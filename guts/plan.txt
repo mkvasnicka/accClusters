@@ -49,6 +49,8 @@ Předpokládaný postup algoritmů
 - napsat seznam externího sw, které je potřeba (např. osmium)
 - zjistit, jak najít sousední edge v sfnetworks -- asi mnohem rychlejší než můj způsob
     - tidygraph? igraph?
+- podívat se na plná data nehod od Štěpána v Úschovně ISu
+- kešovaná data schovat na Microsoft OneDrive
 
 
 
