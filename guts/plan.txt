@@ -1,0 +1,45 @@
+Plán fungování střev systému, když se pojede na sf, tj. ne přes linnet
+======================================================================
+
+Předpokládaný postup algoritmů
+------------------------------
+1. Vytvořit tabulku distriktů (dělá se 1x za život)
+
+2. Vytvořit mapy silnice (dělá se 1x za čas, když se aktualizuje mapa)
+    - Pro každý distrikt:
+        - vybrat obrys okresu, bufferovat ho, vybrat silnice (všechny, ne jak teď)
+        - načíst jako sf
+        - volitelně silnice zjednodušit
+        - silnice lixelizovat -- délka lixelu 1 m / 3 m / 5 m?
+    - každý výsledek (pro každý typ dat = krok a každý okres) uložit do samostatného souboru
+
+3. Nachystat nehody (dělá se při každé aktualizaci nehod nebo silnic)
+    - Pro každý distrikt:
+        - filtrovat silnice na distriktu a silnicích (uložit)
+        - filtrovat čas (uložit?)
+
+4. Spočítat NKDE (dělá se při každé aktualizaci nehod, silnic nebo požadavků)
+    - Pro každý distrikt
+    - Otázka je, jak:
+        - fixní nebo adaptivní bandwidth?
+        - jak dlouhý bandwidth?
+        - continuous / discontinuous?
+        - nehody váženy svou závažností / každá stejnou váhu?
+
+5. Sestativit klastry (dělá se při každé aktualizaci nehod, silnic nebo požadavků)
+    - Pro každý distrikt:
+        - najít nejžhavější nevyřízený lixel
+        - z něho najít klastr souvisejících nehod nad prahem
+        - rozšířit ho o související silnice do určité vzdálenosti
+        - označit id v klastru jako vyřízené
+        - pokud jsou nějaké nevyřízené klastry nad prahem, jít na začátek
+        - sloučit klastry, které se překrývají
+        - (co s klastry, které se překrývají na hranici okresů?)
+
+6. Opakovat sestavování klastrů pro různé prahy hustoty a délky rozšíření
+    - optimalizovat jejich velikosti podle PAI (nebo jak se to jmenuje)
+
+
+
+Poznámky
+--------
