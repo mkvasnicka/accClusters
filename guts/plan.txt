@@ -41,8 +41,23 @@ Předpokládaný postup algoritmů
 
 
 
+Úkoly
+-----
+- vyhazovat míň typů silnic, protože pro Brno město dělá problémy
+    - jaké typy nechat? mohu nechat genericky všechny typy?
+    - přegenerovat mapu silnic
+- napsat seznam externího sw, které je potřeba (např. osmium)
+- zjistit, jak najít sousední edge v sfnetworks -- asi mnohem rychlejší než můj způsob
+    - tidygraph? igraph?
+
+
+
 Otázky
 ------
+- pokud se vyhazují nějaké silnice, pak je potřeba vyhodit nehody, které na nich leží,
+    protože se jinak přichytí na zbylé silnice a vytvoří fiktivní klastr nehod
+- nenačítat nově ze shapefilu? to bych ale musel na okresy rozhazovat v R, což asi
+    bude horší než přes osmium
 - mělo by se jet po okresech, nebo na celé ČR dohromady? spnetwork by to asi zvládl
     - okresy by měly automaticky různý práh husto pro klastry -- to může být výhoda i nevýhoda
         - pokud by to byla nevýhoda, dá se to snadno sjednotit -- stačí načíst hustoty
