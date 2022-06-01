@@ -41,5 +41,22 @@ Předpokládaný postup algoritmů
 
 
 
+Otázky
+------
+- mělo by se jet po okresech, nebo na celé ČR dohromady? spnetwork by to asi zvládl
+    - okresy by měly automaticky různý práh husto pro klastry -- to může být výhoda i nevýhoda
+        - pokud by to byla nevýhoda, dá se to snadno sjednotit -- stačí načíst hustoty
+            ze všech okresů naráz a stanovit meze (kvantily?)
+    - když se pojede na okresech, vznikají problémy, např. klastry, které jsou
+        na hranicích okresů -- a mohou v každém okrese vypadat jinak
+- jak stanovit parametry NKDE, viz výše?
+    - výhody vážených bodů jsou jasné; problém může být, že v čase se zdražují auta
+        a jiné hodnoty škod -- bude se deflovat?
+- použít na synchronizaci mezi kroky make?
+
+
+
 Poznámky
 --------
+- pokud se pojede vždy každý okres zvlášť, pak honit na všech jádrech (paralelizovat)
+- všechny mezivýsledky kešovat do souborů .RData
