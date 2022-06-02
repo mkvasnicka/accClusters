@@ -34,3 +34,33 @@ write_dir_rds <- function(object, file) {
     dir.create(dir, showWarnings = FALSE, recursive = TRUE)
     readr::write_rds(object, file = file, compress = "none")
 }
+
+
+
+# updating files ---------------------------------------------------------------
+
+# is_behind(target, source) returns TRUE if any target files is older than any
+# source files or if it doesn't exist; it returns FALSE otherwise
+#
+# inputs:
+# - target ... (character vector) paths to files depending on source
+# - source ... (character vector) paths to files used to create target
+#
+# values:
+#   logical, see above
+#
+# usage:
+#   if (is_behind(PATH_TO_DISTRICTS, PATH_TO_RAW_DISTRICTS)) {...}
+is_behind <- function(target, source) {
+    mtarget <- file.mtime(target)
+    msource <- file.mtime(source)
+
+    if (any(is.na(msource)))
+        stop("Some sources don't exist:",
+             source[is.na(msource)])
+
+    if (any(is.na(mtarget)))
+        return(TRUE)
+
+    max(msource) > min(mtarget)
+}

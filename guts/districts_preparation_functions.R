@@ -12,6 +12,7 @@
 
 # needed packages
 require(dplyr)
+require(glue)
 require(sf)
 
 
@@ -49,6 +50,8 @@ read_arccr_districts <- function(path_to_districts, layer = "OkresyPolygony") {
                       district_id = KOD_OKRES) |>
         dplyr::select(-NAZ_LAU1, -KOD_OKRES) |>
         dplyr::select(district_id, district_name, everything()) |>
+        dplyr::mutate(osm_file_name = glue("district_{district_id}.osm"),
+                      sf_file_name = glue("district_{district_id}.rds")) |>
         sf::st_transform(crs = planary_projection) |>
         add_class("districts")
 }
