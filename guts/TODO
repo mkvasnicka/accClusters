@@ -17,7 +17,7 @@ Funkce:
 Nehody
 ------
 
-- napsat kód pro přípravu hrubých dat nehod, aby byla jedna malá tabulka, která bude obsahovat
+- napsat kód pro přípravu hrubých dat nehod xls souborů, aby byla jedna malá tabulka, která bude obsahovat
     - id nehody (sloupec p1?)
     - její goelokaci (geometry)
     - sloupce potřebné pro prioritizaci hotspotu (věci, ze kterých se spočítá damage)
@@ -32,7 +32,15 @@ Nehody
     - proč má accidents víc hodnot pro unikátní p1 (tj. v p1 jsou duplicity)?
 - co jsou GPS souřadnice nehod?
 - které sloupce odpovídají různým druhům škod? jak z toho spočítat jedno unikátní číslo škody?
+- vzdálenosti k silnicím?
 
+Co říkal Štěpán:
+- master tabulka je accidents
+- klíč je p1 (když je v accident duplicitní, je to chyba; podívat se, zda je stejný celý řádek)
+- číselník je kody1.xls
+- geolokace jsou sloupce D a E v CDV_databaze_GPS.xls -- crs je Křovák
+    - X kolem -739254.2
+    - Y kolem -1044626
 
 - lepení nehod na silnice paralelizovat
 
