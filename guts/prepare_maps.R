@@ -2,8 +2,9 @@
 # Script:   prepare_maps.R
 # Author:   Michal Kvasnička
 # Purpose:
-# Inputs:   OSM maps
-# Outputs:  tibble of districts
+# Inputs:   OSM map and districts
+# Outputs:  files with various represetnations of OSM maps restricted to roads
+#           and to individual districts
 # Notes:
 #
 # Copyright(c) Michal Kvasnička
@@ -42,8 +43,22 @@ if (is_behind(file.path(SF_MAPS_DIR, districts$sf_file_name),
 
 
 # for each district, create lixelized network and sample points
-create_lixelized_roads(districts,
-                       input_folder = SF_MAPS_DIR,
-                       output_folder = LIXEL_MAPS_DIR,
-                       lx_length = 5, mindist = 2.5,
-                       workers = NO_OF_WORKERS)
+if (is_behind(file.path(LIXEL_MAPS_DIR, districts$lixel_file_name),
+              c(file.path(SF_MAPS_DIR, districts$sf_file_name),
+                PATH_TO_DISTRICTS))) {
+    create_lixelized_roads(districts,
+                           input_folder = SF_MAPS_DIR,
+                           output_folder = LIXEL_MAPS_DIR,
+                           lx_length = 5, mindist = 2.5,
+                           workers = NO_OF_WORKERS)
+}
+
+
+# for each district, create lixel centers (samples)
+if (is_behind(file.path(LIXEL_MAPS_DIR, districts$lixel_sample_file_name),
+              c(file.path(LIXEL_MAPS_DIR, districts$lixel_file_name),
+                PATH_TO_DISTRICTS))) {
+    create_lixel_samples_for_roads(districts,
+                                   input_folder = LIXEL_MAPS_DIR,
+                                   output_folder = LIXEL_MAPS_DIR)
+}

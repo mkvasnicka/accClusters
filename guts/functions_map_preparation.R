@@ -503,13 +503,13 @@ create_lixelized_roads <- function(districts, input_folder, output_folder,
                          workers, chunk_size) {
         network <- readr::read_rds(input_path)
         if (workers == 1)
-            lixels <- lixelize_lines(network, lx_length = lx_length,
-                                     mindist = mindist)
+            lixels <- spNetwork::lixelize_lines(network, lx_length = lx_length,
+                                                mindist = mindist)
         else
-            lixels <- lixels <- lixelize_lines.mc(network,
-                                                  lx_length = lx_length,
-                                                  mindist = mindist,
-                                                  chunk_size = chunk_size)
+            lixels <- spNetwork::lixelize_lines.mc(network,
+                                                   lx_length = lx_length,
+                                                   mindist = mindist,
+                                                   chunk_size = chunk_size)
         write_dir_rds(lixels, output_path)
     }
 
@@ -530,6 +530,31 @@ create_lixelized_roads <- function(districts, input_folder, output_folder,
 
     if (workers > 1)
         future::plan(oplan)
+}
+
+
+# create_lixel_samples_for_roads(districts, input_folder, output_folder) creates
+# center of lixels (samples) for all districts
+#
+# inputs:
+# - districts
+# - input_folder
+# - output_folder
+#
+# value:
+#   none, data are written to disk
+create_lixel_samples_for_roads <- function(districts,
+                                           input_folder, output_folder) {
+    one_file <- function(input_path, output_path) {
+        network <- readr::read_rds(input_path)
+        samples <- spNetwork::lines_center(network)
+        write_dir_rds(samples, output_path)
+    }
+    tibble(
+        input_path = file.path(input_folder, districts$lixel_file_name),
+        output_path = file.path(output_folder, districts$lixel_sample_file_name)
+    ) |>
+        pwalk(one_file)
 }
 
 
