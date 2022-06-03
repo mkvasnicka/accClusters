@@ -51,7 +51,10 @@ read_arccr_districts <- function(path_to_districts, layer = "OkresyPolygony") {
         dplyr::select(-NAZ_LAU1, -KOD_OKRES) |>
         dplyr::select(district_id, district_name, everything()) |>
         dplyr::mutate(osm_file_name = glue("district_{district_id}.osm"),
-                      sf_file_name = glue("district_{district_id}.rds")) |>
+                      sf_file_name = glue("district_{district_id}.rds"),
+                      lixel_file_name = glue("lixel_{district_id}.rds"),
+                      lixel_sample_file_name =
+                          glue("lixel_sample_{district_id}.rds")) |>
         sf::st_transform(crs = planary_projection) |>
         add_class("districts")
 }

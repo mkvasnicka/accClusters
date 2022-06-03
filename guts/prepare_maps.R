@@ -33,9 +33,17 @@ if (is_behind(file.path(OSM_MAPS_DIR, districts$osm_file_name),
 }
 
 
-# for each district, create SF .rds files with filered roads
+# for each district, create simplified SF .rds files with filered roads
 if (is_behind(file.path(SF_MAPS_DIR, districts$sf_file_name),
               c(file.path(OSM_MAPS_DIR, districts$osm_file_name),
                 PATH_TO_DISTRICTS))) {
     create_sf_district_roads(districts, OSM_MAPS_DIR, SF_MAPS_DIR)
 }
+
+
+# for each district, create lixelized network and sample points
+create_lixelized_roads(districts,
+                       input_folder = SF_MAPS_DIR,
+                       output_folder = LIXEL_MAPS_DIR,
+                       lx_length = 5, mindist = 2.5,
+                       workers = NO_OF_WORKERS)

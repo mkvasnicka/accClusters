@@ -17,6 +17,12 @@ wgs_projection <- 4326  # WGS84
 
 
 
+# parallel processing ----------------------------------------------------------
+
+NO_OF_WORKERS <- 4
+
+
+
 # paths ------------------------------------------------------------------------
 
 # start of all paths
@@ -41,7 +47,8 @@ PATH_TO_DISTRICTS <- file.path(DISTRICTS_DIR, "districts.rds")
 
 # paths to filtered/converted maps
 OSM_MAPS_DIR <- file.path(DATA_DIR, "maps")
-SF_MAPS_DIR <-  file.path(DATA_DIR, "maps")
+SF_MAPS_DIR <- file.path(DATA_DIR, "maps")
+LIXEL_MAPS_DIR <- file.path(DATA_DIR, "maps")
 
 
 

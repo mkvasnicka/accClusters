@@ -16,6 +16,7 @@ require(glue)
 require(sf)
 require(tidygraph)
 require(sfnetworks)
+require(spNetwork)
 require(geojsonio)
 require(jsonlite)
 
@@ -469,6 +470,66 @@ create_sf_district_roads <- function(districts, input_folder, output_folder,
                      input_folder = input_folder,
                      output_folder = output_folder)
     # one_file("guts/data/maps/district_40711.osm", xxx)
+}
+
+
+
+# map lixelization -------------------------------------------------------------
+
+# create_lixelized_roads() lixelizes all sf maps in input_folder
+#
+# inputs:
+# - districts ... districts table
+# - input_folder ... (character scalar) a path to folder where SF maps in .rds
+#   are stored
+# - output_folder ... (character scalar) a path to folder where new lixels
+#   should be stored
+# - lx_length ... (numeric scalar) length of lixels, see spNetwork help
+# - mindist ... (numeric scalar) the minimum length of a lixel; after cut, if
+#   the length of the final lixel is shorter than the minimum distance, then it
+#   is added to the previous lixel, see spNetwork help
+# - workers ... number of cores used; if not given, it is read from
+#   NO_OF_WORKERS; if it doesn't exist, 1 core is used
+# - chunk_size ... (integer scalar) size of a chunk used for multiprocessing
+#   (default is 100), see spNetwork help
+#
+# value:
+#   none; files are writen to disk
+create_lixelized_roads <- function(districts, input_folder, output_folder,
+                                   lx_length, mindist = NULL,
+                                   workers = NULL,
+                                   chunk_size = 100) {
+    one_file <- function(input_path, output_path, lx_length, mindist,
+                         workers, chunk_size) {
+        network <- readr::read_rds(input_path)
+        if (workers == 1)
+            lixels <- lixelize_lines(network, lx_length = lx_length,
+                                     mindist = mindist)
+        else
+            lixels <- lixels <- lixelize_lines.mc(network,
+                                                  lx_length = lx_length,
+                                                  mindist = mindist,
+                                                  chunk_size = chunk_size)
+        write_dir_rds(lixels, output_path)
+    }
+
+    if (is.null(workers))
+        workers <- if_else(exists("NO_OF_WORKERS"), NO_OF_WORKERS, 1L)
+
+    if (workers > 1) {
+        oplan <- future::plan()
+        future::plan(future::multisession(workers = workers))
+    }
+
+    tibble(
+        input_path = file.path(input_folder, districts$sf_file_name),
+        output_path = file.path(output_folder, districts$lixel_file_name)
+    ) |>
+        pwalk(one_file, lx_length = lx_length, mindist = mindist,
+              workers = workers, chunk_size = chunk_size)
+
+    if (workers > 1)
+        future::plan(oplan)
 }
 
 
