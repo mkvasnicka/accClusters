@@ -14,6 +14,8 @@ require(dplyr)
 require(purrr)
 require(glue)
 require(sf)
+require(tidygraph)
+require(sfnetworks)
 require(geojsonio)
 require(jsonlite)
 
@@ -273,6 +275,167 @@ create_osm_district_roads <- function(districts, input_path, road_types = NULL,
 
 
 
+# sf simplification ------------------------------------------------------------
+
+# remove_network_pseudo_points(sfnet) removes nodes from the network that are
+# not necessary, i.e., that are degree 2 (only one edge is going in and one edge
+# is going out)
+#
+# inputs:
+# - sfnet ... (sfnetwork) sfnetwork
+#
+# output:
+# sfnetwork with only necessary network nodes
+remove_network_pseudo_points <- function(sfnet) {
+    stopifnot(inherits(sfnet, "sfnetwork"))
+    sfnet |> tidygraph::convert(sfnetworks::to_spatial_smooth)
+}
+
+
+# straigthen_network_roads(sfnet, dTolerance) simplifies, i.e., straightens
+# roads in the sfnet network
+#
+# inputs:
+# - sfnet ... (sfnetwork) sfnetwork
+# - dTolerance ... (numeric scalar) is a tolerance in meters, i.e., the maximum
+#   permissible deviation from a straight line
+straigthen_network_roads <- function(sfnet, dTolerance = 5) {
+    stopifnot(inherits(sfnet, "sfnetwork"))
+    sfnet |>
+        sfnetworks::activate("edges") |>
+        sf::st_simplify(preserveTopology = TRUE, dTolerance = dTolerance)
+}
+
+
+# simplify_network_intersections(sfnet, max_distance) contracts close nodes in
+# the network, i.e., it simplifies the intersections
+#
+# inputs:
+# - sfnet ... (sfnetwork) sfnetwork
+# - max_distance ... (numeric scalar) a maximum distnace between nodes in meters
+#   for the points to be contracted
+#
+# output:
+# sfnet with contracted points
+#
+# usage:
+# sfnet <- simplify_network_intersections(sfnet, max_distance = 5)
+#
+# WARNING: This function may introduce "lifts in mixmasters", i.e., it may
+# connect off-grade intersection that were not previously connected.
+# Therefore, the function is temporarily switched off.
+#
+# A test examples:
+#
+# The first case should be connected:
+# p11 <- st_point(c(0, 0))
+# p12 <- st_point(c(1, 1))
+# p13 <- st_point(c(1, 1.1))
+# p14 <- st_point(c(3, 2))
+# p21 <- st_point(c(0,2))
+# lines <- st_sfc(st_linestring(c(p11, p12)),
+#                 st_linestring(c(p12, p13)),
+#                 st_linestring(c(p13, p14)),
+#                 st_linestring(c(p12, p21)))
+#
+# The second case should NOT be connected
+# p11 <- st_point(c(-1, 0))
+# p12 <- st_point(c(0.1, 0))
+# p13 <- st_point(c(1, 0))
+# p21 <- st_point(c(0, -1))
+# p22 <- st_point(c(0, 0.1))
+# p23 <- st_point(c(0,1))
+# lines <- st_sfc(st_linestring(c(p11, p12)),
+#                 st_linestring(c(p12, p13)),
+#                 st_linestring(c(p21, p22)),
+#                 st_linestring(c(p22, p23)),
+#                 st_linestring(c(p11, p21)))
+#
+# # test
+# net = as_sfnetwork(lines)
+#
+# edge_colors = function(x) rep(sf.colors(12, categorical = TRUE)[-2], 2)[c(1:ecount(x))]
+#
+# plot(st_geometry(net, "edges"), col = edge_colors(net), lwd = 4)
+# plot(st_geometry(net, "nodes"), pch = 20, cex = 2, add = TRUE)
+#
+# net2 <- simplify_network_intersections(net, 0.2) |>
+#     straigthen_network_roads(dTolerance = 0.3)
+#
+# plot(st_geometry(net2, "edges"), col = edge_colors(net), lwd = 4)
+# plot(st_geometry(net2, "nodes"), pch = 20, cex = 2, add = TRUE)
+#
+simplify_network_intersections <- function(sfnet, max_distance = 0.5) {
+    # TODO: remove the following line as soon as the function is improved
+    return(sfnet)
+    stopifnot(inherits(sfnet, "sfnetwork"))
+    # retrieve the coordinates of the nodes
+    node_coords <-  sfnet %>%
+        activate("nodes") %>%
+        st_coordinates()
+    # cluster the nodes with the DBSCAN spatial clustering algorithm;
+    # nodes within a distance of eps from each other will be in the same cluster;
+    # a node is assigned a cluster even if it is the only member of that cluster
+    clusters <- dbscan(node_coords, eps = max_distance, minPts = 1)$cluster
+    # if there are no close points, return the input sfnet
+    if (!any(duplicated(clusters)))
+        return(sfnet)
+    # contract the points
+    sfnet <- sfnet %>%
+        # add the cluster information to the nodes of the network
+        activate("nodes") %>%
+        mutate(cls = clusters) %>%
+        # TODO: the following is probably insufficient---I want to contract only
+        #   point that are directly connected by an edge!
+        # they should also be connected; two nodes that are close to each other
+        # but not connected, can never be part of the same intersection
+        mutate(cmp = group_components())
+    # the combination of the cluster index and the component index can now be
+    # used to define the groups of nodes to be contracted
+    convert(sfnet, to_spatial_contracted, cls, cmp, simplify = TRUE)
+}
+
+
+# simplify_sf(sf, max_distance = 0.5, dTolerance = 5) simplifies road sf tibble;
+# it does three things (in this order):
+# 1. it removes pseudo-points, i.e., points of degree two, i.e., points where
+#   just one edge goes into and just one edge gout out of the point
+# 2. it joins the points that are too close (max_distance) to each other if they
+#   are connected by an edge
+# 3. it straightens the lines---it uses XXX algorithm to replace a linestring
+#   with one straight line if no point of the former linestring is farther from
+#   the new line than dTolerance meters
+#
+# inputs:
+# - sf ... (projected sf tibble of lines) road network
+# - max_distance ... (numeric scalar) maximal distance of connected points
+#   which should be replace a new point (see step 2)
+# - dTolerance ... (numeric scalar) maximal distance between a new line and
+#   and any point in a linestring (see step 3)
+#
+# value:
+#   projected sf; its lines are simplified, the network topology is preserved
+#
+# WARNIG: step 2 is not implemented yet
+simplify_sf <- function(sf, max_distance = 0.5, dTolerance = 5) {
+    stopifnot(inherits(sf, "sf"))
+    # convert to sfnetwork
+    sfnet <- sfnetworks::as_sfnetwork(sf)
+    # start simplification
+    sfnet <- sfnet |>
+        # remove pseudo points, i.e., points that are not nodes of the
+        # graph/network
+        remove_network_pseudo_points() |>
+        # simplify intersections
+        simplify_network_intersections(max_distance = max_distance) |>
+        # simplify the roads, i.e., straingten the roads;
+        straigthen_network_roads(dTolerance = dTolerance)
+    # convert back to sf
+    sfnet |> sfnetworks::activate("edges") |> sf::st_as_sf()
+}
+
+
+
 # read osm as sf ---------------------------------------------------------------
 
 # create_sf_district_roads(districts, input_folder, output_folder) creates SF
@@ -287,11 +450,16 @@ create_osm_district_roads <- function(districts, input_path, road_types = NULL,
 #
 # outputs:
 #   none; files are written to output_folder
-create_sf_district_roads <- function(districts, input_folder, output_folder) {
-    one_file <- function(osm_file_name, sf_file_name, input_folder, output_folder) {
+create_sf_district_roads <- function(districts, input_folder, output_folder,
+                                     max_distance = 0.5, dTolerance = 5) {
+    one_file <- function(osm_file_name, sf_file_name,
+                         input_folder, output_folder) {
         input <- file.path(input_folder, osm_file_name)
         output <- file.path(output_folder, sf_file_name)
-        map <- sf::st_read(input, layer = "lines")
+        map <- sf::st_read(input, layer = "lines") |>
+            st_transform(crs = planary_projection) |>
+            select(-c(waterway, aerialway, barrier, man_made)) |>
+            simplify_sf(max_distance = max_distance, dTolerance = dTolerance)
         write_dir_rds(map, output)
     }
     districts |>
@@ -301,4 +469,37 @@ create_sf_district_roads <- function(districts, input_folder, output_folder) {
                      input_folder = input_folder,
                      output_folder = output_folder)
     # one_file("guts/data/maps/district_40711.osm", xxx)
+}
+
+
+
+# test maps --------------------------------------------------------------------
+
+# test_sf_maps(districts, sf_maps_dir) returns some basic statistics about the
+# road networks prepared by create_sf_district_roads()
+#
+# inputs:
+# - districts ... a district table
+# - sf_maps_dir ... (character scalar) path to the folder where SF maps in .rds
+#   are stored
+#
+# available statistics:
+# - lt#m ... the number of lines shorter than # meters
+# - total ... the toal number of lines
+#
+# TODO: počet komponent sítě; testy geometrie ala Gelb
+test_sf_maps <- function(districts, sf_maps_dir) {
+    one_file <- function(path) {
+        oo <- readRDS(path)
+        len <- oo |> sf::st_length() |> as.numeric()
+        tibble(lt1m = sum(len < 1),
+               lt3m = sum(len < 3),
+               lt5m = sum(len < 5),
+               lt10m = sum(len < 10),
+               lt20m = sum(len < 20),
+               total = length(len))
+    }
+    paths <- file.path(sf_maps_dir, districts$sf_file_name)
+    tab <- purrr::map_dfr(paths, one_file)
+    dplyr::bind_cols(districts, tab)
 }
