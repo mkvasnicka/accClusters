@@ -42,6 +42,13 @@ Co říkal Štěpán:
     - X kolem -739254.2
     - Y kolem -1044626
 
+readr neumí tyto xls načíst
+- workaround:
+    - libreoffice:
+        - https://opensource.com/article/21/3/libreoffice-command-line
+        - libreoffice --headless --convert-to csv CDV_databáze_GPS.xls
+    - ale kódovní je WINDOWS-1250 -- ale zřejmě zmršené
+
 - lepení nehod na silnice paralelizovat
 
 
