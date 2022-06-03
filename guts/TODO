@@ -5,6 +5,9 @@ Mapy
 ----
 
 Pro všechny okresy:
-- zkontrolovat délku segmentů
 - zkontrolovat počet souvislých podgrafů
 - spustit kontrolu, o které psal Gelb
+
+Funkce:
+- vyřešit spojování blízkých bodů v sfnetworks
+- zrychlit hledání klastrů hotspotů na sf/sfnetworks/spNetwork

@@ -14,8 +14,8 @@
 # source necessary scripts
 RSCRIPTDIR <- "guts"
 source(file.path(RSCRIPTDIR, "guts_config.R"))
-source(file.path(RSCRIPTDIR, "auxiliary_functions.R"))
-source(file.path(RSCRIPTDIR, "districts_preparation_functions.R"))
+source(file.path(RSCRIPTDIR, "functions_auxiliary.R"))
+source(file.path(RSCRIPTDIR, "functions_districts_preparation.R"))
 
 
 #' Načtou se distrikty (tady okresy) a převedou se do stejné planární

@@ -15,8 +15,8 @@ require(readr)
 # source necessary scripts
 RSCRIPTDIR <- "guts"
 source(file.path(RSCRIPTDIR, "guts_config.R"))
-source(file.path(RSCRIPTDIR, "auxiliary_functions.R"))
-source(file.path(RSCRIPTDIR, "map_preparation_functions.R"))
+source(file.path(RSCRIPTDIR, "functions_auxiliary.R"))
+source(file.path(RSCRIPTDIR, "functions_map_preparation.R"))
 
 
 # read in districts
