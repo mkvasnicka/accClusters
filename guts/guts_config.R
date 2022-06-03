@@ -48,7 +48,7 @@ PATH_TO_DISTRICTS <- file.path(DISTRICTS_DIR, "districts.rds")
 # paths to filtered/converted maps
 OSM_MAPS_DIR <- file.path(DATA_DIR, "maps")
 SF_MAPS_DIR <- file.path(DATA_DIR, "maps")
-LIXEL_MAPS_DIR <- file.path(DATA_DIR, "maps")
+LIXEL_MAPS_DIR <- file.path(DATA_DIR, "lixels")
 
 
 
@@ -76,3 +76,5 @@ SUPPORTED_ROAD_CLASSES <- c("motorway", "motorway_link",
 # district map creating --------------------------------------------------------
 
 DISTRICT_BUFFER_SIZE <- 1e3
+LIXEL_SIZE <- 5  # meters
+LIXEL_MIN_DIST <- 3  # meters

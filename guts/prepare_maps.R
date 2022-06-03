@@ -49,7 +49,8 @@ if (is_behind(file.path(LIXEL_MAPS_DIR, districts$lixel_file_name),
     create_lixelized_roads(districts,
                            input_folder = SF_MAPS_DIR,
                            output_folder = LIXEL_MAPS_DIR,
-                           lx_length = 5, mindist = 2.5,
+                           lx_length = LIXEL_SIZE,
+                           mindist = LIXEL_MIN_DIST,
                            workers = NO_OF_WORKERS)
 }
 
