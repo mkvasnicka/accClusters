@@ -11,3 +11,33 @@ Pro všechny okresy:
 Funkce:
 - vyřešit spojování blízkých bodů v sfnetworks
 - zrychlit hledání klastrů hotspotů na sf/sfnetworks/spNetwork
+- všude přidat parametr verbose a jeho vypisování
+
+
+Nehody
+------
+
+- napsat kód pro přípravu hrubých dat nehod, aby byla jedna malá tabulka, která bude obsahovat
+    - id nehody (sloupec p1?)
+    - její goelokaci (geometry)
+    - sloupce potřebné pro prioritizaci hotspotu (věci, ze kterých se spočítá damage)
+        - které sloupce to jsou???
+
+- Štěpánův kód přípravy nehod?
+- PČR nám to bude dávat v Excelu?
+- PČR nám bude dávat selekty odpovídající souborům v Excelu?
+- kde je číselník jednotlivých položek?
+- co je hlavní klíč nehod? p1?
+- co je hlavní tabulka? accidents?
+    - proč má accidents víc hodnot pro unikátní p1 (tj. v p1 jsou duplicity)?
+- co jsou GPS souřadnice nehod?
+- které sloupce odpovídají různým druhům škod? jak z toho spočítat jedno unikátní číslo škody?
+
+
+- lepení nehod na silnice paralelizovat
+
+
+Otázky
+------
+- jaké je soužití future a furrr paralelizace?
+- jak nejlíp najít sousední edges v sfnetworks?
