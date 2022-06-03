@@ -9,17 +9,17 @@
 # Copyright(c) Michal Kvasnička
 # -------------------------------------
 
+# parallel processing ----------------------------------------------------------
+
+NO_OF_WORKERS <- future::availableCores()
+
+
+
 # constants --------------------------------------------------------------------
 
 # projections
 planary_projection <- 5514  # Křovák
 wgs_projection <- 4326  # WGS84
-
-
-
-# parallel processing ----------------------------------------------------------
-
-NO_OF_WORKERS <- 4
 
 
 
