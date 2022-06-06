@@ -280,7 +280,8 @@ snap_points_to_lines <- function(points, lines, dist = 100,
 #   such that they lie on a road---they are moved to their closest points on
 #   their closest line
 create_districts_accidents <- function(districts, accidents, max_distance,
-                                       map_dir, accident_dir) {
+                                       map_dir, accident_dir,
+                                       workers = 1) {
     one_file <- function(input_file, output_file, accidents) {
         lines <- readr::read_rds(input_file)
         snapped_points <- snap_points_to_lines(accidents, lines,
@@ -288,8 +289,8 @@ create_districts_accidents <- function(districts, accidents, max_distance,
         write_dir_rds(snapped_points, output_file)
     }
 
-    tibble::tibble(input_file = file.path(map_dir, districts$sf_file_name),
-                   output_file =
-                       file.path(accident_dir, districts$accidents_file_name)) |>
-        purrr::pwalk(one_file, accidents = accidents)
+    tab <- tibble::tibble(
+        input_file = file.path(map_dir, districts$sf_file_name),
+        output_file = file.path(accident_dir, districts$accidents_file_name))
+    PWALK(tab, one_file, accidents = accidents, workers = workers)
 }

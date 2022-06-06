@@ -64,3 +64,18 @@ is_behind <- function(target, source) {
 
     max(msource) > min(mtarget)
 }
+
+
+
+# parallel processing ----------------------------------------------------------
+
+PWALK <- function(.l, .f, workers = 1, ...) {
+    if (workers == 1) {
+        pwalk(.l, .f, ...)
+    } else {
+        oplan <- future::plan()
+        future::plan("multisession", workers = workers)
+        furrr::future_pwalk(.l, .f, ...)
+        future::plan(oplan)
+    }
+}

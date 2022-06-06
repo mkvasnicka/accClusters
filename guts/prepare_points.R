@@ -40,5 +40,6 @@ if (is_behind(file.path(ACCIDENTS_DIR, districts$accidents_file_name),
     create_districts_accidents(districts, accidents,
                                max_distance = ACCIDENT_TO_ROAD_MAX_DISTANCE,
                                map_dir = SF_MAPS_DIR,
-                               accident_dir = ACCIDENTS_DIR)
+                               accident_dir = ACCIDENTS_DIR,
+                               workers = NO_OF_WORKERS)
 }
