@@ -25,19 +25,15 @@ districts <- readr::read_rds(PATH_TO_DISTRICTS)
 
 
 # read in all accidents data
-# TODO: načíst skutečná data o nehodách
-pcrdata <- new.env()
-load(PATH_TO_RAW_ACCIDENTS, envir = pcrdata)
-accidents <- pcrdata$accidents
-accidents <- st_transform(accidents, planary_projection)
-rm(pcrdata)
+if (is_behind(PATH_TO_RAW_ACCIDENTS,
+              list.files(RAW_ACCIDENTS_DIR, pattern = "csv",
+                         recursive = TRUE, full.names = TRUE))) {
+    accidents <- read_raw_accidents(RAW_ACCIDENTS_DIR)
+    write_dir_rds(accidents, PATH_TO_RAW_ACCIDENTS)
+}
 
 
-# lines <- readr::read_rds(file.path(SF_MAPS_DIR, "district_40711.rds"))
-# snapped_points <- snap_points_to_lines(accidents, lines,
-#                                        dist = ACCIDENT_TO_ROAD_MAX_DISTANCE)
-# write_dir_rds(snapped_points, file.path(ACCIDENTS_DIR, "accidents_40711.rds"))
-
+# crop the accidents to buffered districts and snap them to selected roads
 if (is_behind(file.path(ACCIDENTS_DIR, districts$accidents_file_name),
               c(file.path(SF_MAPS_DIR, districts$sf_file_name),
                 PATH_TO_DISTRICTS, PATH_TO_RAW_ACCIDENTS))) {

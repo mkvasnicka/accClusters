@@ -1,0 +1,35 @@
+Kódování nehod:
+
+| kód  | význam                                                                |
+| ---- | --------------------------------------------------------------------- |
+| P01  | id nehody                                                             |
+| P2A  | datum nehody                                                          |
+| P2B  | čas nehody                                                            |
+| P05A | v obci/mimo obec                                                      |
+| P06  | druh nehody                                                           |
+| P13A | umsrceno osob                                                         |
+| P13B | tězce zraněno osob                                                    |
+| P13C | lehce zraněno osob                                                    |
+| P14  | celková hmotná škoda ve stokorunách                                   |
+| P33G | následky pro chodce                                                   |
+| P59G | následky pro řidiče                                                   |
+
+
+Tabulky (hlavička 7. řádek):
+
+- ####_databáze_nehody.xls - hlavní databáze
+- ####_databáze_GPS.xls - geolokace
+- ####_databáze_chodci.xls - sloupce P29-p33h
+- ####_databáze_vozidla.xls - sloupce id vozidla + P44-P58
+- ####_databáze_nasledky.xls - sloupce id vozidla + P59a-h
+
+Tabulky nejde načíst pomocí balíku readxl, xlsx, openxlsx.
+
+
+Zdroje k načetení xls do R:
+
+- https://www.r-bloggers.com/2021/06/reading-data-from-excel-files-xlsxlsxcsv-into-r-quick-guide/
+- https://r-coder.com/read-excel-r/
+
+
+Nakonec konvertuju do .csv pomocí skriptu prepare_raw_accidents.sh, který používá utilitku unoconv (asi součást LibreOffice, ale v Ubuntu se musí nainstalovat zvlášť).

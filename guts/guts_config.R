@@ -70,7 +70,9 @@ PATH_TO_RAW_ROADS_OSM <- file.path(RAW_MAPS_DIR, "czech-republic-latest.osm.pbf"
 
 # path to original accidents file
 RAW_ACCIDENTS_DIR <- file.path(RAW_DATA_DIR, "accidents")
-PATH_TO_RAW_ACCIDENTS <- file.path(RAW_ACCIDENTS_DIR, "pcrdata.RData")
+# PATH_TO_RAW_ACCIDENTS <- file.path(RAW_ACCIDENTS_DIR, "pcrdata.RData")
+PATH_TO_RAW_ACCIDENTS <- file.path(RAW_ACCIDENTS_DIR, "raw_accidents.rds")
+
 
 
 # paths to created data
