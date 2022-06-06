@@ -53,9 +53,10 @@ require(sf)
 #   - Y is column E
 #   - both of them must be divided by 1000
 #
-# WARNING:
+# WARNINGS:
 # - accidents that are not geolocated (columns d or e is missing in the GPS
 #   table) are dropped from the tibble
+# - duplicated rows are dropped
 #
 # notes:
 # - the CSVs can be extracted from XLS by prepare_raw_accidents.sh script
@@ -159,6 +160,7 @@ read_raw_accidents <- function(folder, skip = 6) {
             skip = skip)
         dplyr::left_join(accidents, gps, by = "p1") |>
             dplyr::filter(!is.na(coord_x), !is.na(coord_y)) |>
+            dplyr::distinct() |>
             sf::st_as_sf(coords = c("coord_x", "coord_y"),
                          crs = planary_projection)
 
