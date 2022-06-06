@@ -33,3 +33,9 @@ Zdroje k načetení xls do R:
 
 
 Nakonec konvertuju do .csv pomocí skriptu prepare_raw_accidents.sh, který používá utilitku unoconv (asi součást LibreOffice, ale v Ubuntu se musí nainstalovat zvlášť).
+
+
+Alternativa je použít LibreOffice přímo, ale výsledkem je zmršené kódování WINDOWS-1250, viz:
+
+- https://opensource.com/article/21/3/libreoffice-command-line
+- libreoffice --headless --convert-to csv CDV_databáze_GPS.xls

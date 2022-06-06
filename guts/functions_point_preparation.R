@@ -46,6 +46,12 @@ require(sf)
 #   - *databáze_nasledky*.csv
 #   - *databáze_nehody*.csv
 #   - databáze_vozidla*.csv
+# - column p1 is own key (there are duplicities; it's a bug sometimes)
+# - coding is in  kody1.xls
+# - geolocation are columns D and E in *databaze_GPS*.xls---CRS is Křovák
+#   - X is column D
+#   - Y is column E
+#   - both of them must be divided by 1000
 #
 # WARNING:
 # - accidents that are not geolocated (columns d or e is missing in the GPS

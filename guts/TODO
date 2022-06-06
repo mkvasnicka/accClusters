@@ -34,25 +34,7 @@ Nehody
 - které sloupce odpovídají různým druhům škod? jak z toho spočítat jedno unikátní číslo škody?
 - vzdálenosti k silnicím?
 
-Co říkal Štěpán:
-- master tabulka je accidents
-- klíč je p1 (když je v accident duplicitní, je to chyba; podívat se, zda je stejný celý řádek)
-- číselník je kody1.xls
-- geolokace jsou sloupce D a E v CDV_databaze_GPS.xls -- crs je Křovák
-    - X kolem -739254.2
-    - Y kolem -1044626
-
-readr neumí tyto xls načíst
-- workaround:
-    - libreoffice:
-        - https://opensource.com/article/21/3/libreoffice-command-line
-        - libreoffice --headless --convert-to csv CDV_databáze_GPS.xls
-    - ale kódovní je WINDOWS-1250 -- ale zřejmě zmršené
-
-- lepení nehod na silnice paralelizovat
-
 
 Otázky
 ------
-- jaké je soužití future a furrr paralelizace?
 - jak nejlíp najít sousední edges v sfnetworks?
