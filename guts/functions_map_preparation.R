@@ -419,6 +419,8 @@ simplify_network_intersections <- function(sfnet, max_distance = 0.5) {
 #
 # WARNIG: step 2 is not implemented yet
 simplify_sf <- function(sf, max_distance = 0.5, dTolerance = 5) {
+    # TODO: opravit funkci a odstranit následující řádek
+    return(sf)
     stopifnot(inherits(sf, "sf"))
     # convert to sfnetwork
     sfnet <- sfnetworks::as_sfnetwork(sf)
