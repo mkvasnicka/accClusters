@@ -894,6 +894,6 @@ if (FALSE) {
 
     library(tmap)
     tmap_mode("view")
-    plot_not_connected_segments(brno)
+    # plot_not_connected_segments(brno)
     plot_out_of_major_component(brno_net)
 }

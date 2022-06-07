@@ -11,6 +11,8 @@ Pro všechny okresy:
 Funkce:
 - zjistit, proč se kazí simplifikace -- a jestli se to děje po načtení přes linnet (teď je simplifikace vypnutá)
 - při načítání vyhodit všechny silnice, které nejsou součástí hlavní komponenty silniční sítě
+- paralelizovat převod silnic z .osm do SF.rds + progress bar
+- SF silnice v .rds jsou nově sfnetworks -- tomu se bude muset přizpůsobit kód, který na tom staví
 - vyřešit spojování blízkých bodů v sfnetworks
 - zrychlit hledání klastrů hotspotů na sf/sfnetworks/spNetwork
 - všude přidat parametr verbose a jeho vypisování
