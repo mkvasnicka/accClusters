@@ -287,8 +287,9 @@ create_osm_district_roads <- function(districts, input_path, road_types = NULL,
 # TODO: net$lines$marks are missing
 # TODO: network$lines$markformat are different
 graph_to_linnet <- function(vertices, edges, window) {
-    spatstat::linnet(
-        vertices = spatstat::as.ppp(cbind(vertices$x, vertices$y), W = window),
+    spatstat.linnet::linnet(
+        vertices = spatstat.geom::as.ppp(cbind(vertices$x, vertices$y),
+                                         W = window),
         edges = cbind(edges$from, edges$to),
         sparse = TRUE)
 }
@@ -583,18 +584,30 @@ simplify_sf <- function(sf, max_distance = 0.5, dTolerance = 5) {
 #   live
 # - output_folder ... (character scalar) folder where district-filtered SF files
 #   should be stored
+# - crs ... (numeric scalar) planary projection
+# - max_distance ... (numeric scalar) maximal distance of connected points
+#   which should be replace a new point (see step 2)
+# - dTolerance ... (numeric scalar) maximal distance between a new line and
+#   and any point in a linestring (see step 3)
 #
 # outputs:
 #   none; files are written to output_folder
+#
+# notes:
+# - this function cannot use sf::st_read(); for the reason, see help on
+#   read_osm_to_sfnetwork()
 create_sf_district_roads <- function(districts, input_folder, output_folder,
+                                     crs,
                                      max_distance = 0.5, dTolerance = 5) {
     one_file <- function(osm_file_name, sf_file_name,
                          input_folder, output_folder) {
         input <- file.path(input_folder, osm_file_name)
         output <- file.path(output_folder, sf_file_name)
-        map <- sf::st_read(input, layer = "lines") |>
-            st_transform(crs = planary_projection) |>
-            select(-c(waterway, aerialway, barrier, man_made)) |>
+        # map <- sf::st_read(input, layer = "lines") |>
+        #     st_transform(crs = planary_projection) |>
+        #     select(-c(waterway, aerialway, barrier, man_made)) |>
+        #     simplify_sf(max_distance = max_distance, dTolerance = dTolerance)
+        map <- read_osm_to_sfnetwork(input, crs = crs) |>
             simplify_sf(max_distance = max_distance, dTolerance = dTolerance)
         write_dir_rds(map, output)
     }

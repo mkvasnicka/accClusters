@@ -9,6 +9,8 @@ Pro všechny okresy:
 - spustit kontrolu, o které psal Gelb
 
 Funkce:
+- zjistit, proč se kazí simplifikace -- a jestli se to děje po načtení přes linnet (teď je simplifikace vypnutá)
+- při načítání vyhodit všechny silnice, které nejsou součástí hlavní komponenty silniční sítě
 - vyřešit spojování blízkých bodů v sfnetworks
 - zrychlit hledání klastrů hotspotů na sf/sfnetworks/spNetwork
 - všude přidat parametr verbose a jeho vypisování
