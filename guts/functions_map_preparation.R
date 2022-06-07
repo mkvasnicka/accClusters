@@ -21,6 +21,9 @@ require(geojsonio)
 require(jsonlite)
 require(spdep)
 require(igraph)
+require(osmar)
+require(spatstat)
+
 
 
 
@@ -51,10 +54,10 @@ write_one_district_geojson <- function(district, buffer_size, folder, pb) {
         dir.create(folder)
     output_path <- file.path(folder,
                              glue("district_{district$district_id}.geojson"))
-    district %>%
-        sf::st_transform(crs = planary_projection) %>%
-        sf::st_buffer(dist = buffer_size) %>%
-        sf::st_transform(crs = wgs_projection) %>%
+    district |>
+        sf::st_transform(crs = planary_projection) |>
+        sf::st_buffer(dist = buffer_size) |>
+        sf::st_transform(crs = wgs_projection) |>
         silent_geojson_write(file = output_path)
     if (!is.null(pb))
         pb$tick(1)
@@ -177,12 +180,12 @@ create_json_do_file <- function(districts, folder, verbose) {
         output = glue::glue("district_{districts$district_id}.osm"),
         file_name = glue::glue("district_{districts$district_id}.geojson"),
         file_type = "geojson"
-    ) %>%
-        dplyr::mutate(across(everything(), as.character)) %>%
-        nest_by(output, .key = "polygon") %>%
+    ) |>
+        dplyr::mutate(across(everything(), as.character)) |>
+        nest_by(output, .key = "polygon") |>
         mutate(polygon = jsonlite::unbox(polygon))
     jsonlite::toJSON(list(directory = jsonlite::unbox(folder), extracts = extracts),
-                     pretty = TRUE) %>%
+                     pretty = TRUE) |>
         silent_geojson_write(file = file.path(folder, "districts.json"))
 }
 
@@ -274,6 +277,134 @@ create_osm_district_roads <- function(districts, input_path, road_types = NULL,
     filter_all_osm_district_roads(districts, road_map, folder,
                                   districts_in_one_go = districts_in_one_go,
                                   verbose = verbose)
+}
+
+
+
+# reading osm via linnet -------------------------------------------------------
+
+# convert vertices and edges back to linnet
+# TODO: net$lines$marks are missing
+# TODO: network$lines$markformat are different
+graph_to_linnet <- function(vertices, edges, window) {
+    spatstat::linnet(
+        vertices = spatstat::as.ppp(cbind(vertices$x, vertices$y), W = window),
+        edges = cbind(edges$from, edges$to),
+        sparse = TRUE)
+}
+
+
+# converts sf geometry to columns
+# taken from https://github.com/r-spatial/sf/issues/231
+sfc_as_cols <- function(x, names = c("x","y")) {
+    stopifnot(inherits(x, "sf") && inherits(sf::st_geometry(x), "sfc_POINT"))
+    ret <- do.call(rbind, sf::st_geometry(x))
+    ret <- tibble::as_tibble(ret)
+    stopifnot(length(names) == ncol(ret))
+    ret <- setNames(ret,names)
+    dplyr::bind_cols(x,ret)
+}
+
+
+# function osmar_to_linnet() convets an osmar object obj to linnet; since osmar
+# is in WGS84, it must be projected
+#
+# inputs:
+# - obj ... osmar object
+# - crs ... a planary crs
+#
+# output:
+# - linnet
+osmar_to_linnet <- function(obj, crs) {
+    # check inputs
+    stopifnot(inherits(obj, "osmar"))
+    # get vertices, remove useless stuff, and reproject
+    vertices <- obj$nodes[[1]] |>  #  (taken from osmar::as_igraph())
+        dplyr::select(id, lat, lon) |>
+        sf::st_as_sf(coords = c("lon", "lat"), crs = wgs_projection) |>
+        sf::st_transform(crs = crs) |>
+        sfc_as_cols() |>
+        sf::st_drop_geometry()
+    # get edges (roads) and add reference to node row
+    edges <- obj$ways[[3]]   # (taken from osmar::as_igraph())
+    edges$vertex <- match(edges$ref, vertices$id)
+    # break edges to from--to pairs
+    edges <- edges |>
+        dplyr::group_by(id) |>
+        dplyr::mutate(from = vertex, to = lead(vertex)) |>
+        dplyr::filter(!is.na(to))
+    # convert to linnet
+    window <- c(range(vertices$x), range(vertices$y))
+    # linnet(vertices = as.ppp(cbind(vertices$x, vertices$y), W = window),
+    #        edges = cbind(edges$from, edges$to),
+    #        sparse = TRUE)
+    graph_to_linnet(vertices, edges, window)
+}
+
+
+# function read_osm() reads osm to osmar (which does the heavy lifting)
+#
+# inputs:
+# - path ... (character scalar) a path to a OSM file
+#
+# output:
+# - osmar object
+#
+# notes:
+# - it works only for non-compressed files (.osm)
+# - it works for small maps (up to a district) only
+read_osm <- function(path) {
+    osmar::get_osm(osmar::complete_file(), source = osmar::osmsource_file(path))
+}
+
+
+# function read_osm_to_linnet() read a prefiltered OSM file from path and
+# converts it to linnet; it is projected on the fly
+#
+# inputs:
+# - path ... (character scalar) a path to a OSM file
+# - crs ... a plannary projection
+#
+# output:
+# - linnet object
+#
+# notes:
+# - it works only for non-compressed files (.osm)
+# - it works for small maps (up to a district) only
+read_osm_to_linnet <- function(path, crs) {
+    # don't join with |> -- it creates a misterious warning
+    oo <- read_osm(path)
+    osmar_to_linnet(oo, crs = crs)
+}
+
+
+# read_osm_to_sfnetwork(path, crs) reads prefiltered .osm files and converts
+# them to sfnetwork
+#
+# inputs:
+# - path ... (character scalar) path to .osm file
+# - crs ... (numeric scalar) planary projection
+#
+# value:
+#   sfnetwork
+#
+# REASON for this function:
+#   .osm file can be read with sf:st_read() and then converted with
+#   as_sfnetwork(); however, this breaks the topology of the road network and it
+#   is splitted to many not-connected components; this function is a workaround
+#   around this problem: osmar and spatstat do the heavy-lifting
+#
+# TODO: vypisuje varování -- opravit
+# Warning messages:
+# 1: The `x` argument of `as_tibble.matrix()` must have unique column names if `.name_repair` is omitted as of tibble 2.0.0.
+# Using compatibility `.name_repair`.
+# This warning is displayed once every 8 hours.
+# Call `lifecycle::last_lifecycle_warnings()` to see where this warning was generated.
+# 2: Duplicated segments were ignored
+read_osm_to_sfnetwork <- function(path, crs) {
+    lnet <- read_osm_to_linnet(path, crs = crs)
+    sfnetworks::as_sfnetwork(lnet, directed = FALSE, edges_as_lines = TRUE) |>
+        sf::st_set_crs(crs)
 }
 
 
@@ -373,8 +504,8 @@ simplify_network_intersections <- function(sfnet, max_distance = 0.5) {
     return(sfnet)
     stopifnot(inherits(sfnet, "sfnetwork"))
     # retrieve the coordinates of the nodes
-    node_coords <-  sfnet %>%
-        activate("nodes") %>%
+    node_coords <-  sfnet |>
+        activate("nodes") |>
         st_coordinates()
     # cluster the nodes with the DBSCAN spatial clustering algorithm;
     # nodes within a distance of eps from each other will be in the same cluster;
@@ -384,10 +515,10 @@ simplify_network_intersections <- function(sfnet, max_distance = 0.5) {
     if (!any(duplicated(clusters)))
         return(sfnet)
     # contract the points
-    sfnet <- sfnet %>%
+    sfnet <- sfnet |>
         # add the cluster information to the nodes of the network
-        activate("nodes") %>%
-        mutate(cls = clusters) %>%
+        activate("nodes") |>
+        mutate(cls = clusters) |>
         # TODO: the following is probably insufficient---I want to contract only
         #   point that are directly connected by an edge!
         # they should also be connected; two nodes that are close to each other
@@ -732,15 +863,16 @@ plot_out_of_major_component <- function(net, col = "red", lwd = 2) {
 # tests ------------------------------------------------------------------------
 
 if (FALSE) {
-    library(readr)
-    brno <- read_rds("guts/data/maps/district_40711.rds")
+    # library(readr)
+    # brno <- read_rds("guts/data/maps/district_40711.rds")
 
-    library(osmar)
-    library(spatstat)
-    brno <- read_osm_to_linnet("guts/data/maps/district_40711.osm",
-                               crs = planary_projection)
-    brno_net <- as_sfnetwork(brno, directed = FALSE, edges_as_lines = TRUE) |>
-        st_set_crs(planary_projection)
+    # brno <- read_osm_to_linnet("guts/data/maps/district_40711.osm",
+    #                            crs = planary_projection)
+    # brno_net <- as_sfnetwork(brno, directed = FALSE, edges_as_lines = TRUE) |>
+    #     st_set_crs(planary_projection)
+
+    brno_net <- read_osm_to_sfnetwork("guts/data/maps/district_40711.osm",
+                                      crs = planary_projection)
     brno <- brno_net |> activate("edges") |> st_as_sf()
 
     system.time(brno_nb <- brno |> create_sf_nb())
