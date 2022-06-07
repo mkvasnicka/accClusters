@@ -20,6 +20,7 @@ require(spNetwork)
 require(geojsonio)
 require(jsonlite)
 require(spdep)
+require(igraph)
 
 
 
@@ -618,6 +619,28 @@ not_connected_segments <- function(nb) {
 }
 
 
+# sfnetwork_components(net) accepts sfnetwork net and returns vector; each
+# element of the vector corresponds to one node in the net; it is id (integer
+# number) of component to which the node belongs to
+#
+# inputs:
+# - net ... (sfnetwork) a line network
+#
+# value:
+#   integer vector corresponding to the nodes in net; the nodes with the same
+#   number constitute one component of the network
+sfnetwork_components <- function(net) {
+    net |>
+        sfnetworks::activate("edges") |>
+        dplyr::select(from, to) |>
+        tibble::as_tibble() |>
+        sf::st_drop_geometry() |>
+        as.matrix() |>
+        igraph::graph_from_edgelist(directed = FALSE) |>
+        igraph::components() |>
+        purrr::pluck("membership")
+}
+
 
 # test maps --------------------------------------------------------------------
 
@@ -667,14 +690,43 @@ test_sf_maps <- function(districts, sf_maps_dir) {
 #   plot_not_connected_segments(brno, col = "green") +
 #       plot_not_connected_segments(brno_simplified, col = "red)
 plot_not_connected_segments <- function(sf, col = "red", lwd = 3) {
-    # if (inherits(sf, "sfnetwork"))
-    #     sf <- sf |> activate("edges") |> sf::st_as_sf()
-    # nb <- create_sf_nb(sf)
-    # idx <- not_connected_segments(nb)
     idx <- not_connected_segments(sf)
     tmap::tm_shape(sf) + tmap::tm_lines() +
         tmap::tm_shape(sf[idx, ]) + tmap::tm_lines(col = col, lwd = lwd)
 }
+
+
+# plot_out_of_major_component(sf, col, lwd) plots sf network and shows edges
+# that are not part of the major comonent
+#
+# inputs:
+# - net ... (sf or sfnetwork) lines of a network
+# - col ... (character scaler of color) color used to visualize edges that are
+#   disconnected from the major component
+# - lwd ... (numeric scaler) line width  used to visualize edges that are
+#   disconnected from the major component
+#
+# value:
+#   tmap plot; if printed, it is plotted
+plot_out_of_major_component <- function(net, col = "red", lwd = 2) {
+    if (inherits(net, "sf"))
+        net <- sfnetworks::as_sfnetwork(net, directed = FALSE)
+    stopifnot(inherits(net, "sfnetwork"))
+    cls <- sfnetwork_components(net)
+    largest <- cls |>
+        table() |>
+        sort(decreasing = TRUE) |>
+        names() |>
+        pluck(1) |>
+        as.integer()
+    nodes <- which(cls == largest)
+    sf <- net |> activate("edges") |> st_as_sf()
+    tmap::tm_shape(sf) + tmap::tm_lines() +
+        tmap::tm_shape(dplyr::filter(sf, !(from %in% nodes | from %in% nodes))) +
+        tmap::tm_lines(col = col, lwd = lwd)
+
+}
+
 
 
 # tests ------------------------------------------------------------------------
@@ -682,10 +734,21 @@ plot_not_connected_segments <- function(sf, col = "red", lwd = 3) {
 if (FALSE) {
     library(readr)
     brno <- read_rds("guts/data/maps/district_40711.rds")
+
+    library(osmar)
+    library(spatstat)
+    brno <- read_osm_to_linnet("guts/data/maps/district_40711.osm",
+                               crs = planary_projection)
+    brno_net <- as_sfnetwork(brno, directed = FALSE, edges_as_lines = TRUE) |>
+        st_set_crs(planary_projection)
+    brno <- brno_net |> activate("edges") |> st_as_sf()
+
     system.time(brno_nb <- brno |> create_sf_nb())
     system.time(idx <- not_connected_segments(brno_nb))
     sum(idx)
+
     library(tmap)
     tmap_mode("view")
     plot_not_connected_segments(brno)
+    plot_out_of_major_component(brno_net)
 }
