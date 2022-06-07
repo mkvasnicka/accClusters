@@ -19,6 +19,7 @@ require(sfnetworks)
 require(spNetwork)
 require(geojsonio)
 require(jsonlite)
+require(spdep)
 
 
 
@@ -512,6 +513,7 @@ create_lixelized_roads <- function(districts, input_folder, output_folder,
                                                    lx_length = lx_length,
                                                    mindist = mindist,
                                                    chunk_size = chunk_size)
+        lixels$len <- sf::st_length(lixels)
         write_dir_rds(lixels, output_path)
     }
 
@@ -561,6 +563,62 @@ create_lixel_samples_for_roads <- function(districts,
 
 
 
+# convert maps into nb ---------------------------------------------------------
+
+# create_sf_nb(sf) converts sf tibble of lines (or edges of sfnetwork) into
+# spdep::nb
+#
+# inputs:
+# - sf ... (sf of lines or sfnetwork)
+#
+# value:
+#   nb, i.e., a list with one slot for each line/edge in sf (in their order);
+#   each slot contains the rows of lines/edges that touch the line, i.e., are
+#   its neighbors in the network
+#
+# notes:
+# - the algorithm is taken from
+#   https://stackoverflow.com/questions/62119516/generate-neighbour-list-object-for-spatial-lines-in-r
+# - it is imperfect because it uses sf lines, not the true topology of the
+#   networkt (however, it is blazingly fast)
+create_sf_nb <- function(sf) {
+    stopifnot(inherits(sf, "sf") || inherits(sf, "sfnetwork"))
+
+        # define ad-hoc function to translate sgbp into nb (as documented in
+    # https://r-spatial.github.io/spdep/articles/nb_sf.html#creating-neighbours-using-sf-objects)
+    as.nb.sgbp <- function(x) {
+        attrs <- attributes(x)
+        x <- lapply(x, function(i) {if (length(i) == 0L) 0L else i} )
+        attributes(x) <- attrs
+        class(x) <- "nb"
+        x
+    }
+
+    if (inherits(sf, "sfnetwork"))
+        sf <- sf |> activate("edges") |> sf::st_as_sf()
+    net <- sf::st_touches(sf)
+    as.nb.sgbp(net)
+}
+
+
+# not_connected_segments(nb) returns logical values for each segment of a sf
+# network that is TRUE if the edge is connected to no other edge, and FALSE
+# otherwise
+#
+# inputs:
+# - nb ... (sf, sfnetwork, or spdep::nb) network
+#
+# value:
+#   logical vector, see above
+not_connected_segments <- function(nb) {
+    if (inherits(nb, "sf") || inherits(nb, "sfnetwork"))
+        nb <- create_sf_nb(nb)
+    stopifnot(inherits(nb, "nb"))
+    purrr::map_lgl(nb, ~(0 %in% .))
+}
+
+
+
 # test maps --------------------------------------------------------------------
 
 # test_sf_maps(districts, sf_maps_dir) returns some basic statistics about the
@@ -590,4 +648,44 @@ test_sf_maps <- function(districts, sf_maps_dir) {
     paths <- file.path(sf_maps_dir, districts$sf_file_name)
     tab <- purrr::map_dfr(paths, one_file)
     dplyr::bind_cols(districts, tab)
+}
+
+# plot_not_connected_segments(sf, col, lwd) plots sf network and shows edges
+# that are not connected to any other edge (this criteria is very weak)
+#
+# inputs:
+# - sf ... (sf or sfnetwork) lines of a network
+# - col ... (character scaler of color) color used to visualize not connected
+#   edges
+# - lwd ... (numeric scaler) line width  used to visualize not connected edges
+#
+# value:
+#   tmap plot; if printed, it is plotted, but it can be connected with `+` with
+#   other tmap plots
+#
+# usage:
+#   plot_not_connected_segments(brno, col = "green") +
+#       plot_not_connected_segments(brno_simplified, col = "red)
+plot_not_connected_segments <- function(sf, col = "red", lwd = 3) {
+    # if (inherits(sf, "sfnetwork"))
+    #     sf <- sf |> activate("edges") |> sf::st_as_sf()
+    # nb <- create_sf_nb(sf)
+    # idx <- not_connected_segments(nb)
+    idx <- not_connected_segments(sf)
+    tmap::tm_shape(sf) + tmap::tm_lines() +
+        tmap::tm_shape(sf[idx, ]) + tmap::tm_lines(col = col, lwd = lwd)
+}
+
+
+# tests ------------------------------------------------------------------------
+
+if (FALSE) {
+    library(readr)
+    brno <- read_rds("guts/data/maps/district_40711.rds")
+    system.time(brno_nb <- brno |> create_sf_nb())
+    system.time(idx <- not_connected_segments(brno_nb))
+    sum(idx)
+    library(tmap)
+    tmap_mode("view")
+    plot_not_connected_segments(brno)
 }
