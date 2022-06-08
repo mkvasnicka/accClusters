@@ -531,8 +531,8 @@ simplify_network_intersections <- function(sfnet, max_distance = 0.5) {
 }
 
 
-# simplify_sf(sf, max_distance = 0.5, dTolerance = 5) simplifies road sf tibble;
-# it does three things (in this order):
+# simplify_sfnetwork(net, max_distance = 0.5, dTolerance = 5) simplifies road
+# sfnetwork; it does three things (in this order):
 # 1. it removes pseudo-points, i.e., points of degree two, i.e., points where
 #   just one edge goes into and just one edge gout out of the point
 # 2. it joins the points that are too close (max_distance) to each other if they
@@ -542,7 +542,7 @@ simplify_network_intersections <- function(sfnet, max_distance = 0.5) {
 #   the new line than dTolerance meters
 #
 # inputs:
-# - sf ... (projected sf tibble of lines) road network
+# - sf ... (projected sfnetwork) road network
 # - max_distance ... (numeric scalar) maximal distance of connected points
 #   which should be replace a new point (see step 2)
 # - dTolerance ... (numeric scalar) maximal distance between a new line and
@@ -552,14 +552,9 @@ simplify_network_intersections <- function(sfnet, max_distance = 0.5) {
 #   projected sf; its lines are simplified, the network topology is preserved
 #
 # WARNIG: step 2 is not implemented yet
-simplify_sf <- function(sf, max_distance = 0.5, dTolerance = 5) {
-    # TODO: opravit funkci a odstranit následující řádek
-    return(sf)
-    stopifnot(inherits(sf, "sf"))
-    # convert to sfnetwork
-    sfnet <- sfnetworks::as_sfnetwork(sf)
-    # start simplification
-    sfnet <- sfnet |>
+simplify_sfnetwork <- function(net, max_distance = 0.5, dTolerance = 5) {
+    stopifnot(inherits(net, "sfnetwork"))
+    net |>
         # remove pseudo points, i.e., points that are not nodes of the
         # graph/network
         remove_network_pseudo_points() |>
@@ -567,8 +562,6 @@ simplify_sf <- function(sf, max_distance = 0.5, dTolerance = 5) {
         simplify_network_intersections(max_distance = max_distance) |>
         # simplify the roads, i.e., straingten the roads;
         straigthen_network_roads(dTolerance = dTolerance)
-    # convert back to sf
-    sfnet |> sfnetworks::activate("edges") |> sf::st_as_sf()
 }
 
 
@@ -589,6 +582,7 @@ simplify_sf <- function(sf, max_distance = 0.5, dTolerance = 5) {
 #   which should be replace a new point (see step 2)
 # - dTolerance ... (numeric scalar) maximal distance between a new line and
 #   and any point in a linestring (see step 3)
+# - workers ... (integer scalar) how many cores should be used in parallel
 #
 # outputs:
 #   none; files are written to output_folder
@@ -598,7 +592,8 @@ simplify_sf <- function(sf, max_distance = 0.5, dTolerance = 5) {
 #   read_osm_to_sfnetwork()
 create_sf_district_roads <- function(districts, input_folder, output_folder,
                                      crs,
-                                     max_distance = 0.5, dTolerance = 5) {
+                                     max_distance = 0.5, dTolerance = 5,
+                                     workers = 1) {
     one_file <- function(osm_file_name, sf_file_name,
                          input_folder, output_folder) {
         input <- file.path(input_folder, osm_file_name)
@@ -608,16 +603,18 @@ create_sf_district_roads <- function(districts, input_folder, output_folder,
         #     select(-c(waterway, aerialway, barrier, man_made)) |>
         #     simplify_sf(max_distance = max_distance, dTolerance = dTolerance)
         map <- read_osm_to_sfnetwork(input, crs = crs) |>
-            simplify_sf(max_distance = max_distance, dTolerance = dTolerance)
+            remove_sfnetwork_minor_components() |>
+            simplify_sfnetwork(max_distance = max_distance,
+                               dTolerance = dTolerance)
         write_dir_rds(map, output)
     }
     districts |>
         dplyr::select(osm_file_name, sf_file_name) |>
         sf::st_drop_geometry() |>
-        purrr::pwalk(one_file,
-                     input_folder = input_folder,
-                     output_folder = output_folder)
-    # one_file("guts/data/maps/district_40711.osm", xxx)
+        PWALK(one_file,
+              workers = workers,
+              input_folder = input_folder,
+              output_folder = output_folder)
 }
 
 
@@ -786,14 +783,15 @@ sfnetwork_components <- function(net) {
 }
 
 
-# remove_minor_components(net) removes all minor components from the network
+# remove_sfnetwork_minor_components(net) removes all minor components from the
+# network
 #
 # inputs:
 # - net ... (sfnetwork) road network
 #
 # value:
 #   sfnetwork consisting of the major component of net
-remove_minor_components <- function(net) {
+remove_sfnetwork_minor_components <- function(net) {
     stopifnot(inherits(net, "sfnetwork"))
     cls <- sfnetwork_components(net)
     largest <- cls |>
