@@ -11,6 +11,12 @@ Pro všechny okresy:
 Funkce:
 - SF silnice v .rds jsou nově sfnetworks -- tomu se bude muset přizpůsobit kód, který na tom staví
 - vyřešit spojování blízkých bodů v sfnetworks
+    - problém:
+        - buď vyhodím nahrazené cesty, ale to vyhodí i všechny smyčky v síti,
+        - nebo nevyhodím smyčky, ale zůstanou tam i původní silnice
+    - dělá to parametr simplify na řádku
+        tidygraph::convert(sfnet, sfnetworks::to_spatial_contracted, cls, cmp,
+                           simplify = FALSE)
 - zrychlit hledání klastrů hotspotů na sf/sfnetworks/spNetwork
 - všude přidat parametr verbose a jeho vypisování
 - CRS všude vytahat z funkcí do jejich interface -- tam použít konstatny
@@ -23,8 +29,3 @@ V současnosti se natahují jen soupce z tabulky nehody a z GPS se doplní souř
 - doplnit ostatní sloupce, které budou potřeba
 - vyhodit sloupce, které nejsou potřeba
 - jak počítat závažnost nehody?
-
-
-Otázky
-------
-- jak nejlíp najít sousední edges v sfnetworks?
