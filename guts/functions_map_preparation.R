@@ -786,6 +786,32 @@ sfnetwork_components <- function(net) {
 }
 
 
+# remove_minor_components(net) removes all minor components from the network
+#
+# inputs:
+# - net ... (sfnetwork) road network
+#
+# value:
+#   sfnetwork consisting of the major component of net
+remove_minor_components <- function(net) {
+    stopifnot(inherits(net, "sfnetwork"))
+    cls <- sfnetwork_components(net)
+    largest <- cls |>
+        table() |>
+        sort(decreasing = TRUE) |>
+        names() |>
+        purrr::pluck(1) |>
+        as.integer()
+    nodes <- which(cls == largest)
+    net |>
+        activate("edges") |>
+        dplyr::filter(from %in% nodes | from %in% nodes) |>
+        activate("nodes") |>
+        filter(!node_is_isolated())
+}
+
+
+
 # test maps --------------------------------------------------------------------
 
 # test_sf_maps(districts, sf_maps_dir) returns some basic statistics about the
@@ -865,10 +891,11 @@ plot_out_of_major_component <- function(net, col = "red", lwd = 2) {
         as.integer()
     nodes <- which(cls == largest)
     sf <- net |> activate("edges") |> st_as_sf()
-    tmap::tm_shape(sf) + tmap::tm_lines() +
-        tmap::tm_shape(dplyr::filter(sf, !(from %in% nodes | from %in% nodes))) +
-        tmap::tm_lines(col = col, lwd = lwd)
-
+    plt <- tmap::tm_shape(sf) + tmap::tm_lines()
+    sf <- dplyr::filter(sf, !(from %in% nodes | from %in% nodes))
+    if (nrow(sf) > 0)
+        plt <- plt + tmap::tm_shape(sf) + tmap::tm_lines(col = col, lwd = lwd)
+    plt
 }
 
 
