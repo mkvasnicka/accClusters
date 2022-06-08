@@ -897,6 +897,40 @@ plot_out_of_major_component <- function(net, col = "red", lwd = 2) {
 }
 
 
+# test_roads() test processed sfnetwork roads
+#
+# inputs:
+# - districts ... (sf tibble) districts
+# - number ... (integer scalar) which district to review
+# - base_path ... (character scalar)
+test_roads <- function(districts, number, base_path = SF_MAPS_DIR) {
+    dn <- districts$district_name[number]
+    di <- districts$district_id[number]
+    cat("District", dn, ", id", di, "\n")
+
+    path <- file.path(base_path, districts$sf_file_name[number])
+    net <- read_rds(path)
+    cmp <- sfnetwork_components(net) |> table() |> sort(decreasing = TRUE)
+    cat("Number of components:", length(cmp), "\n")
+    if (length(cmp) > 1)
+        cat("Components: ", cmp, "\n")
+
+    len <- net |> activate("edges") |> st_length() |> as.numeric()
+    mlen <- sum(len < 1)
+    cat("Number of lines shorter than 1 meter:", mlen, "\n")
+    if (mlen > 0) {
+        cat("Short lenghts are", sort(len[len < 1]), "\n")
+        sf <- net |> activate("edges") |> st_as_sf()
+        tmm <- tmap::tmap_mode()
+        tmap::tmap_mode("view")
+        plt <- tm_shape(sf) + tm_lines() +
+            tm_shape(sf[len < 1, ]) + tm_lines(col = "red", lwd = 3)
+        print(plt)
+        tmap::tmap_mode(tmm)
+    }
+}
+
+
 
 # tests ------------------------------------------------------------------------
 
@@ -921,4 +955,6 @@ if (FALSE) {
     tmap_mode("view")
     # plot_not_connected_segments(brno)
     plot_out_of_major_component(brno_net)
+
+    test_roads("guts/data/maps/district_40711.rds")
 }
