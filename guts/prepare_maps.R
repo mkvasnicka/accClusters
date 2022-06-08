@@ -40,7 +40,7 @@ if (is_behind(file.path(SF_MAPS_DIR, districts$sf_file_name),
               c(file.path(OSM_MAPS_DIR, districts$osm_file_name),
                 PATH_TO_DISTRICTS))) {
     create_sf_district_roads(districts, OSM_MAPS_DIR, SF_MAPS_DIR,
-                             crs = planary_projection,
+                             crs = PLANARY_PROJECTION,
                              workers = NO_OF_WORKERS)
 }
 

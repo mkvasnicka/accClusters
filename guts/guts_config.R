@@ -18,8 +18,8 @@ NO_OF_WORKERS <- future::availableCores()
 # constants --------------------------------------------------------------------
 
 # projections
-planary_projection <- 5514  # Křovák
-wgs_projection <- 4326  # WGS84
+PLANARY_PROJECTION <- 5514  # Křovák
+WGS84 <- 4326  # WGS84
 
 
 # district map creating

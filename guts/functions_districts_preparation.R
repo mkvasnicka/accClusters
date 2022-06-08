@@ -57,7 +57,7 @@ read_arccr_districts <- function(path_to_districts, layer = "OkresyPolygony") {
                           glue("lixel_sample_{district_id}.rds"),
                       accidents_file_name =
                           glue("accidents_{district_id}.rds")) |>
-        sf::st_transform(crs = planary_projection) |>
+        sf::st_transform(crs = PLANARY_PROJECTION) |>
         add_class("districts")
 }
 

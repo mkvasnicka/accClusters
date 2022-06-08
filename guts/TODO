@@ -9,11 +9,11 @@ Pro všechny okresy:
 - spustit kontrolu, o které psal Gelb
 
 Funkce:
-- zjistit, proč se kazí simplifikace -- a jestli se to děje po načtení přes linnet (teď je simplifikace vypnutá)
 - SF silnice v .rds jsou nově sfnetworks -- tomu se bude muset přizpůsobit kód, který na tom staví
 - vyřešit spojování blízkých bodů v sfnetworks
 - zrychlit hledání klastrů hotspotů na sf/sfnetworks/spNetwork
 - všude přidat parametr verbose a jeho vypisování
+- CRS všude vytahat z funkcí do jejich interface -- tam použít konstatny
 
 
 Nehody

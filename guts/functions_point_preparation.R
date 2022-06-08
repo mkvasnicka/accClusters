@@ -162,7 +162,7 @@ read_raw_accidents <- function(folder, skip = 6) {
             dplyr::filter(!is.na(coord_x), !is.na(coord_y)) |>
             dplyr::distinct() |>
             sf::st_as_sf(coords = c("coord_x", "coord_y"),
-                         crs = planary_projection)
+                         crs = PLANARY_PROJECTION)
 
     }
 

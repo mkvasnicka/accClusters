@@ -55,9 +55,9 @@ write_one_district_geojson <- function(district, buffer_size, folder, pb) {
     output_path <- file.path(folder,
                              glue("district_{district$district_id}.geojson"))
     district |>
-        sf::st_transform(crs = planary_projection) |>
+        sf::st_transform(crs = PLANARY_PROJECTION) |>
         sf::st_buffer(dist = buffer_size) |>
-        sf::st_transform(crs = wgs_projection) |>
+        sf::st_transform(crs = WGS84) |>
         silent_geojson_write(file = output_path)
     if (!is.null(pb))
         pb$tick(1)
@@ -322,7 +322,7 @@ osmar_to_linnet <- function(obj, crs) {
     # get vertices, remove useless stuff, and reproject
     vertices <- obj$nodes[[1]] |>  #  (taken from osmar::as_igraph())
         dplyr::select(id, lat, lon) |>
-        sf::st_as_sf(coords = c("lon", "lat"), crs = wgs_projection) |>
+        sf::st_as_sf(coords = c("lon", "lat"), crs = WGS84) |>
         sf::st_transform(crs = crs) |>
         sfc_as_cols() |>
         sf::st_drop_geometry()
@@ -667,7 +667,7 @@ create_sf_district_roads <- function(districts, input_folder, output_folder,
         input <- file.path(input_folder, osm_file_name)
         output <- file.path(output_folder, sf_file_name)
         # map <- sf::st_read(input, layer = "lines") |>
-        #     st_transform(crs = planary_projection) |>
+        #     st_transform(crs = PLANARY_PROJECTION) |>
         #     select(-c(waterway, aerialway, barrier, man_made)) |>
         #     simplify_sf(max_distance = max_distance, dTolerance = dTolerance)
         map <- read_osm_to_sfnetwork(input, crs = crs) |>
@@ -1007,12 +1007,12 @@ if (FALSE) {
     # brno <- read_rds("guts/data/maps/district_40711.rds")
 
     # brno <- read_osm_to_linnet("guts/data/maps/district_40711.osm",
-    #                            crs = planary_projection)
+    #                            crs = PLANARY_PROJECTION)
     # brno_net <- as_sfnetwork(brno, directed = FALSE, edges_as_lines = TRUE) |>
-    #     st_set_crs(planary_projection)
+    #     st_set_crs(PLANARY_PROJECTION)
 
     brno_net <- read_osm_to_sfnetwork("guts/data/maps/district_40711.osm",
-                                      crs = planary_projection)
+                                      crs = PLANARY_PROJECTION)
     brno <- brno_net |> activate("edges") |> st_as_sf()
 
     system.time(brno_nb <- brno |> create_sf_nb())
