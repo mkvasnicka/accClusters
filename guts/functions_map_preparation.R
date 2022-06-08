@@ -456,8 +456,7 @@ straigthen_network_roads <- function(sfnet, dTolerance = 5) {
 # usage:
 # sfnet <- simplify_network_intersections(sfnet, max_distance = 5)
 #
-# WARNING: This function may introduce "lifts in mixmasters", i.e., it may
-# connect off-grade intersection that were not previously connected.
+# WARNING: This function doesn't work.
 # Therefore, the function is temporarily switched off.
 #
 # A test examples:
@@ -501,34 +500,103 @@ straigthen_network_roads <- function(sfnet, dTolerance = 5) {
 # plot(st_geometry(net2, "nodes"), pch = 20, cex = 2, add = TRUE)
 #
 simplify_network_intersections <- function(sfnet, max_distance = 0.5) {
+
     # TODO: remove the following line as soon as the function is improved
     return(sfnet)
+
     stopifnot(inherits(sfnet, "sfnetwork"))
+
+    # for each cluster, it gets all components of graph that consists of nodes
+    # in the cluster and their direct connections in the sfnetwork edges; the
+    # relationship is transitive
+    get_cluster_components <- function(sfnet, clusters) {
+        # checks that i and j are connected by an edge in cons; cons is tibble
+        # with from and to columns
+        connected <- function(cons, i, j) {
+            (any(cons$to[cons$from == i] == j) ||
+                any(cons$to[cons$from == j] == i)) &&
+                min(c(cons$len[cons$from == i & cons$to == j],
+                      cons$len[cons$from == j & cons$to == i])) <= max_distance
+        }
+
+        # computes components of graph consisting of points in a cluster; cons
+        # is tibble with from and to columns; ii is a integer vector of nodes in
+        # a cluster
+        components <- function(cons, ii) {
+            # all combinations of nodes in a cluster; drop not-connected
+            # combinations
+            cmbs <- t(combn(ii, 2))
+            cc <- purrr::map_lgl(seq_len(nrow(cmbs)),
+                                 ~connected(cons, cmbs[., 1], cmbs[., 2]))
+            cmbs <- cmbs[cc, , drop = FALSE]
+            # add the nodes that have been dropped---connect them to themselves
+            out <- setdiff(ii, unique(as.numeric(cmbs)))
+            out <- rep(out, each = 2) |> matrix(ncol = 2, byrow = TRUE)
+            cmbs <- rbind(cmbs, out)
+            # convert to characters (otherwise igraph adds many non-existent
+            # nodes)
+            cmbs <- as.character(cmbs) |> matrix(ncol = 2)
+            # convert to graph and find its components
+            gg <- igraph::graph_from_edgelist(cmbs, directed = FALSE)
+            res <- igraph::components(gg)$membership
+            as.integer(res[order(as.integer(names(res)))])
+        }
+
+        # get table of connections
+        cons <- sfnet |>
+            tidygraph::activate("edges") |>
+            mutate(len = as.numeric(sfnetworks::edge_length())) |>
+            tibble::as_tibble() |>
+            sf::st_drop_geometry() |>
+            dplyr::select(from, to, len)
+
+        # ids of reals clusters, i.e., clusters with at least two nodes
+        cls <- clusters[duplicated(clusters)] |> unique()
+
+        # components vector; everything is one component at the beginning
+        cmp <- purrr::rep_along(clusters, 1)
+        # for each cluster, update components
+        for (k in seq_along(cls)) {
+            ii <- which(clusters == cls[k])
+            cmp[ii] <- components(cons, ii)
+        }
+
+        # return
+        cmp
+    }
+
     # retrieve the coordinates of the nodes
     node_coords <-  sfnet |>
-        activate("nodes") |>
-        st_coordinates()
-    # cluster the nodes with the DBSCAN spatial clustering algorithm;
-    # nodes within a distance of eps from each other will be in the same cluster;
-    # a node is assigned a cluster even if it is the only member of that cluster
-    clusters <- dbscan(node_coords, eps = max_distance, minPts = 1)$cluster
+        tidygraph::activate("nodes") |>
+        sf::st_coordinates()
+    # cluster the nodes with the DBSCAN spatial clustering algorithm; nodes
+    # within a distance of eps from each other will be in the same cluster; a
+    # node is assigned a cluster even if it is the only member of that cluster
+    clusters <- dbscan::dbscan(node_coords, eps = max_distance,
+                               minPts = 1)$cluster
     # if there are no close points, return the input sfnet
     if (!any(duplicated(clusters)))
         return(sfnet)
     # contract the points
     sfnet <- sfnet |>
         # add the cluster information to the nodes of the network
-        activate("nodes") |>
-        mutate(cls = clusters) |>
-        # TODO: the following is probably insufficient---I want to contract only
-        #   point that are directly connected by an edge!
-        # they should also be connected; two nodes that are close to each other
-        # but not connected, can never be part of the same intersection
-        mutate(cmp = group_components())
+        tidygraph::activate("nodes") |>
+        dplyr::mutate(cls = clusters) |>
+        # the sfnetwork vignette uses  mutate(cmp = group_components()), which
+        # is insufficient---I want to contract only point that are
+        # directly connected by an edge! they should also be connected; two
+        # nodes that are close to each other but not connected, can never be
+        # part of the same intersection
+        dplyr::mutate(cmp = get_cluster_components(sfnet, clusters))
     # the combination of the cluster index and the component index can now be
     # used to define the groups of nodes to be contracted
-    convert(sfnet, to_spatial_contracted, cls, cmp, simplify = TRUE)
+    # TODO: problém: simplify = FALSE tam nechá i hrany, které má odstranit;
+    #   simplify = TRUE ale odstraní i všechy smyčky (loops), což je problém!
+    tidygraph::convert(sfnet, sfnetworks::to_spatial_contracted, cls, cmp,
+                       simplify = FALSE)
 }
+
+
 
 
 # simplify_sfnetwork(net, max_distance = 0.5, dTolerance = 5) simplifies road
@@ -903,10 +971,10 @@ plot_out_of_major_component <- function(net, col = "red", lwd = 2) {
 # - districts ... (sf tibble) districts
 # - number ... (integer scalar) which district to review
 # - base_path ... (character scalar)
-test_roads <- function(districts, number, base_path = SF_MAPS_DIR) {
+test_roads <- function(districts, number, max_len = 1, base_path = SF_MAPS_DIR) {
     dn <- districts$district_name[number]
     di <- districts$district_id[number]
-    cat("District", dn, ", id", di, "\n")
+    cat("District", dn, "-- id", di, "\n")
 
     path <- file.path(base_path, districts$sf_file_name[number])
     net <- read_rds(path)
@@ -916,15 +984,15 @@ test_roads <- function(districts, number, base_path = SF_MAPS_DIR) {
         cat("Components: ", cmp, "\n")
 
     len <- net |> activate("edges") |> st_length() |> as.numeric()
-    mlen <- sum(len < 1)
-    cat("Number of lines shorter than 1 meter:", mlen, "\n")
+    mlen <- sum(len < max_len)
+    cat("Number of lines shorter than", max_len, "meter(s):", mlen, "\n")
     if (mlen > 0) {
-        cat("Short lenghts are", sort(len[len < 1]), "\n")
+        cat("Short lenghts are", sort(len[len < max_len]), "\n")
         sf <- net |> activate("edges") |> st_as_sf()
         tmm <- tmap::tmap_mode()
         tmap::tmap_mode("view")
         plt <- tm_shape(sf) + tm_lines() +
-            tm_shape(sf[len < 1, ]) + tm_lines(col = "red", lwd = 3)
+            tm_shape(sf[len < max_len, ]) + tm_lines(col = "red", lwd = 3)
         print(plt)
         tmap::tmap_mode(tmm)
     }
@@ -957,4 +1025,21 @@ if (FALSE) {
     plot_out_of_major_component(brno_net)
 
     test_roads("guts/data/maps/district_40711.rds")
+
+
+    library(readr)
+    brno <- read_rds("guts/data/maps/district_40711.rds")
+    brno_simp <- brno |> simplify_network_intersections(max_distance = 3)
+    sf <- brno |> activate("edges") |> st_as_sf()
+    sf <- sf |> mutate(len = st_length(sf))
+    sf_simp <- brno_simp |> activate("edges") |> st_as_sf()
+    sf_simp <- sf_simp |> mutate(len = st_length(sf_simp))
+    sfx <- sf |> filter(as.numeric(len) <= 3)
+
+    tmap_mode("view")
+    tm_shape(sf) + tm_lines() +
+        tm_shape(sf_simp) + tm_lines(col = "green") +
+        tm_shape(sfx) + tm_lines(col = "red", lwd = 3)
+
+
 }
