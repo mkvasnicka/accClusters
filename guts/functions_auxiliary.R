@@ -84,7 +84,8 @@ PWALK <- function(.l, .f, workers = 1, ...) {
     } else {
         oplan <- future::plan()
         future::plan("multisession", workers = workers)
-        furrr::future_pwalk(.l, .f, ...)
+        furrr::future_pwalk(.l, .f, ...,
+                            .options = furrr::furrr_options(seed = TRUE))
         future::plan(oplan)
     }
 }
