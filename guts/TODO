@@ -20,6 +20,9 @@ Funkce:
 - zrychlit hledání klastrů hotspotů na sf/sfnetworks/spNetwork
 - CRS všude vytahat z funkcí do jejich interface -- tam použít konstatny
 
+Tvorba OSM
+- osmium nechce pokračovat, když soubory .osm existují -- na začátku funkce, která je má vytvořit, je třeba je vymazat
+
 
 Nehody
 ------
