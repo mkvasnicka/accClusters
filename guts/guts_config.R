@@ -89,3 +89,6 @@ LIXEL_MAPS_DIR <- file.path(DATA_DIR, "lixels")
 
 # paths to accidents data by districts
 ACCIDENTS_DIR <- file.path(DATA_DIR, "accidents")
+
+# path to NKDEs by districts
+DENSITIES_DIR <- file.path(DATA_DIR, "densities")

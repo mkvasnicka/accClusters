@@ -35,3 +35,4 @@ Všude
 -----
 
 - počet workers vzít z get_number_of_workers()
+- odstranit jména souborů z tabulky districts a všude, kde se na to odkazuje, a nahradit to funkcemi, které budou používat id z districts

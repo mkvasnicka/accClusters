@@ -1,0 +1,62 @@
+# -------------------------------------
+# Script:   functions_hotspots_preparation.R
+# Author:   Michal Kvasnička
+# Purpose:
+# Inputs:
+# Outputs:
+# Notes:
+#
+# Copyright(c) Michal Kvasnička
+# -------------------------------------
+
+require(spNetwork)
+require(readr)
+require(tibble)
+
+
+compute_densities <- function(districts,
+                              maps_dir, lixel_dir, sample_dir, accidents_dir,
+                              density_dir,
+                              weights = NULL, bw = 300,
+                              adaptive = FALSE, trim_bw = 600,
+                              method = "discontinuous", agg = 1,
+                              workers = NULL) {
+  one_district <- function(map_path, lixel_path, sample_path, accidents_path,
+                           density_path,
+                           weights, bw, adaptive, trim_bw, method, agg) {
+    map <- readr::read_rds(map_path) |>
+        sfnetworks::activate("edges") |>
+        sf::st_as_sf()
+    lixels <- readr::read_rds(lixel_path)
+    samples <- readr::read_rds(sample_path)
+    accidents <- readr::read_rds(accidents_path)
+    if (is.null(weights))
+        weights <- rep(1,nrow(accidents))
+    densities <- spNetwork::nkde(map,
+                                 events = accidents,
+                                 w = weights,
+                                 samples = samples,
+                                 kernel_name = "quartic",
+                                 bw = bw, div = "bw",
+                                 adaptive = adaptive,
+                                 trim_bw = trim_bw,
+                                 method = method, digits = 1, tol = 1,
+                                 grid_shape = c(10,10), max_depth = 10,
+                                 agg = agg,
+                                 sparse = TRUE,
+                                 verbose = TRUE)
+    lixels$density <- densities
+    write_dir_rds(lixels, density_path)
+  }
+
+  tab <- tibble::tibble(
+      map_path = file.path(maps_dir, districts$sf_file_name),
+      lixel_path = file.path(lixel_dir, districts$lixel_file_name),
+      sample_path = file.path(sample_dir, districts$lixel_sample_file_name),
+      accidents_path = file.path(accidents_dir, districts$accidents_file_name),
+      density_path = file.path(density_dir, districts$densities_file_name)
+  )
+  PWALK(tab, one_district, workers = get_number_of_workers(workers),
+        weights = weights, bw = bw, adaptive = adaptive, trim_bw = trim_bw,
+        method = method, agg = agg)
+}
