@@ -708,44 +708,50 @@ create_sf_district_roads <- function(districts, input_folder, output_folder,
 #
 # value:
 #   none; files are writen to disk
-create_lixelized_roads <- function(districts, input_folder, output_folder,
-                                   lx_length, mindist = NULL,
-                                   workers = NULL,
-                                   chunk_size = 100) {
-    one_file <- function(input_path, output_path, lx_length, mindist,
-                         workers, chunk_size) {
-        network <- readr::read_rds(input_path) |>
-            sfnetworks::activate("edges") |>
-            st_as_sf()
-        if (workers == 1)
-            lixels <- spNetwork::lixelize_lines(network, lx_length = lx_length,
-                                                mindist = mindist)
-        else
-            lixels <- spNetwork::lixelize_lines.mc(network,
-                                                   lx_length = lx_length,
-                                                   mindist = mindist,
-                                                   chunk_size = chunk_size)
-        lixels$len <- sf::st_length(lixels)
-        write_dir_rds(lixels, output_path)
-    }
-
-    workers <- get_number_of_workers(workers)
-
-    if (workers > 1) {
-        oplan <- future::plan()
-        future::plan("multisession", workers = workers)
-    }
-
-    tibble(
-        input_path = file.path(input_folder, districts$sf_file_name),
-        output_path = file.path(output_folder, districts$lixel_file_name)
-    ) |>
-        pwalk(one_file, lx_length = lx_length, mindist = mindist,
-              workers = workers, chunk_size = chunk_size)
-
-    if (workers > 1)
-        future::plan(oplan)
-}
+#
+# notes:
+# - it seems that it is more efficient to create lixels in parallel than to use
+#   parallelized version of lixelization; the reason is that only small fraction
+#   of lixelize_lines.mc() is in fact parallelized
+#
+# create_lixelized_roads <- function(districts, input_folder, output_folder,
+#                                    lx_length, mindist = NULL,
+#                                    workers = NULL,
+#                                    chunk_size = 100) {
+#     one_file <- function(input_path, output_path, lx_length, mindist,
+#                          workers, chunk_size) {
+#         network <- readr::read_rds(input_path) |>
+#             sfnetworks::activate("edges") |>
+#             st_as_sf()
+#         if (workers == 1)
+#             lixels <- spNetwork::lixelize_lines(network, lx_length = lx_length,
+#                                                 mindist = mindist)
+#         else
+#             lixels <- spNetwork::lixelize_lines.mc(network,
+#                                                    lx_length = lx_length,
+#                                                    mindist = mindist,
+#                                                    chunk_size = chunk_size)
+#         lixels$len <- sf::st_length(lixels)
+#         write_dir_rds(lixels, output_path)
+#     }
+#
+#     workers <- get_number_of_workers(workers)
+#
+#     if (workers > 1) {
+#         oplan <- future::plan()
+#         future::plan("multisession", workers = workers)
+#     }
+#
+#     tibble(
+#         input_path = file.path(input_folder, districts$sf_file_name),
+#         output_path = file.path(output_folder, districts$lixel_file_name)
+#     ) |>
+#         pwalk(one_file, lx_length = lx_length, mindist = mindist,
+#               workers = workers, chunk_size = chunk_size)
+#
+#     if (workers > 1)
+#         future::plan(oplan)
+# }
 create_lixelized_roads <- function(districts, input_folder, output_folder,
                                    lx_length, mindist = NULL,
                                    workers = NULL,
