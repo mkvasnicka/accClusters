@@ -29,3 +29,9 @@ V současnosti se natahují jen soupce z tabulky nehody a z GPS se doplní souř
 - doplnit ostatní sloupce, které budou potřeba
 - vyhodit sloupce, které nejsou potřeba
 - jak počítat závažnost nehody?
+
+
+Všude
+-----
+
+- počet workers vzít z get_number_of_workers()

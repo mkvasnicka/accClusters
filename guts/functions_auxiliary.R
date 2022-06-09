@@ -69,6 +69,13 @@ is_behind <- function(target, source) {
 
 # parallel processing ----------------------------------------------------------
 
+get_number_of_workers <- function(workers) {
+    if (is.null(workers))
+        workers <- if_else(exists("NO_OF_WORKERS"), NO_OF_WORKERS, 1)
+    workers
+}
+
+
 PWALK <- function(.l, .f, workers = 1, ...) {
     if (workers == 1) {
         purrr::pwalk(.l, .f, ...)

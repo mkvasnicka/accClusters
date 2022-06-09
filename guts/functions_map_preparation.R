@@ -714,7 +714,9 @@ create_lixelized_roads <- function(districts, input_folder, output_folder,
                                    chunk_size = 100) {
     one_file <- function(input_path, output_path, lx_length, mindist,
                          workers, chunk_size) {
-        network <- readr::read_rds(input_path)
+        network <- readr::read_rds(input_path) |>
+            sfnetworks::activate("edges") |>
+            st_as_sf()
         if (workers == 1)
             lixels <- spNetwork::lixelize_lines(network, lx_length = lx_length,
                                                 mindist = mindist)
@@ -727,12 +729,13 @@ create_lixelized_roads <- function(districts, input_folder, output_folder,
         write_dir_rds(lixels, output_path)
     }
 
-    if (is.null(workers))
-        workers <- if_else(exists("NO_OF_WORKERS"), NO_OF_WORKERS, 1L)
+    # if (is.null(workers))
+    #     workers <- if_else(exists("NO_OF_WORKERS"), NO_OF_WORKERS, 1L)
+    workers <- get_number_of_workers(workers)
 
     if (workers > 1) {
         oplan <- future::plan()
-        future::plan(future::multisession(workers = workers))
+        future::plan("multisession", workers = workers)
     }
 
     tibble(
