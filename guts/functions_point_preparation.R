@@ -291,7 +291,9 @@ create_districts_accidents <- function(districts, accidents, max_distance,
                                        map_dir, accident_dir,
                                        workers = 1) {
     one_file <- function(input_file, output_file, accidents) {
-        lines <- readr::read_rds(input_file)
+        lines <- readr::read_rds(input_file) |>
+            sfnetworks::activate("edges") |>
+            st_as_sf()
         snapped_points <- snap_points_to_lines(accidents, lines,
                                                dist = max_distance)
         write_dir_rds(snapped_points, output_file)

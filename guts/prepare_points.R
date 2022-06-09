@@ -30,6 +30,8 @@ if (is_behind(PATH_TO_RAW_ACCIDENTS,
                          recursive = TRUE, full.names = TRUE))) {
     accidents <- read_raw_accidents(RAW_ACCIDENTS_DIR)
     write_dir_rds(accidents, PATH_TO_RAW_ACCIDENTS)
+} else {
+    accidents <- read_rds(PATH_TO_RAW_ACCIDENTS)
 }
 
 
