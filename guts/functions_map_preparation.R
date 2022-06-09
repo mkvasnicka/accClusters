@@ -729,8 +729,6 @@ create_lixelized_roads <- function(districts, input_folder, output_folder,
         write_dir_rds(lixels, output_path)
     }
 
-    # if (is.null(workers))
-    #     workers <- if_else(exists("NO_OF_WORKERS"), NO_OF_WORKERS, 1L)
     workers <- get_number_of_workers(workers)
 
     if (workers > 1) {
@@ -748,20 +746,45 @@ create_lixelized_roads <- function(districts, input_folder, output_folder,
     if (workers > 1)
         future::plan(oplan)
 }
+create_lixelized_roads <- function(districts, input_folder, output_folder,
+                                   lx_length, mindist = NULL,
+                                   workers = NULL,
+                                   chunk_size = 100) {
+    one_file <- function(input_path, output_path, lx_length, mindist,
+                         chunk_size) {
+        network <- readr::read_rds(input_path) |>
+            sfnetworks::activate("edges") |>
+            st_as_sf()
+        lixels <- spNetwork::lixelize_lines(network, lx_length = lx_length,
+                                            mindist = mindist)
+        lixels$len <- sf::st_length(lixels)
+        write_dir_rds(lixels, output_path)
+    }
+
+    tibble(
+        input_path = file.path(input_folder, districts$sf_file_name),
+        output_path = file.path(output_folder, districts$lixel_file_name)
+    ) |>
+        PWALK(one_file, workers = workers,
+              lx_length = lx_length, mindist = mindist, chunk_size = chunk_size)
+}
 
 
-# create_lixel_samples_for_roads(districts, input_folder, output_folder) creates
-# center of lixels (samples) for all districts
+# create_lixel_samples_for_roads(districts, input_folder, output_folder,
+# workers) creates center of lixels (samples) for all districts
 #
 # inputs:
-# - districts
-# - input_folder
-# - output_folder
+# - districts ... (sf tibble) table of districts
+# - input_folder ... (character scalar) path to folder where lixels are stored
+# - output_folder ... (character scaler) path to folder where samples should be
+#   stored
+# - workers ... (numeric scalar) number of workers used in parallel
 #
 # value:
 #   none, data are written to disk
 create_lixel_samples_for_roads <- function(districts,
-                                           input_folder, output_folder) {
+                                           input_folder, output_folder,
+                                           workers = NULL) {
     one_file <- function(input_path, output_path) {
         network <- readr::read_rds(input_path)
         samples <- spNetwork::lines_center(network)
@@ -771,7 +794,7 @@ create_lixel_samples_for_roads <- function(districts,
         input_path = file.path(input_folder, districts$lixel_file_name),
         output_path = file.path(output_folder, districts$lixel_sample_file_name)
     ) |>
-        pwalk(one_file)
+        PWALK(one_file, workers = workers)
 }
 
 

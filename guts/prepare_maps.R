@@ -35,7 +35,7 @@ if (is_behind(file.path(OSM_MAPS_DIR, districts$osm_file_name),
 }
 
 
-# for each district, create simplified SF .rds files with filered roads
+# for each district, create simplified sfnetwork .rds files with filtered roads
 if (is_behind(file.path(SF_MAPS_DIR, districts$sf_file_name),
               c(file.path(OSM_MAPS_DIR, districts$osm_file_name),
                 PATH_TO_DISTRICTS))) {
@@ -64,5 +64,6 @@ if (is_behind(file.path(LIXEL_MAPS_DIR, districts$lixel_sample_file_name),
                 PATH_TO_DISTRICTS))) {
     create_lixel_samples_for_roads(districts,
                                    input_folder = LIXEL_MAPS_DIR,
-                                   output_folder = LIXEL_MAPS_DIR)
+                                   output_folder = LIXEL_MAPS_DIR,
+                                   workers = NO_OF_WORKERS)
 }

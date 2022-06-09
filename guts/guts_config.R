@@ -28,7 +28,7 @@ DISTRICT_BUFFER_SIZE <- 1e3
 
 # lixelization
 LIXEL_SIZE <- 5  # meters
-LIXEL_MIN_DIST <- 3  # meters
+LIXEL_MIN_DIST <- 2  # meters
 
 
 # snapping accidents to roads

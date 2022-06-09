@@ -77,6 +77,8 @@ get_number_of_workers <- function(workers) {
 
 
 PWALK <- function(.l, .f, workers = 1, ...) {
+    workers <- get_number_of_workers(workers)
+
     if (workers == 1) {
         purrr::pwalk(.l, .f, ...)
     } else {
