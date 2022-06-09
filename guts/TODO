@@ -18,7 +18,6 @@ Funkce:
         tidygraph::convert(sfnet, sfnetworks::to_spatial_contracted, cls, cmp,
                            simplify = FALSE)
 - zrychlit hledání klastrů hotspotů na sf/sfnetworks/spNetwork
-- všude přidat parametr verbose a jeho vypisování
 - CRS všude vytahat z funkcí do jejich interface -- tam použít konstatny
 
 
@@ -36,3 +35,4 @@ Všude
 
 - počet workers vzít z get_number_of_workers()
 - odstranit jména souborů z tabulky districts a všude, kde se na to odkazuje, a nahradit to funkcemi, které budou používat id z districts
+- spojit všechny prepare_*.R do jednoho souboru a přidat logování
