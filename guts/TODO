@@ -19,6 +19,7 @@ Funkce:
                            simplify = FALSE)
 - zrychlit hledání klastrů hotspotů na sf/sfnetworks/spNetwork
 - CRS všude vytahat z funkcí do jejich interface -- tam použít konstatny
+- funkce create_sf_nb() používá sf_touches() -- použít raději from -- to v lixelech?
 
 Tvorba OSM
 - osmium nechce pokračovat, když soubory .osm existují -- na začátku funkce, která je má vytvořit, je třeba je vymazat

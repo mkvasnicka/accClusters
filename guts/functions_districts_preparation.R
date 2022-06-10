@@ -55,6 +55,7 @@ read_arccr_districts <- function(path_to_districts, layer = "OkresyPolygony") {
                       lixel_file_name = glue("lixel_{district_id}.rds"),
                       lixel_sample_file_name =
                           glue("lixel_sample_{district_id}.rds"),
+                      lixel_nb_file_name = glue("lixel_nb_{district_id}.rds"),
                       accidents_file_name =
                           glue("accidents_{district_id}.rds"),
                       densities_file_name =

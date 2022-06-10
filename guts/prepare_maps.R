@@ -67,3 +67,14 @@ if (is_behind(file.path(LIXEL_MAPS_DIR, districts$lixel_sample_file_name),
                                    output_folder = LIXEL_MAPS_DIR,
                                    workers = NO_OF_WORKERS)
 }
+
+
+# for each districts, create neighbor list objects (nb)
+if (is_behind(file.path(LIXEL_MAPS_DIR, districts$lixel_nb_file_name),
+              c(file.path(LIXEL_MAPS_DIR, districts$lixel_file_name),
+                PATH_TO_DISTRICTS))) {
+    create_lixel_nbs(districts,
+                     input_folder = LIXEL_MAPS_DIR,
+                     output_folder = LIXEL_MAPS_DIR,
+                     workers = NO_OF_WORKERS)
+}

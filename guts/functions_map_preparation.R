@@ -843,6 +843,31 @@ create_sf_nb <- function(sf) {
 }
 
 
+# create_lixel_nbs() creates neighbors' list for each districts lixels
+#
+# inputs:
+# - districts ... (sf tibble) table of districts
+# - input_folder ... (character scalar) folder where lixels are stored
+# - output_folder ... (character scalar) folder where nbs should be written to
+# - workers ... (numeric scalar) number of cores used for parallel computation
+#
+# value:
+#   none, data are written to disk
+create_lixel_nbs <- function(districts, input_folder, output_folder,
+                             workers = NULL) {
+    one_district <- function(input_file, output_file) {
+        lixels <- readr::read_rds(input_file)
+        nb <- create_sf_nb(lixels)
+        write_dir_rds(nb, output_file)
+    }
+    tab <- tibble::tibble(
+        input_file = file.path(input_folder, districts$lixel_file_name),
+        output_file = file.path(output_folder, districts$lixel_nb_file_name)
+    )
+    PWALK(tab, one_district, workers = workers)
+}
+
+
 # not_connected_segments(nb) returns logical values for each segment of a sf
 # network that is TRUE if the edge is connected to no other edge, and FALSE
 # otherwise
