@@ -40,3 +40,4 @@ Všude
 - počet workers vzít z get_number_of_workers()
 - odstranit jména souborů z tabulky districts a všude, kde se na to odkazuje, a nahradit to funkcemi, které budou používat id z districts
 - spojit všechny prepare_*.R do jednoho souboru a přidat logování
+- najít všechna volání purrr a paralelizovat, co je možné
