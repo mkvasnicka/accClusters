@@ -50,39 +50,39 @@ read_arccr_districts <- function(path_to_districts, layer = "OkresyPolygony") {
                       district_id = KOD_OKRES) |>
         dplyr::select(-NAZ_LAU1, -KOD_OKRES) |>
         dplyr::select(district_id, district_name, everything()) |>
-        dplyr::mutate(osm_file_name = glue("district_{district_id}.osm"),
-                      sf_file_name = glue("district_{district_id}.rds"),
-                      lixel_file_name = glue("lixel_{district_id}.rds"),
-                      lixel_sample_file_name =
-                          glue("lixel_sample_{district_id}.rds"),
-                      lixel_nb_file_name = glue("lixel_nb_{district_id}.rds"),
-                      accidents_file_name =
-                          glue("accidents_{district_id}.rds"),
-                      densities_file_name =
-                          glue("densities_{district_id}.rds")) |>
+        # dplyr::mutate(osm_file_name = glue("district_{district_id}.osm"),
+        #               sf_file_name = glue("district_{district_id}.rds"),
+        #               lixel_file_name = glue("lixel_{district_id}.rds"),
+        #               lixel_sample_file_name =
+        #                   glue("lixel_sample_{district_id}.rds"),
+        #               lixel_nb_file_name = glue("lixel_nb_{district_id}.rds"),
+        #               accidents_file_name =
+        #                   glue("accidents_{district_id}.rds"),
+        #               densities_file_name =
+        #                   glue("densities_{district_id}.rds")) |>
         sf::st_transform(crs = PLANARY_PROJECTION) |>
         add_class("districts")
 }
 
 
-# prohibits RStudio to freeze when it tries to view districts with added slots
-print.districts <- function(d, ...) {
-    cat("Districts\n  no. of districts:", nrow(d),
-        "\n  columns:", paste(names(d), collapse = ", "))
-}
-#str.districts <- print.districts
-filter.districts <- function(d, ...) {
-    remove_first_class(d) |>
-        dplyr::filter(...) |>
-        add_class("districts")
-}
-mutate.districts <- function(d, ...) {
-    remove_first_class(d) |>
-        dplyr::mutate(...) |>
-        add_class("districts")
-}
-select.districts <- function(d, ...) {
-    remove_first_class(d) |>
-        dplyr::select(...) |>
-        add_class("districts")
-}
+# # prohibits RStudio to freeze when it tries to view districts with added slots
+# print.districts <- function(d, ...) {
+#     cat("Districts\n  no. of districts:", nrow(d),
+#         "\n  columns:", paste(names(d), collapse = ", "))
+# }
+# #str.districts <- print.districts
+# filter.districts <- function(d, ...) {
+#     remove_first_class(d) |>
+#         dplyr::filter(...) |>
+#         add_class("districts")
+# }
+# mutate.districts <- function(d, ...) {
+#     remove_first_class(d) |>
+#         dplyr::mutate(...) |>
+#         add_class("districts")
+# }
+# select.districts <- function(d, ...) {
+#     remove_first_class(d) |>
+#         dplyr::select(...) |>
+#         add_class("districts")
+# }

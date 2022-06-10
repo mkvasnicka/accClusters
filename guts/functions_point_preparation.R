@@ -300,7 +300,7 @@ create_districts_accidents <- function(districts, accidents, max_distance,
     }
 
     tab <- tibble::tibble(
-        input_file = file.path(map_dir, districts$sf_file_name),
-        output_file = file.path(accident_dir, districts$accidents_file_name))
+        input_file = sf_file_name(districts, map_dir),
+        output_file = accidents_file_name(districts, accident_dir))
     PWALK(tab, one_file, accidents = accidents, workers = workers)
 }

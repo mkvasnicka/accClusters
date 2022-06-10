@@ -50,11 +50,11 @@ compute_densities <- function(districts,
   }
 
   tab <- tibble::tibble(
-      map_path = file.path(maps_dir, districts$sf_file_name),
-      lixel_path = file.path(lixel_dir, districts$lixel_file_name),
-      sample_path = file.path(sample_dir, districts$lixel_sample_file_name),
-      accidents_path = file.path(accidents_dir, districts$accidents_file_name),
-      density_path = file.path(density_dir, districts$densities_file_name)
+      map_path = sf_file_name(districts, maps_dir),
+      lixel_path = lixel_file_name(districts, lixel_dir),
+      sample_path = lixel_sample_file_name(districts, sample_dir),
+      accidents_path = accidents_file_name(districts, accidents_dir),
+      density_path = densities_file_name(districts, density_dir)
   )
   PWALK(tab, one_district, workers = get_number_of_workers(workers),
         weights = weights, bw = bw, adaptive = adaptive, trim_bw = trim_bw,

@@ -26,7 +26,7 @@ districts <- readr::read_rds(PATH_TO_DISTRICTS)
 
 
 # for each district, create .osm files with filered roads
-if (is_behind(file.path(OSM_MAPS_DIR, districts$osm_file_name),
+if (is_behind(osm_file_name(districts, OSM_MAPS_DIR),
               c(PATH_TO_RAW_ROADS_OSM, PATH_TO_DISTRICTS))) {
     create_osm_district_roads(districts, PATH_TO_RAW_ROADS_OSM,
                               road_types = SUPPORTED_ROAD_CLASSES,
@@ -36,19 +36,17 @@ if (is_behind(file.path(OSM_MAPS_DIR, districts$osm_file_name),
 
 
 # for each district, create simplified sfnetwork .rds files with filtered roads
-if (is_behind(file.path(SF_MAPS_DIR, districts$sf_file_name),
-              c(file.path(OSM_MAPS_DIR, districts$osm_file_name),
-                PATH_TO_DISTRICTS))) {
+if (is_behind(sf_file_name(districts, SF_MAPS_DIR),
+              c(osm_file_name(districts, OSM_MAPS_DIR), PATH_TO_DISTRICTS))) {
     create_sf_district_roads(districts, OSM_MAPS_DIR, SF_MAPS_DIR,
                              crs = PLANARY_PROJECTION,
                              workers = NO_OF_WORKERS)
 }
 
 
-# for each district, create lixelized network and sample points
-if (is_behind(file.path(LIXEL_MAPS_DIR, districts$lixel_file_name),
-              c(file.path(SF_MAPS_DIR, districts$sf_file_name),
-                PATH_TO_DISTRICTS))) {
+# for each district, create lixelized network
+if (is_behind(lixel_file_name(districts, LIXEL_MAPS_DIR),
+              c(sf_file_name(districts, SF_MAPS_DIR), PATH_TO_DISTRICTS))) {
     create_lixelized_roads(districts,
                            input_folder = SF_MAPS_DIR,
                            output_folder = LIXEL_MAPS_DIR,
@@ -59,8 +57,8 @@ if (is_behind(file.path(LIXEL_MAPS_DIR, districts$lixel_file_name),
 
 
 # for each district, create lixel centers (samples)
-if (is_behind(file.path(LIXEL_MAPS_DIR, districts$lixel_sample_file_name),
-              c(file.path(LIXEL_MAPS_DIR, districts$lixel_file_name),
+if (is_behind(lixel_sample_file_name(districts, LIXEL_MAPS_DIR),
+              c(lixel_file_name(districts, LIXEL_MAPS_DIR),
                 PATH_TO_DISTRICTS))) {
     create_lixel_samples_for_roads(districts,
                                    input_folder = LIXEL_MAPS_DIR,
@@ -70,8 +68,8 @@ if (is_behind(file.path(LIXEL_MAPS_DIR, districts$lixel_sample_file_name),
 
 
 # for each districts, create neighbor list objects (nb)
-if (is_behind(file.path(LIXEL_MAPS_DIR, districts$lixel_nb_file_name),
-              c(file.path(LIXEL_MAPS_DIR, districts$lixel_file_name),
+if (is_behind(lixel_nb_file_name(districts, LIXEL_MAPS_DIR),
+              c(lixel_file_name(districts, LIXEL_MAPS_DIR),
                 PATH_TO_DISTRICTS))) {
     create_lixel_nbs(districts,
                      input_folder = LIXEL_MAPS_DIR,

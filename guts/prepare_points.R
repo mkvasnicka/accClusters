@@ -36,8 +36,8 @@ if (is_behind(PATH_TO_RAW_ACCIDENTS,
 
 
 # crop the accidents to buffered districts and snap them to selected roads
-if (is_behind(file.path(ACCIDENTS_DIR, districts$accidents_file_name),
-              c(file.path(SF_MAPS_DIR, districts$sf_file_name),
+if (is_behind(accidents_file_name(districts, ACCIDENTS_DIR),
+              c(sf_file_name(districts, SF_MAPS_DIR),
                 PATH_TO_DISTRICTS, PATH_TO_RAW_ACCIDENTS))) {
     create_districts_accidents(districts, accidents,
                                max_distance = ACCIDENT_TO_ROAD_MAX_DISTANCE,

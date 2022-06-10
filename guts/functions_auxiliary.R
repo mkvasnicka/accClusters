@@ -14,6 +14,87 @@ require(readr)
 
 
 
+# paths to files ---------------------------------------------------------------
+
+# general template for paths to individual district files
+#
+# inputs:
+# - folder ... (character scalar) folder where the files are stored
+# - districts ... (sf tibble) the districts table
+# - txt ... (character scalar) general template in glue format
+#   supported parts:
+#   - id ... id numbers of districts
+#   - name ... names of districts
+#
+# value:
+#   character vector of paths to specific files;
+#   if is.null(folder), only file name is returned
+basic_file_name <- function(folder, districts, txt) {
+    fname <- glue::glue(txt,
+                      id = districts$district_id,
+                      name = districts$district_name) |>
+        as.character()
+    if (is.null(folder))
+        return(fname)
+    file.path(folder, fname)
+}
+
+# these functions return paths to individual district files of various types
+#
+# inputs:
+# - districts ... (sf tibble) the districts table
+# - folder ... (character scalar) folder where the files are stored;
+#   if is.null(folder) (implicit value) then only file name is returned
+#
+# value:
+#   character vector of paths to specific files; see folder input
+
+# paths to geojson files describing individual districts
+geojson_file_name <- function(districts, folder = NULL) {
+    basic_file_name(folder, districts, "district_{id}.geojson")
+}
+
+# paths to osm files including selected roads in particual districts
+osm_file_name <- function(districts, folder = NULL) {
+    basic_file_name(folder, districts, "district_{id}.osm")
+}
+
+# paths to sfnetwork files including selected roads in particual districts
+sf_file_name <- function(districts, folder = NULL) {
+    basic_file_name(folder, districts, "district_{id}.rds")
+}
+
+# paths to files including lixelated selected roads in particual districts
+lixel_file_name <- function(districts, folder = NULL) {
+    basic_file_name(folder, districts, "lixel_{id}.osm")
+}
+
+# paths to files including mid-points of lixelated selected roads in particual
+# districts
+lixel_sample_file_name <- function(districts, folder = NULL) {
+    basic_file_name(folder, districts, "lixel_sample_{id}.osm")
+}
+
+# paths to files including neighbors' lists of lixelated selected roads in
+# particual districts
+lixel_nb_file_name <- function(districts, folder = NULL) {
+    basic_file_name(folder, districts, "lixel_nb_{id}.osm")
+}
+
+# paths to files including accidents cropped to particular districts snapped to
+# selected roads there
+accidents_file_name <- function(districts, folder = NULL) {
+    basic_file_name(folder, districts, "accidents_{id}.osm")
+}
+
+# paths to files including lixelated selected roads in particual districts with
+# added NKDE densities
+densities_file_name <- function(districts, folder = NULL) {
+    basic_file_name(folder, districts, "densities_{id}.osm")
+}
+
+
+
 # reading/writing files --------------------------------------------------------
 
 # write_dir_rds(object, file) writes one object to a path; it doesn't compress
