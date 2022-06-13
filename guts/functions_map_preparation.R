@@ -662,27 +662,18 @@ create_sf_district_roads <- function(districts, input_folder, output_folder,
                                      crs,
                                      max_distance = 0.5, dTolerance = 5,
                                      workers = 1) {
-    one_file <- function(osm_file_name, sf_file_name,
-                         input_folder, output_folder) {
-        input <- file.path(input_folder, osm_file_name)
-        output <- file.path(output_folder, sf_file_name)
-        # map <- sf::st_read(input, layer = "lines") |>
-        #     st_transform(crs = PLANARY_PROJECTION) |>
-        #     select(-c(waterway, aerialway, barrier, man_made)) |>
-        #     simplify_sf(max_distance = max_distance, dTolerance = dTolerance)
-        map <- read_osm_to_sfnetwork(input, crs = crs) |>
+    one_file <- function(input_file, output_file) {
+        map <- read_osm_to_sfnetwork(input_file, crs = crs) |>
             remove_sfnetwork_minor_components() |>
             simplify_sfnetwork(max_distance = max_distance,
                                dTolerance = dTolerance)
-        write_dir_rds(map, output)
+        write_dir_rds(map, output_file)
     }
-    districts |>
-        dplyr::select(osm_file_name, sf_file_name) |>
-        sf::st_drop_geometry() |>
-        PWALK(one_file,
-              workers = workers,
-              input_folder = input_folder,
-              output_folder = output_folder)
+    tab <- tibble::tibble(
+        input_file = osm_file_name(districts, input_folder),
+        output_file = sf_file_name(districts, output_folder)
+    )
+    PWALK(tab, one_file, workers = workers)
 }
 
 
