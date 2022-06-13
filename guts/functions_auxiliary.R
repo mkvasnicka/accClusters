@@ -175,3 +175,34 @@ PWALK <- function(.l, .f, workers = 1, ...) {
         future::plan(oplan)
     }
 }
+
+
+
+# damage costs -----------------------------------------------------------------
+
+# accident_damage_cost() computes each accident's damage cost
+#
+# inputs:
+# - dead ... (integer vector) number of casualties in accidents (P13A)
+# - serious_injury ... (integer vector) number of seriously injured in accidents
+#   (P13B)
+# - light_injury ... (integer vector) number of light injured in accidents
+#   (P13C)
+# - material_cost ... (numeric vector) total material cost in 100 CZK (P14)
+# - unit_costs ... list three named slots:
+#   - dead ... (numeric scalar) casualty cost in millions CZK, i.e., value of
+#       statistical life
+#   - serious_injury ... (numeric scalar) cost of one serious injury in millions
+#       CZK
+#   - light_injury ... (numeric scalar) cost of one light injury in millions CZK
+#
+# value:
+#   numeric vector of damage costs in millions of CZK; each number is the total
+#   damage of the corresponding accident
+accident_damage_cost <- function(dead, serious_injury, light_injury,
+                                 material_cost, unit_costs) {
+    dead * unit_costs$dead +
+        serious_injury * unit_costs$serious_injury +
+        light_injury * unit_costs$light_injury +
+        material_cost * 1e2 / 1e6
+}

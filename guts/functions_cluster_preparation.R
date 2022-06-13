@@ -267,18 +267,12 @@ add_clusters_to_accidents <- function(accidents, clusters) {
 
 
 cluster_cost <- function(accidents, unit_costs) {
-    cost <- function(dead, serious_injury, light_injury, material_cost,
-                     unit_costs) {
-        sum(dead * unit_costs$dead +
-                serious_injury * unit_costs$serious_injury +
-                light_injury * unit_costs$light_injury +
-                material_cost * 1e2 / 1e6)
-    }
     accidents |>
         sf::st_drop_geometry() |>
         dplyr::filter(!is.na(cluster)) |>
         dplyr::group_by(cluster) |>
-        dplyr::summarise(cost = cost(p13a, p13b, p13c, p14, unit_costs),
+        dplyr::summarise(cost = sum(accident_damage_cost(p13a, p13b, p13c, p14,
+                                                     unit_costs)),
                          .groups = "drop")
 }
 
