@@ -66,31 +66,31 @@ sf_file_name <- function(districts, folder = NULL) {
 
 # paths to files including lixelated selected roads in particual districts
 lixel_file_name <- function(districts, folder = NULL) {
-    basic_file_name(folder, districts, "lixel_{id}.osm")
+    basic_file_name(folder, districts, "lixel_{id}.rds")
 }
 
 # paths to files including mid-points of lixelated selected roads in particual
 # districts
 lixel_sample_file_name <- function(districts, folder = NULL) {
-    basic_file_name(folder, districts, "lixel_sample_{id}.osm")
+    basic_file_name(folder, districts, "lixel_sample_{id}.rds")
 }
 
 # paths to files including neighbors' lists of lixelated selected roads in
 # particual districts
 lixel_nb_file_name <- function(districts, folder = NULL) {
-    basic_file_name(folder, districts, "lixel_nb_{id}.osm")
+    basic_file_name(folder, districts, "lixel_nb_{id}.rds")
 }
 
 # paths to files including accidents cropped to particular districts snapped to
 # selected roads there
 accidents_file_name <- function(districts, folder = NULL) {
-    basic_file_name(folder, districts, "accidents_{id}.osm")
+    basic_file_name(folder, districts, "accidents_{id}.rds")
 }
 
 # paths to files including lixelated selected roads in particual districts with
 # added NKDE densities
 densities_file_name <- function(districts, folder = NULL) {
-    basic_file_name(folder, districts, "densities_{id}.osm")
+    basic_file_name(folder, districts, "densities_{id}.rds")
 }
 
 
