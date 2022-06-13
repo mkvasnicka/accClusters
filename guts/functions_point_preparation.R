@@ -250,6 +250,7 @@ snap_points_to_lines <- function(points, lines, dist = 100,
     np <- sf::st_cast(np, "POINT")[c(FALSE, TRUE)]
     if (verbose) message("Adding attributes...")
     out <- sf::st_drop_geometry(buff_points)
+    out$lixel_id <- lines$lixel_id[nf]
     out$geometry <- np
     out <- st_as_sf(out)
     if (all_points) {
@@ -257,6 +258,7 @@ snap_points_to_lines <- function(points, lines, dist = 100,
         out$valid <- TRUE
         outside <- points[!inside, ]
         outside$valid <- FALSE
+        outside$lixel_id <- NA_integer_
         out <- dplyr::bind_rows(out, outside)
     }
     out
@@ -274,7 +276,7 @@ snap_points_to_lines <- function(points, lines, dist = 100,
 # - accidents ... (SF tibble) all accidents including their attributes
 # - max_distance ... (numeric scalar) maximum distance from the (selected)
 #   roads; it the distance is higher, the accident is removed from the dataset
-# - map_dir ... (character scalar) path to folder there sf maps of districts are
+# - lixel_dir ... (character scalar) path to folder there lixellized roads are
 #   stored
 # - accident_dir ... (character scaler) path to folder where the new accidents
 #   files should be stored
@@ -288,19 +290,17 @@ snap_points_to_lines <- function(points, lines, dist = 100,
 #   such that they lie on a road---they are moved to their closest points on
 #   their closest line
 create_districts_accidents <- function(districts, accidents, max_distance,
-                                       map_dir, accident_dir,
+                                       lixel_dir, accident_dir,
                                        workers = 1) {
     one_file <- function(input_file, output_file, accidents) {
-        lines <- readr::read_rds(input_file) |>
-            sfnetworks::activate("edges") |>
-            st_as_sf()
+        lines <- readr::read_rds(input_file)
         snapped_points <- snap_points_to_lines(accidents, lines,
                                                dist = max_distance)
         write_dir_rds(snapped_points, output_file)
     }
 
     tab <- tibble::tibble(
-        input_file = sf_file_name(districts, map_dir),
+        input_file = lixel_file_name(districts, lixel_dir),
         output_file = accidents_file_name(districts, accident_dir))
     PWALK(tab, one_file, accidents = accidents, workers = workers)
 }
