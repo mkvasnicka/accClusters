@@ -260,20 +260,12 @@ add_clusters_to_accidents <- function(accidents, clusters) {
 
 # compute cluster costs --------------------------------------------------------
 
-# | P13A | umsrceno osob                                                         |
-# | P13B | tězce zraněno osob                                                    |
-# | P13C | lehce zraněno osob                                                    |
-# | P14  | celková hmotná škoda ve stokorunách                                   |
-
-
 cluster_cost <- function(accidents, unit_costs) {
     accidents |>
         sf::st_drop_geometry() |>
         dplyr::filter(!is.na(cluster)) |>
         dplyr::group_by(cluster) |>
-        dplyr::summarise(cost = sum(accident_damage_cost(p13a, p13b, p13c, p14,
-                                                     unit_costs)),
-                         .groups = "drop")
+        dplyr::summarise(cost = sum(accident_cost), .groups = "drop")
 }
 
 
