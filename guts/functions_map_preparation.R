@@ -52,7 +52,8 @@ silent_geojson_write <- function(input, file)
 write_one_district_geojson <- function(district, buffer_size, folder, pb) {
     if (!dir.exists(folder))
         dir.create(folder)
-    output_path <- geojson_file_name(district, folder)
+    output_path <- file.path(folder,
+                             glue("district_{district$district_id}.geojson"))
     district |>
         sf::st_transform(crs = PLANARY_PROJECTION) |>
         sf::st_buffer(dist = buffer_size) |>
@@ -65,16 +66,14 @@ write_districts_geojson <- function(districts, buffer_size, folder,
                                     verbose = FALSE) {
     if (verbose) {
         message("Creating geojsons...")
-        pb <- progress_bar$new(
-            format = "  creating geojson [:bar] :current/:total in :elapsed eta: :eta",
-            total = nrow(districts), clear = FALSE, width = 60)
+        pb <- progress_bar$new(format = "  creating geojson [:bar] :current/:total in :elapsed eta: :eta",
+                               total = nrow(districts), clear = FALSE, width = 60)
         pb$tick(0)
     } else {
         pb <- NULL
     }
     purrr::walk(seq_len(nrow(districts)),
-                ~write_one_district_geojson(districts[., ], buffer_size,
-                                            folder, pb))
+                ~write_one_district_geojson(districts[., ], buffer_size, folder, pb))
 }
 
 
@@ -142,8 +141,8 @@ filter_osm_roads <- function(input_path, output_path, road_types = NULL,
 # - maybe the time could be saved if all extractions are done in one geojson
 #   file---perhaps osmium could process all districts at once---check it!
 filter_osm_one_district_roads <- function(district, input_path, folder, pb = NULL) {
-    geojson <- geojson_file_name(district, folder)
-    outfile <- osm_file_name(district, folder)
+    geojson <- file.path(folder, glue("district_{district$district_id}.geojson"))
+    outfile <- file.path(folder, glue("district_{district$district_id}.osm"))
     system(glue("osmium extract -p {geojson} {input_path} -o {outfile}"))
     if (!is.null(pb))
         pb$tick(1)
@@ -178,8 +177,8 @@ create_json_do_file <- function(districts, folder, verbose) {
     if (verbose)
         message("Creating do all json...")
     extracts <- tibble::tibble(
-        output = osm_file_name(districts),
-        file_name = geojson_file_name(districts),
+        output = glue::glue("district_{districts$district_id}.osm"),
+        file_name = glue::glue("district_{districts$district_id}.geojson"),
         file_type = "geojson"
     ) |>
         dplyr::mutate(across(everything(), as.character)) |>
@@ -663,22 +662,27 @@ create_sf_district_roads <- function(districts, input_folder, output_folder,
                                      crs,
                                      max_distance = 0.5, dTolerance = 5,
                                      workers = 1) {
-    one_file <- function(input_file, output_file) {
+    one_file <- function(osm_file_name, sf_file_name,
+                         input_folder, output_folder) {
+        input <- file.path(input_folder, osm_file_name)
+        output <- file.path(output_folder, sf_file_name)
         # map <- sf::st_read(input, layer = "lines") |>
         #     st_transform(crs = PLANARY_PROJECTION) |>
         #     select(-c(waterway, aerialway, barrier, man_made)) |>
         #     simplify_sf(max_distance = max_distance, dTolerance = dTolerance)
-        map <- read_osm_to_sfnetwork(input_file, crs = crs) |>
+        map <- read_osm_to_sfnetwork(input, crs = crs) |>
             remove_sfnetwork_minor_components() |>
             simplify_sfnetwork(max_distance = max_distance,
                                dTolerance = dTolerance)
-        write_dir_rds(map, output_file)
+        write_dir_rds(map, output)
     }
-    tab <- tibble::tibble(
-        input_file = osm_file_name(districts, input_folder),
-        output_file = sf_file_name(districts, output_folder)
-    )
-    PWALK(tab, one_file, workers = workers)
+    districts |>
+        dplyr::select(osm_file_name, sf_file_name) |>
+        sf::st_drop_geometry() |>
+        PWALK(one_file,
+              workers = workers,
+              input_folder = input_folder,
+              output_folder = output_folder)
 }
 
 
@@ -704,99 +708,53 @@ create_sf_district_roads <- function(districts, input_folder, output_folder,
 #
 # value:
 #   none; files are writen to disk
-#
-# notes:
-# - it seems that it is more efficient to create lixels in parallel than to use
-#   parallelized version of lixelization; the reason is that only small fraction
-#   of lixelize_lines.mc() is in fact parallelized
-#
-# create_lixelized_roads <- function(districts, input_folder, output_folder,
-#                                    lx_length, mindist = NULL,
-#                                    workers = NULL,
-#                                    chunk_size = 100) {
-#     one_file <- function(input_path, output_path, lx_length, mindist,
-#                          workers, chunk_size) {
-#         network <- readr::read_rds(input_path) |>
-#             sfnetworks::activate("edges") |>
-#             st_as_sf()
-#         if (workers == 1)
-#             lixels <- spNetwork::lixelize_lines(network, lx_length = lx_length,
-#                                                 mindist = mindist)
-#         else
-#             lixels <- spNetwork::lixelize_lines.mc(network,
-#                                                    lx_length = lx_length,
-#                                                    mindist = mindist,
-#                                                    chunk_size = chunk_size)
-#         lixels$len <- sf::st_length(lixels)
-#         write_dir_rds(lixels, output_path)
-#     }
-#
-#     workers <- get_number_of_workers(workers)
-#
-#     if (workers > 1) {
-#         oplan <- future::plan()
-#         future::plan("multisession", workers = workers)
-#     }
-#
-#     tibble(
-#         input_path = file.path(input_folder, districts$sf_file_name),
-#         output_path = file.path(output_folder, districts$lixel_file_name)
-#     ) |>
-#         pwalk(one_file, lx_length = lx_length, mindist = mindist,
-#               workers = workers, chunk_size = chunk_size)
-#
-#     if (workers > 1)
-#         future::plan(oplan)
-# }
 create_lixelized_roads <- function(districts, input_folder, output_folder,
                                    lx_length, mindist = NULL,
                                    workers = NULL,
                                    chunk_size = 100) {
-    one_file <- function(input_path, output_path, lx_length, mindist,
-                         chunk_size) {
+    one_file <- function(input_path, output_path, lx_length, mindist) {
         network <- readr::read_rds(input_path) |>
             sfnetworks::activate("edges") |>
             st_as_sf()
         lixels <- spNetwork::lixelize_lines(network, lx_length = lx_length,
                                             mindist = mindist)
         lixels$len <- sf::st_length(lixels)
+        lixels$lixel_id <- seq_len(nrow(lixels))
         write_dir_rds(lixels, output_path)
     }
 
+    workers <- get_number_of_workers(workers)
     tab <- tibble(
         input_path = sf_file_name(districts, input_folder),
         output_path = lixel_file_name(districts, output_folder)
     )
     PWALK(tab, one_file, workers = workers,
-          lx_length = lx_length, mindist = mindist, chunk_size = chunk_size)
+          lx_length = lx_length, mindist = mindist)
 }
 
 
-# create_lixel_samples_for_roads(districts, input_folder, output_folder,
-# workers) creates center of lixels (samples) for all districts
+# create_lixel_samples_for_roads(districts, input_folder, output_folder) creates
+# center of lixels (samples) for all districts
 #
 # inputs:
-# - districts ... (sf tibble) table of districts
-# - input_folder ... (character scalar) path to folder where lixels are stored
-# - output_folder ... (character scaler) path to folder where samples should be
-#   stored
-# - workers ... (numeric scalar) number of workers used in parallel
+# - districts
+# - input_folder
+# - output_folder
 #
 # value:
 #   none, data are written to disk
 create_lixel_samples_for_roads <- function(districts,
-                                           input_folder, output_folder,
-                                           workers = NULL) {
+                                           input_folder, output_folder) {
     one_file <- function(input_path, output_path) {
         network <- readr::read_rds(input_path)
         samples <- spNetwork::lines_center(network)
         write_dir_rds(samples, output_path)
     }
-    tab <- tibble(
-        input_path = lixel_file_name(districts, input_folder),
-        output_path = lixel_sample_file_name(districts, output_folder)
-    )
-    PWALK(tab, one_file, workers = workers)
+    tibble(
+        input_path = file.path(input_folder, districts$lixel_file_name),
+        output_path = file.path(output_folder, districts$lixel_sample_file_name)
+    ) |>
+        pwalk(one_file)
 }
 
 
@@ -836,31 +794,6 @@ create_sf_nb <- function(sf) {
         sf <- sf |> activate("edges") |> sf::st_as_sf()
     net <- sf::st_touches(sf)
     as.nb.sgbp(net)
-}
-
-
-# create_lixel_nbs() creates neighbors' list for each districts lixels
-#
-# inputs:
-# - districts ... (sf tibble) table of districts
-# - input_folder ... (character scalar) folder where lixels are stored
-# - output_folder ... (character scalar) folder where nbs should be written to
-# - workers ... (numeric scalar) number of cores used for parallel computation
-#
-# value:
-#   none, data are written to disk
-create_lixel_nbs <- function(districts, input_folder, output_folder,
-                             workers = NULL) {
-    one_district <- function(input_file, output_file) {
-        lixels <- readr::read_rds(input_file)
-        nb <- create_sf_nb(lixels)
-        write_dir_rds(nb, output_file)
-    }
-    tab <- tibble::tibble(
-        input_file = lixel_file_name(districts, input_folder),
-        output_file = lixel_nb_file_name(districts, output_folder)
-    )
-    PWALK(tab, one_district, workers = workers)
 }
 
 
