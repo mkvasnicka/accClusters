@@ -278,6 +278,12 @@ snap_points_to_lines <- function(points, lines, dist = 100,
 #   roads; it the distance is higher, the accident is removed from the dataset
 # - lixel_dir ... (character scalar) path to folder there lixellized roads are
 #   stored
+# - unit_costs ... list three named slots:
+#   - dead ... (numeric scalar) casualty cost in millions CZK, i.e., value of
+#       statistical life
+#   - serious_injury ... (numeric scalar) cost of one serious injury in millions
+#       CZK
+#   - light_injury ... (numeric scalar) cost of one light injury in millions CZK
 # - accident_dir ... (character scaler) path to folder where the new accidents
 #   files should be stored
 #
@@ -291,11 +297,18 @@ snap_points_to_lines <- function(points, lines, dist = 100,
 #   their closest line
 create_districts_accidents <- function(districts, accidents, max_distance,
                                        lixel_dir, accident_dir,
+                                       unit_costs,
                                        workers = 1) {
     one_file <- function(input_file, output_file, accidents) {
         lines <- readr::read_rds(input_file)
         snapped_points <- snap_points_to_lines(accidents, lines,
-                                               dist = max_distance)
+                                               dist = max_distance) |>
+            mutate(accident_cost =
+                       accident_damage_cost(dead = p13a,
+                                            serious_injury = p13b,
+                                            light_injury = p13c,
+                                            material_cost = p14,
+                                            unit_costs = unit_costs))
         write_dir_rds(snapped_points, output_file)
     }
 

@@ -43,5 +43,6 @@ if (is_behind(accidents_file_name(districts, ACCIDENTS_DIR),
                                max_distance = ACCIDENT_TO_ROAD_MAX_DISTANCE,
                                lixel_dir = LIXEL_MAPS_DIR,
                                accident_dir = ACCIDENTS_DIR,
+                               unit_costs = UNIT_COSTS,
                                workers = NO_OF_WORKERS)
 }
