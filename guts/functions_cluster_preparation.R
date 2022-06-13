@@ -238,7 +238,7 @@ join_clusters <- function(clusters) {
 compute_cluster_tibble <- function(lixels, nb, threshold, steps) {
     make_clusters(lixels, nb, threshold, steps) |>
         join_clusters() |>
-        purrr::map(~tibble(lineID = unlist(.))) |>
+        purrr::map(~tibble(lixel_id = unlist(.))) |>
         dplyr::bind_rows(.id = "cluster") |>
         mutate(cluster = as.integer(cluster))
 }

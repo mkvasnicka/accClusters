@@ -24,47 +24,7 @@ source(file.path(RSCRIPTDIR, "functions_hotspots_preparation.R"))
 districts <- readr::read_rds(PATH_TO_DISTRICTS)
 
 
-# accidents <- read_rds(file.path(ACCIDENTS_DIR, "accidents_40711.rds"))
-# map <- read_rds(file.path(SF_MAPS_DIR, "district_40711.rds")) |>
-#     sfnetworks::activate("edges") |>
-#     sf::st_as_sf()
-# lixels <- read_rds(file.path(LIXEL_MAPS_DIR, "lixel_40711.rds"))
-# samples <- read_rds(file.path(LIXEL_MAPS_DIR, "lixel_sample_40711.rds"))
-#
-# library(spNetwork)
-#
-# # setting the multisession plan
-# oplan <- future::plan()
-# future::plan("multisession", workers = NO_OF_WORKERS)
-#
-# system.time(
-#     densities <- spNetwork::nkde.mc(map,
-#                          events = accidents,
-#                          w = rep(1,nrow(accidents)),
-#                          samples = samples,
-#                          kernel_name = "quartic",
-#                          bw = 300, div = "bw",
-#                          # adaptive = TRUE,
-#                          # trim_bw = 600,
-#                          method = "discontinuous", digits = 1, tol = 1,
-#                          grid_shape = c(10,10), max_depth = 10,
-#                          agg = 5, #we aggregate events within a 5m radius (faster calculation)
-#                          sparse = TRUE,
-#                          verbose = TRUE)
-# )
-#
-# future::plan(oplan)
-#
-# lixels$density <- densities
-#
-# library(tmap)
-# tmap_mode("view")
-#
-# tm_shape(map) + tm_lines() +
-#     tm_shape(lixels |> filter(density >= quantile(densities, 0.9))) +
-#     tm_lines(col = "density")
-
-
+# compute hotspots, i.e., NKDE
 if(is_behind(densities_file_name(districts, DENSITIES_DIR),
              c(sf_file_name(districts, SF_MAPS_DIR),
                lixel_file_name(districts, LIXEL_MAPS_DIR),
