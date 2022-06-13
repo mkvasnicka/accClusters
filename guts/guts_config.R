@@ -11,7 +11,7 @@
 
 # parallel processing ----------------------------------------------------------
 
-NO_OF_WORKERS <- future::availableCores()
+NO_OF_WORKERS <- "auto"  # future::availableCores()
 
 
 

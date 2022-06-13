@@ -11,6 +11,7 @@
 
 # necessary packages
 require(readr)
+require(memuse)
 
 
 
@@ -152,7 +153,11 @@ is_behind <- function(target, source) {
 
 get_number_of_workers <- function(workers) {
     if (is.null(workers))
-        workers <- if_else(exists("NO_OF_WORKERS"), NO_OF_WORKERS, 1)
+        workers <- ifelse(exists("NO_OF_WORKERS"), NO_OF_WORKERS, 1)
+    if (workers == "auto") {
+        ram <- as.numeric(memuse::Sys.meminfo()$freeram) / 1024 ^ 3
+        no_of_cores <- future::availableCores()
+        workers <- min(no_of_cores, floor(ram / 2.5))}
     workers
 }
 
