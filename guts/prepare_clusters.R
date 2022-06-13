@@ -41,17 +41,19 @@ system.time(
 
 
 system.time(
-    clstrs <- left_join(lixels, cls, by = "lixel_id") |>
-        filter(!is.na(cluster)) |>
-        group_by(cluster) |>
-        summarise(total_length = sum(len),
-                  total_density = sum(density),
-                  geometry = st_union(geometry),
-                  .groups = "drop")
+    # clstrs <- add_clusters_to_lixels(lixels, cls) |>
+    #     filter(!is.na(cluster)) |>
+    #     group_by(cluster) |>
+    #     summarise(total_length = sum(len),
+    #               total_density = sum(density),
+    #               geometry = st_union(geometry),
+    #               .groups = "drop")
+    clstrs <- graphic_clusters(lixels, accidents, cls, unit_costs = UNIT_COSTS)
 )
 
-
-acc <- left_join(accidents, cls, by = "lixel_id")
+system.time(
+    acc <- add_clusters_to_accidents(accidents, cls)
+)
 
 
 tm_shape(brno |> activate("edges") |> st_as_sf()) + tm_lines() +
@@ -60,3 +62,7 @@ tm_shape(brno |> activate("edges") |> st_as_sf()) + tm_lines() +
     tm_shape(acc |> filter(!is.na(cluster)) |>
                  mutate(cluster = as.character(cluster))) +
     tm_dots(col = "cluster")
+
+
+tm_shape(clstrs) + tm_lines(col = "cost", lwd = 3)
+tm_shape(clstrs) + tm_lines(col = "cost_per_meter", lwd = 3)

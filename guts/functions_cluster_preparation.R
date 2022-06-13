@@ -13,7 +13,7 @@ require(spdep)
 require(dplyr)
 
 
-# one district -----------------------------------------------------------------
+# one district cluster tibble --------------------------------------------------
 
 # cluster_condition_density() tells which rows x in tibble lixels have densities
 # at least equal to threshold
@@ -240,5 +240,60 @@ compute_cluster_tibble <- function(lixels, nb, threshold, steps) {
         join_clusters() |>
         purrr::map(~tibble(lixel_id = unlist(.))) |>
         dplyr::bind_rows(.id = "cluster") |>
-        mutate(cluster = as.integer(cluster))
+        dplyr::mutate(cluster = as.integer(cluster))
+}
+
+
+
+# cluster to lixels/accidents --------------------------------------------------
+
+add_clusters_to_lixels <- function(lixels, clusters) {
+    dplyr::left_join(lixels, clusters, by = "lixel_id")
+}
+
+
+add_clusters_to_accidents <- function(accidents, clusters) {
+    acc <- dplyr::left_join(accidents, clusters, by = "lixel_id")
+}
+
+
+
+# compute cluster costs --------------------------------------------------------
+
+# | P13A | umsrceno osob                                                         |
+# | P13B | tězce zraněno osob                                                    |
+# | P13C | lehce zraněno osob                                                    |
+# | P14  | celková hmotná škoda ve stokorunách                                   |
+
+
+cluster_cost <- function(accidents, unit_costs) {
+    cost <- function(dead, serious_injury, light_injury, material_cost,
+                     unit_costs) {
+        sum(dead * unit_costs$dead +
+                serious_injury * unit_costs$serious_injury +
+                light_injury * unit_costs$light_injury +
+                material_cost * 1e2 / 1e6)
+    }
+    accidents |>
+        sf::st_drop_geometry() |>
+        dplyr::filter(!is.na(cluster)) |>
+        dplyr::group_by(cluster) |>
+        dplyr::summarise(cost = cost(p13a, p13b, p13c, p14, unit_costs),
+                         .groups = "drop")
+}
+
+
+
+graphic_clusters <- function(lixels, accidents, clusters, unit_costs) {
+    clstrs <- add_clusters_to_lixels(lixels, clusters) |>
+        dplyr::filter(!is.na(cluster)) |>
+        dplyr::group_by(cluster) |>
+        dplyr::summarise(total_length = sum(len),
+                         total_density = sum(density),
+                         geometry = st_union(geometry),
+                         .groups = "drop")
+    accdnts <- add_clusters_to_accidents(accidents, clusters)
+    costs <- cluster_cost(accdnts, unit_costs)
+    dplyr::left_join(clstrs, costs, by = "cluster") |>
+        dplyr::mutate(cost_per_meter = cost / total_length)
 }
