@@ -743,8 +743,8 @@ create_lixel_samples_for_roads <- function(districts,
         write_dir_rds(samples, output_path)
     }
     tab <- tibble(
-        input_path = file.path(input_folder, districts$lixel_file_name),
-        output_path = file.path(output_folder, districts$lixel_sample_file_name)
+        input_path = lixel_file_name(districts, input_folder),
+        output_path = lixel_sample_file_name(districts, output_folder)
     )
     workers <- get_number_of_workers(workers)
     PWALK(tab, one_file, workers = workers)
@@ -808,8 +808,8 @@ create_lixel_nbs <- function(districts, input_folder, output_folder,
         write_dir_rds(nb, output_file)
     }
     tab <- tibble::tibble(
-        input_file = file.path(input_folder, districts$lixel_file_name),
-        output_file = file.path(output_folder, districts$lixel_nb_file_name)
+        input_file = lixel_file_name(districts, input_folder),
+        output_file = lixel_nb_file_name(districts, output_folder)
     )
     PWALK(tab, one_district, workers = workers)
 }
