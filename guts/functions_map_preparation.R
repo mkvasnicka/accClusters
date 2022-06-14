@@ -735,17 +735,19 @@ create_lixelized_roads <- function(districts, input_folder, output_folder,
 # value:
 #   none, data are written to disk
 create_lixel_samples_for_roads <- function(districts,
-                                           input_folder, output_folder) {
+                                           input_folder, output_folder,
+                                           workers = NULL) {
     one_file <- function(input_path, output_path) {
         network <- readr::read_rds(input_path)
         samples <- spNetwork::lines_center(network)
         write_dir_rds(samples, output_path)
     }
-    tibble(
+    tab <- tibble(
         input_path = file.path(input_folder, districts$lixel_file_name),
         output_path = file.path(output_folder, districts$lixel_sample_file_name)
-    ) |>
-        pwalk(one_file)
+    )
+    workers <- get_number_of_workers(workers)
+    PWALK(tab, one_file, workers = workers)
 }
 
 
