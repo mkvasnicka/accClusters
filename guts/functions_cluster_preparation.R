@@ -253,7 +253,7 @@ add_clusters_to_lixels <- function(lixels, clusters) {
 
 
 add_clusters_to_accidents <- function(accidents, clusters) {
-    acc <- dplyr::left_join(accidents, clusters, by = "lixel_id")
+    dplyr::left_join(accidents, clusters, by = "lixel_id")
 }
 
 
@@ -285,6 +285,27 @@ graphic_clusters <- function(lixels, accidents, clusters, unit_costs) {
 }
 
 
+# faster than graphic_clusters, no graphical representation
+gr_clusters <- function(lixels, accidents, clusters) {
+    clstrs <- lixels |>
+        st_drop_geometry() |>
+        add_clusters_to_lixels(clusters) |>
+        dplyr::filter(!is.na(cluster)) |>
+        dplyr::group_by(cluster) |>
+        dplyr::summarise(total_length = sum(len),
+                         total_density = sum(density),
+                         .groups = "drop")
+    accdnts <- accidents |>
+        st_drop_geometry() |>
+        add_clusters_to_accidents(clusters) |>
+        dplyr::filter(!is.na(cluster)) |>
+        dplyr::group_by(cluster) |>
+        dplyr::summarise(cost = sum(accident_cost), .groups = "drop")
+    dplyr::left_join(clstrs, accdnts, by = "cluster") |>
+        dplyr::mutate(cost_per_meter = cost / total_length)
+}
+
+
 
 # optimize cluster parameters --------------------------------------------------
 
@@ -306,4 +327,21 @@ cluster_pai <- function(cluster, accidents, lixels) {
     total_length <- as.numeric(sum(lixels$len))
     (cluster_cost / total_cost) / (cluster_length / total_length)
 
+}
+
+
+optimize_cluster_parameters <- function(lixels, nb, accidents) {
+    f <- function(x) {
+        threshold <- x[1]
+        no_of_steps <- round(x[2])
+        cls <- compute_cluster_tibble(lixels, nb, threshold, no_of_steps)
+        clstrs <- gr_clusters(lixels, accidents, cls)
+        pai <- cluster_pai(clstrs, accidents, lixels)
+        ifelse(is.na(pai), Inf, -pai)
+    }
+    optim(par = c(0.995, 10),
+          fn = f,
+          lower = c(0.95, 1), upper = c(1, 60),
+          lixels = lixels, nb = nb, accidents = accidents
+    )
 }

@@ -41,27 +41,29 @@ nb <- read_rds(lixel_nb_file_name(districts, LIXEL_MAPS_DIR))
 accidents <- read_rds(accidents_file_name(districts, ACCIDENTS_DIR))
 
 
-threshold <- quantile(lixels$density, 0.995)
-no_of_steps <- 0
+threshold <- quantile(lixels$density, 0.99)
+no_of_steps <- 20
 
 
-system.time(
+system.time({
     cls <- compute_cluster_tibble(lixels, nb, threshold, no_of_steps)
-)
-
-
-system.time(
-    clstrs <- graphic_clusters(lixels, accidents, cls, unit_costs = UNIT_COSTS)
-)
+    # clstrs <- graphic_clusters(lixels, accidents, cls, unit_costs = UNIT_COSTS)
+    clstrs <- gr_clusters(lixels, accidents, cls)
+})
 
 
 cluster_pai(clstrs, accidents, lixels)
-# treshold = 0.995 quantile, no_of_steps = 0 => PAI =
+# treshold = 0.99 quantile, no_of_steps = 5 => PAI = NA
+# treshold = 0.99 quantile, no_of_steps = 20 => PAI = 7.985548
+# treshold = 0.995 quantile, no_of_steps = 0 => PAI = NA
 # treshold = 0.995 quantile, no_of_steps = 1 => PAI = 17.60684
 # treshold = 0.995 quantile, no_of_steps = 5 => PAI = 14.50918
 # treshold = 0.995 quantile, no_of_steps = 15 => PAI = 10.41518
 # treshold = 0.995 quantile, no_of_steps = 30 => PAI = 7.20486
 # treshold = 0.995 quantile, no_of_steps = 60 => PAI = 4.564866
+
+
+optimize_cluster_parameters(lixels, nb, accidents)
 
 
 system.time(
