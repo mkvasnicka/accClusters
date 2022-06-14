@@ -1,11 +1,15 @@
 TODO
 ====
 
-Celkově
--------
+Hotspoty/klastry
+----------------
 
-- vyskoušet výpočet NKDE paralelně s neváženými nehodami a vážnými pomocí injuries
+- vyzkoušet výpočet NKDE paralelně s neváženými nehodami a vážnými pomocí injuries
 - PAI optimalizace parametrizace tvorby klastrů
+- jak zahrnout čas? zatím se počítá na všech nehodách. jak to udělat? možnosti:
+    - statická tabulka s rozsahy datumů, pro které se to počítá
+    - nějaký automat
+    - jen poslední klouzavé okno (např. 3 roky zpět od posledního data)
 
 
 Mapy
