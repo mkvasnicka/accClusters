@@ -9,6 +9,7 @@
 # Copyright(c) Corporation Name
 # -------------------------------------
 
+# load necessary packages
 library(readr)
 library(sf)
 library(sfnetworks)
@@ -22,13 +23,22 @@ source(file.path(RSCRIPTDIR, "functions_auxiliary.R"))
 source(file.path(RSCRIPTDIR, "functions_cluster_preparation.R"))
 
 
+# read in districts
+districts <- readr::read_rds(PATH_TO_DISTRICTS)
+
+
 tmap_mode("view")
 
 
-brno <- read_rds("guts/data/maps/district_40711.rds")
-nbs <- read_rds("guts/data/lixels/lixel_nb_40711.rds")
-lixels <- read_rds("guts/data/densities/densities_40711.rds")
-accidents <- read_rds("guts/data/accidents/accidents_40711.rds")
+# TEMP
+districts <- districts |>
+    dplyr::filter(stringr::str_detect(district_name, "Beroun"))
+
+
+full_map <- read_rds(sf_file_name(districts, SF_MAPS_DIR))
+lixels <- read_rds(densities_file_name(districts, DENSITIES_DIR))
+nb <- read_rds(lixel_nb_file_name(districts, LIXEL_MAPS_DIR))
+accidents <- read_rds(accidents_file_name(districts, ACCIDENTS_DIR))
 
 
 threshold <- quantile(lixels$density, 0.995)
@@ -36,18 +46,11 @@ no_of_steps <- 30
 
 
 system.time(
-    cls <- compute_cluster_tibble(lixels, nbs, threshold, no_of_steps)
+    cls <- compute_cluster_tibble(lixels, nb, threshold, no_of_steps)
 )
 
 
 system.time(
-    # clstrs <- add_clusters_to_lixels(lixels, cls) |>
-    #     filter(!is.na(cluster)) |>
-    #     group_by(cluster) |>
-    #     summarise(total_length = sum(len),
-    #               total_density = sum(density),
-    #               geometry = st_union(geometry),
-    #               .groups = "drop")
     clstrs <- graphic_clusters(lixels, accidents, cls, unit_costs = UNIT_COSTS)
 )
 
@@ -56,7 +59,7 @@ system.time(
 )
 
 
-tm_shape(brno |> activate("edges") |> st_as_sf()) + tm_lines() +
+tm_shape(full_map |> activate("edges") |> st_as_sf()) + tm_lines() +
     tm_shape(clstrs |> mutate(cluster = as.character(cluster))) +
     tm_lines(col = "cluster", lwd = 2) +
     tm_shape(acc |> filter(!is.na(cluster)) |>
@@ -66,3 +69,6 @@ tm_shape(brno |> activate("edges") |> st_as_sf()) + tm_lines() +
 
 tm_shape(clstrs) + tm_lines(col = "cost", lwd = 3)
 tm_shape(clstrs) + tm_lines(col = "cost_per_meter", lwd = 3)
+
+
+cluster_pai(clstrs, accidents, lixels)

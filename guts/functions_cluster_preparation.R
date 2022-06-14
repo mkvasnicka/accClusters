@@ -283,3 +283,27 @@ graphic_clusters <- function(lixels, accidents, clusters, unit_costs) {
     dplyr::left_join(clstrs, costs, by = "cluster") |>
         dplyr::mutate(cost_per_meter = cost / total_length)
 }
+
+
+
+# optimize cluster parameters --------------------------------------------------
+
+# cluster_pai() computes PAI of clusters
+#
+# inputs:
+# - cluster ... ((sf) tibble) with columns total_density and cost as returned by
+#   graphic_clusters()
+# - accidents ... (sf tibble) of accidents cropped to the particular district
+#   and snapped to its roads; it must contain column accident_cost
+# - lixels ... (sf tibble) road lixels; it must contain column len
+#
+# value:
+#   PAI (numeric scalar)---the higher, the better
+cluster_pai <- function(cluster, accidents, lixels) {
+    cluster_cost <- sum(cluster$cost)
+    cluster_length <- as.numeric(sum(cluster$total_length))
+    total_cost <- sum(accidents$accident_cost)
+    total_length <- as.numeric(sum(lixels$len))
+    (cluster_cost / total_cost) / (cluster_length / total_length)
+
+}
