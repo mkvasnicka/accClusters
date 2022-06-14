@@ -11,6 +11,7 @@
 
 # necessary packages
 require(readr)
+require(stringr)
 require(memuse)
 
 
@@ -138,8 +139,8 @@ is_behind <- function(target, source) {
     msource <- file.mtime(source)
 
     if (any(is.na(msource)))
-        stop("Some sources don't exist:",
-             source[is.na(msource)])
+        stop("Some sources don't exist: ",
+             str_c(source[is.na(msource)], collapse = ", "))
 
     if (any(is.na(mtarget)))
         return(TRUE)
