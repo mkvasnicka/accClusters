@@ -10,6 +10,8 @@ Hotspoty/klastry
     - statická tabulka s rozsahy datumů, pro které se to počítá
     - nějaký automat
     - jen poslední klouzavé okno (např. 3 roky zpět od posledního data)
+- otázka: optimalizovat parametry klastrů globálně (tj. PAI celku, nebo po jednotlivých klastech)?
+    - pokud po klastrech, jak?
 
 
 Mapy
