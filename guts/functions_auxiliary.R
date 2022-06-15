@@ -10,9 +10,11 @@
 # -------------------------------------
 
 # necessary packages
+require(dplyr)
 require(readr)
 require(stringr)
 require(memuse)
+require(logging)
 
 
 
@@ -207,3 +209,57 @@ accident_damage_cost <- function(dead, serious_injury, light_injury,
         light_injury * unit_costs$light_injury +
         material_cost * 1e2 / 1e6
 }
+
+
+
+# logging ----------------------------------------------------------------------
+
+# create_log_file(log_folder) creates a new log file in log_folder; it creates
+# the folder, too, if necessary
+#
+# inputs:
+# - log_folder (character scalar) path to a folder where logs should be stored
+#
+# value:
+#   none; it only creates the file (and the folder, if necessary)
+#
+# notes:
+# - the reason for this approach is following: I want individual steps in data
+#   preparation to run in vanilla fresh R each time, but I want all logging into
+#   one file; therefore, I have to start logging into the newest existing file;
+#   therefore, there must be a way to create a new log file
+create_log_file <- function(log_folder) {
+    dir.create(log_folder, showWarnings = FALSE, recursive = TRUE)
+    time <- as.character(Sys.time())
+    log_file <- stringr::str_c(
+        stringr::str_replace_all(time, "[\\s:]", "-"),
+        ".log")
+    readr::write_lines(
+        stringr::str_c(time, " CREATED log file"),
+        file.path(log_folder, log_file)
+    )
+}
+
+
+# start_logging(log_folder) starts logging into the newest .log file in
+# log_folder
+#
+# inputs:
+# - log_folder (character scalar) path to a folder where logs arestored
+#
+# value:
+#   none; it starts logging into the newest .log file in log_folder
+#
+# notes:
+# - for reason why it is done this way, see notes to create_log_file()
+start_logging <- function(log_folder) {
+    logging::basicConfig()
+    log_file <- list.files(log_folder, pattern = "\\.log", full.names = TRUE) |>
+        file.info() |>
+        dplyr::arrange(dplyr::desc(ctime)) |>
+        dplyr::slice(1) |>
+        rownames()
+    addHandler(writeToFile, file = log_file)
+}
+
+

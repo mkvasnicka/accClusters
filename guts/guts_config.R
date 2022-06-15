@@ -100,3 +100,8 @@ ACCIDENTS_DIR <- file.path(DATA_DIR, "accidents")
 
 # path to NKDEs by districts
 DENSITIES_DIR <- file.path(DATA_DIR, "densities")
+
+
+
+# logging
+LOG_DIR <- file.path(DIR_ORIGIN, "log")
