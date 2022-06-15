@@ -151,6 +151,48 @@ is_behind <- function(target, source) {
 }
 
 
+# districts_behind() returns subset of districts for which the computation is
+# behind
+#
+# inputs:
+# - districts ... (sf tibble) tibble of districts
+# - target_fun ... (function) name function of the target, such as
+#   lixel_file_name
+# - source_fun ... (function) name function of the target, such as sf_file_name
+# - target_folder ... (character scalar) path to folder where target files
+#   should be stored
+# - source_folder ... (character scalar) path to folder where source files
+#   are be stored
+# - other_files ... (optional character vector) paths to other files that
+#   condition target creation
+#
+# value:
+#   subset of (rows of) districts table; it includes only its rows for which
+#   targets must be created because they either don't exist or are behind
+districts_behind <- function(districts, target_fun, source_fun,
+                             target_folder, source_folder,
+                             other_files = NULL) {
+    target_files <- target_fun(districts, target_folder)
+    source_files <- source_fun(districts, source_folder)
+
+    mtarget <- file.mtime(target_files)
+    msource <- file.mtime(source_files)
+    if (is.null(other_files)) {
+        mother <- -Inf
+    } else{
+        mother <- max(file.mtime(other_files))
+    }
+
+    if (any(is.na(msource)))
+        stop("Some sources don't exist: ",
+             str_c(source_files[is.na(msource)], collapse = ", "))
+
+    ids <- is.na(mtarget) | (mtarget < msource) | (mtarget < mother)
+
+    districts[ids, ]
+}
+
+
 
 # parallel processing ----------------------------------------------------------
 
@@ -167,7 +209,7 @@ get_number_of_workers <- function(workers) {
 
 PWALK <- function(.l, .f, workers = 1, ...) {
     workers <- get_number_of_workers(workers)
-
+    .f <- purrr::possibly(.f, otherwise = NULL)
     if (workers == 1) {
         purrr::pwalk(.l, .f, ...)
     } else {
@@ -252,14 +294,16 @@ create_log_file <- function(log_folder) {
 #
 # notes:
 # - for reason why it is done this way, see notes to create_log_file()
-start_logging <- function(log_folder) {
+start_logging <- function(log_folder, console = FALSE) {
     logging::basicConfig()
     log_file <- list.files(log_folder, pattern = "\\.log", full.names = TRUE) |>
         file.info() |>
         dplyr::arrange(dplyr::desc(ctime)) |>
         dplyr::slice(1) |>
         rownames()
-    addHandler(writeToFile, file = log_file)
+    logging::addHandler(writeToFile, file = log_file)
+    if (console)
+        logging::removeHandler("basic.stdout")
 }
 
 

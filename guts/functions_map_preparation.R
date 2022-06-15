@@ -661,7 +661,8 @@ simplify_sfnetwork <- function(net, max_distance = 0.5, dTolerance = 5) {
 create_sf_district_roads <- function(districts, input_folder, output_folder,
                                      crs,
                                      max_distance = 0.5, dTolerance = 5,
-                                     workers = 1) {
+                                     workers = 1,
+                                     other_dependencies = NULL) {
     one_file <- function(input_file, output_file) {
         map <- read_osm_to_sfnetwork(input_file, crs = crs) |>
             remove_sfnetwork_minor_components() |>
@@ -669,6 +670,13 @@ create_sf_district_roads <- function(districts, input_folder, output_folder,
                                dTolerance = dTolerance)
         write_dir_rds(map, output_file)
     }
+
+    districts <- districts_behind(districts,
+                                  target_fun = sf_file_name,
+                                  source_fun = osm_file_name,
+                                  target_folder = output_folder,
+                                  source_folder = input_folder,
+                                  other_files = other_dependencies)
     tab <- tibble::tibble(
         input_file = osm_file_name(districts, input_folder),
         output_file = sf_file_name(districts, output_folder)
@@ -702,7 +710,7 @@ create_sf_district_roads <- function(districts, input_folder, output_folder,
 create_lixelized_roads <- function(districts, input_folder, output_folder,
                                    lx_length, mindist = NULL,
                                    workers = NULL,
-                                   chunk_size = 100) {
+                                   other_dependencies = NULL) {
     one_file <- function(input_path, output_path, lx_length, mindist) {
         network <- readr::read_rds(input_path) |>
             sfnetworks::activate("edges") |>
@@ -715,6 +723,12 @@ create_lixelized_roads <- function(districts, input_folder, output_folder,
     }
 
     workers <- get_number_of_workers(workers)
+    districts <- districts_behind(districts,
+                                  target_fun = lixel_file_name,
+                                  source_fun = sf_file_name,
+                                  target_folder = output_folder,
+                                  source_folder = input_folder,
+                                  other_files = other_dependencies)
     tab <- tibble(
         input_path = sf_file_name(districts, input_folder),
         output_path = lixel_file_name(districts, output_folder)
@@ -736,17 +750,25 @@ create_lixelized_roads <- function(districts, input_folder, output_folder,
 #   none, data are written to disk
 create_lixel_samples_for_roads <- function(districts,
                                            input_folder, output_folder,
-                                           workers = NULL) {
+                                           workers = NULL,
+                                           other_dependencies = NULL) {
     one_file <- function(input_path, output_path) {
         network <- readr::read_rds(input_path)
         samples <- spNetwork::lines_center(network)
         write_dir_rds(samples, output_path)
     }
+
+    workers <- get_number_of_workers(workers)
+    districts <- districts_behind(districts,
+                                  target_fun = lixel_sample_file_name,
+                                  source_fun = lixel_file_name,
+                                  target_folder = output_folder,
+                                  source_folder = input_folder,
+                                  other_files = other_dependencies)
     tab <- tibble(
         input_path = lixel_file_name(districts, input_folder),
         output_path = lixel_sample_file_name(districts, output_folder)
     )
-    workers <- get_number_of_workers(workers)
     PWALK(tab, one_file, workers = workers)
 }
 
@@ -801,12 +823,21 @@ create_sf_nb <- function(sf) {
 # value:
 #   none, data are written to disk
 create_lixel_nbs <- function(districts, input_folder, output_folder,
-                             workers = NULL) {
+                             workers = NULL,
+                             other_dependencies = NULL) {
     one_district <- function(input_file, output_file) {
         lixels <- readr::read_rds(input_file)
         nb <- create_sf_nb(lixels)
         write_dir_rds(nb, output_file)
     }
+
+    workers <- get_number_of_workers(workers)
+    districts <- districts_behind(districts,
+                                  target_fun = lixel_nb_file_name,
+                                  source_fun = lixel_file_name,
+                                  target_folder = output_folder,
+                                  source_folder = input_folder,
+                                  other_files = other_dependencies)
     tab <- tibble::tibble(
         input_file = lixel_file_name(districts, input_folder),
         output_file = lixel_nb_file_name(districts, output_folder)
