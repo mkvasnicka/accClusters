@@ -298,7 +298,7 @@ snap_points_to_lines <- function(points, lines, dist = 100,
 create_districts_accidents <- function(districts, accidents, max_distance,
                                        lixel_dir, accident_dir,
                                        unit_costs,
-                                       workers = 1,
+                                       workers = NULL,
                                        other_dependencies = NULL) {
     one_file <- function(input_file, output_file, accidents) {
         lines <- readr::read_rds(input_file)

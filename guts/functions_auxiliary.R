@@ -191,6 +191,41 @@ districts_behind <- function(districts, target_fun, source_fun,
 
     districts[ids, ]
 }
+districts_behind <- function(districts, target_fun, source_fun,
+                             target_folder, source_folder,
+                             other_files = NULL) {
+    target_files <- target_fun(districts, target_folder)
+    mtarget <- file.mtime(target_files)
+
+    if (is.list(source_fun)) {
+        if (!is.list(source_folder) ||
+            length(source_fun) != length(source_folder))
+            stop("If source_fun is a list, source_folder must ",
+                 "be a list of the same length.")
+        msource <- -Inf
+        for (k in seq_along(source_fun)) {
+            source_files <- source_fun[[k]](districts, source_folder[[k]])
+            msource <- pmax(msource, file.mtime(source_files))
+        }
+    } else {
+        source_files <- source_fun(districts, source_folder)
+        msource <- file.mtime(source_files)
+    }
+
+    if (is.null(other_files)) {
+        mother <- -Inf
+    } else{
+        mother <- max(file.mtime(other_files))
+    }
+
+    if (any(is.na(msource)))
+        stop("Some sources don't exist: ",
+             str_c(source_files[is.na(msource)], collapse = ", "))
+
+    ids <- is.na(mtarget) | (mtarget < msource) | (mtarget < mother)
+
+    districts[ids, ]
+}
 
 
 

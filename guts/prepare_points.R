@@ -44,7 +44,7 @@ if (is_behind(PATH_TO_RAW_ACCIDENTS,
                                lixel_dir = LIXEL_MAPS_DIR,
                                accident_dir = ACCIDENTS_DIR,
                                unit_costs = UNIT_COSTS,
-                               workers = NO_OF_WORKERS,
+                               workers = NO_OF_WORKERS_ACCIDENTS,
                                other_dependencies = c(PATH_TO_DISTRICTS,
                                                       PATH_TO_RAW_ACCIDENTS))
 # }

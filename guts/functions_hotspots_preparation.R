@@ -20,7 +20,8 @@ compute_densities <- function(districts,
                               weights = NULL, bw = 300,
                               adaptive = FALSE, trim_bw = 600,
                               method = "discontinuous", agg = 1,
-                              workers = NULL) {
+                              workers = NULL,
+                              other_files = NULL) {
   one_district <- function(map_path, lixel_path, sample_path, accidents_path,
                            density_path,
                            weights, bw, adaptive, trim_bw, method, agg) {
@@ -49,6 +50,16 @@ compute_densities <- function(districts,
     write_dir_rds(lixels, density_path)
   }
 
+  workers <- get_number_of_workers(workers)
+  districts <- districts_behind(districts,
+                                target_fun = densities_file_name,
+                                source_fun = list(sf_file_name, lixel_file_name,
+                                                  lixel_sample_file_name,
+                                                  accidents_file_name),
+                                target_folder = density_dir,
+                                source_folder = list(maps_dir, lixel_dir,
+                                                     sample_dir, accidents_dir),
+                                other_files = other_files)
   tab <- tibble::tibble(
       map_path = sf_file_name(districts, maps_dir),
       lixel_path = lixel_file_name(districts, lixel_dir),
