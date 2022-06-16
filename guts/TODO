@@ -45,6 +45,7 @@ V současnosti se natahují jen soupce z tabulky nehody a z GPS se doplní souř
 - doplnit ostatní sloupce, které budou potřeba
 - vyhodit sloupce, které nejsou potřeba
 - jak počítat závažnost nehody?
+- create_districts_accidents() běží na málo jádrech, protože  vyžaduje hodně paměti -- asi kvůli kopírování velké tabulky accidents; asi by šlo zlepšit, kdyby se tabulka prvně cropem rozdělila na kusy a ty se poslaly přímo do paralelizace
 
 
 Všude

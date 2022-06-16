@@ -196,13 +196,13 @@ districts_behind <- function(districts, target_fun, source_fun,
 
 # parallel processing ----------------------------------------------------------
 
-get_number_of_workers <- function(workers) {
+get_number_of_workers <- function(workers, ram_needed = RAM_PER_CORE_GENERAL) {
     if (is.null(workers))
         workers <- ifelse(exists("NO_OF_WORKERS"), NO_OF_WORKERS, 1)
     if (workers == "auto") {
         ram <- as.numeric(memuse::Sys.meminfo()$freeram) / 1024 ^ 3
         no_of_cores <- future::availableCores()
-        workers <- min(no_of_cores, floor(ram / 2.5))}
+        workers <- min(no_of_cores, floor(ram / ram_needed))}
     workers
 }
 

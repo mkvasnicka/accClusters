@@ -11,8 +11,13 @@
 
 # parallel processing ----------------------------------------------------------
 
+# how many cores should be used in parallel
 NO_OF_WORKERS <- "auto"  # future::availableCores()
 
+# how much ram should be available per core in parallel processing when the
+# number of cores used is detected automatically
+RAM_PER_CORE_GENERAL <- 2.5
+RAM_PER_CORE_ACCIDENTS <- 8
 
 
 # constants --------------------------------------------------------------------

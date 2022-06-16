@@ -298,7 +298,8 @@ snap_points_to_lines <- function(points, lines, dist = 100,
 create_districts_accidents <- function(districts, accidents, max_distance,
                                        lixel_dir, accident_dir,
                                        unit_costs,
-                                       workers = 1) {
+                                       workers = 1,
+                                       other_dependencies = NULL) {
     one_file <- function(input_file, output_file, accidents) {
         lines <- readr::read_rds(input_file)
         snapped_points <- snap_points_to_lines(accidents, lines,
@@ -312,6 +313,14 @@ create_districts_accidents <- function(districts, accidents, max_distance,
         write_dir_rds(snapped_points, output_file)
     }
 
+    workers <- get_number_of_workers(workers,
+                                     ram_needed = RAM_PER_CORE_ACCIDENTS)
+    districts <- districts_behind(districts,
+                                  target_fun = accidents_file_name,
+                                  source_fun = lixel_file_name,
+                                  target_folder = accident_dir,
+                                  source_folder = lixel_dir,
+                                  other_files = other_dependencies)
     tab <- tibble::tibble(
         input_file = lixel_file_name(districts, lixel_dir),
         output_file = accidents_file_name(districts, accident_dir))
