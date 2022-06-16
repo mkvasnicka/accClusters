@@ -23,7 +23,9 @@ source(file.path(RSCRIPTDIR, "functions_districts_preparation.R"))
 #' Navíc přidáme naše vlastní jména distriktů a jejich id. To umožní abstrakci
 #' nad tím, co jsou distrikty (nemusí být nutně okresy) a jaké mapy se použijí,
 #' tj. jak to mají pojmenované.
-if (is_behind(PATH_TO_DISTRICTS, PATH_TO_RAW_DISTRICTS)) {
-    districts <- read_arccr_districts(PATH_TO_RAW_DISTRICTS)
-    write_dir_rds(districts, file = PATH_TO_DISTRICTS)
-}
+# if (is_behind(PATH_TO_DISTRICTS, PATH_TO_RAW_DISTRICTS)) {
+#     districts <- read_arccr_districts(PATH_TO_RAW_DISTRICTS)
+#     write_dir_rds(districts, file = PATH_TO_DISTRICTS)
+# }
+create_districts(path_do_districts = PATH_TO_DISTRICTS,
+                 path_to_raw_districts = PATH_TO_RAW_DISTRICTS)
