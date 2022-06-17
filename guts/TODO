@@ -1,6 +1,34 @@
 TODO
 ====
 
+Předání dat Štěpánovi
+---------------------
+- tabulka lixels
+    - sloupce lixel_id, geometrie, density, klastr_id
+    - jen lixely, které jsou součástí nějakého klastru nebo s hustotou v 95. kvantilu a výše
+- tabulka accidents
+    - sloupce p1 a klastr_id
+    - jen nehody, které jsou součástí klastrů
+tabulky po bufferovaných okresech
+    - otázka, co dělat s okraji: nechat/oříznout
+    - pokud oříznout, co klastry na pomezí? asi nechat celé?
+každá tabulka je pro jeden okres a jeden čas
+    - časy definuje konfigurační tabulka, asi TSV (from_date, to_date)
+    - to znamená, že
+        - density už se počítají pro různé časy
+        - všechno za tím (klastry) se musí počítat nejen pro okresy, ale i pro časy
+        - name funkce (sf_file_name() apod.) musí mít parametr ... pro předání takových parametrů
+        - podobně rozšířit funkce is_behind() a districts_behind()
+jména souborů XXXX_####_YYYY_MM_DD_YYYY_MM_DD, kde
+    - XXXX je číslo okresu
+    - první YYYY_MM_DD je počáteční datum
+    - druhé YYYY_MM_DD je koncové datum
+compute_densities()
+    - přidat help
+    - výstupní soubor závisí na from_date, to_date -- nutno upravit name funkci
+    - napsat wrapper, který projde nejen tabulku okresů, ale i tabulku datumů
+
+
 Hotspoty/klastry
 ----------------
 
