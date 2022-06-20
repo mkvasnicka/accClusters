@@ -25,12 +25,6 @@ districts <- readr::read_rds(PATH_TO_DISTRICTS)
 
 
 # compute hotspots, i.e., NKDE
-# if(is_behind(densities_file_name(districts, DENSITIES_DIR),
-#              c(sf_file_name(districts, SF_MAPS_DIR),
-#                lixel_file_name(districts, LIXEL_MAPS_DIR),
-#                lixel_sample_file_name(districts, LIXEL_MAPS_DIR),
-#                accidents_file_name(districts, ACCIDENTS_DIR),
-#                PATH_TO_DISTRICTS))) {
     compute_densities(districts,
                       maps_dir = SF_MAPS_DIR,
                       lixel_dir = LIXEL_MAPS_DIR,
@@ -44,4 +38,3 @@ districts <- readr::read_rds(PATH_TO_DISTRICTS)
                       method = "discontinuous", agg = 1,
                       workers = NO_OF_WORKERS,
                       other_files = PATH_TO_DISTRICTS)
-# }

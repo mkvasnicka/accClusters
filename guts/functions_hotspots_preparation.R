@@ -73,13 +73,16 @@ compute_densities <- function(districts,
                                 target_folder = density_dir,
                                 source_folder = list(maps_dir, lixel_dir,
                                                      sample_dir, accidents_dir),
-                                other_files = other_files)
+                                other_files = other_files,
+                                from_date = from_date, to_date = to_date)
   tab <- tibble::tibble(
       map_path = sf_file_name(districts, maps_dir),
       lixel_path = lixel_file_name(districts, lixel_dir),
       sample_path = lixel_sample_file_name(districts, sample_dir),
       accidents_path = accidents_file_name(districts, accidents_dir),
-      density_path = densities_file_name(districts, density_dir)
+      density_path = densities_file_name(districts, density_dir,
+                                         from_date = from_date,
+                                         to_date = to_date)
   )
   PWALK(tab, one_district, workers = get_number_of_workers(workers),
         from_date, to_date,
