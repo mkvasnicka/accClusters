@@ -103,16 +103,39 @@ densities_file_name <- function(districts, folder = NULL, ...) {
                     ...)
 }
 
+# paths to files including the final product used in Shiny
+shiny_file_name <- function(districts, folder = NULL, ...) {
+    pars <- list(...)
+    stopifnot("from_date" %in% names(pars) && "to_date" %in% names(pars))
+    basic_file_name(folder, districts,
+                    stringr::str_c("shiny_{id}_{as.character(from_date)}_",
+                                   "{as.character(to_date)}.RData"),
+                    ...)
+}
+
 
 
 # reading/writing files --------------------------------------------------------
+
+# create_dir_for_file(file) recursively creates folders needed to save file
+#
+# inputs:
+# - file ... (character scalar) path to file
+#
+# value:
+#   none; it creates folders if needed
+create_dir_for_file <- function(file) {
+    dir <- dirname(file)
+    dir.create(dir, showWarnings = FALSE, recursive = TRUE)
+}
+
 
 # write_dir_rds(object, file) writes one object to a path; it doesn't compress
 # the file; it creates all necessary (sub)folders in the path
 #
 # inputs:
 # - object ... any kind of object
-# - file ... (character scalar) a paht to the object
+# - file ... (character scalar) a path to the object
 #
 # value:
 #   none
@@ -121,9 +144,23 @@ densities_file_name <- function(districts, folder = NULL, ...) {
 #   write_dir_rds(districts, "/tmp/boo.rds")
 #   districts <- readr::read_rds("/tmp/boo.rds")
 write_dir_rds <- function(object, file) {
-    dir <- dirname(file)
-    dir.create(dir, showWarnings = FALSE, recursive = TRUE)
+    create_dir_for_file(file)
     readr::write_rds(object, file = file, compress = "none")
+}
+
+
+# write_dir_rdata(..., file) writes all objects in ... to a path; it doesn't
+# compress the file; it creates all necessary (sub)folders in the path
+#
+# inputs:
+# - ... ... any kind of objects
+# - file ... (character scalar) a path to the object
+#
+# value:
+#   none
+write_dir_rdata <- function(..., file) {
+    create_dir_for_file(file)
+    save(..., file = file, compress = FALSE)
 }
 
 

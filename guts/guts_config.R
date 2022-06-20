@@ -122,5 +122,9 @@ ACCIDENTS_DIR <- file.path(DATA_DIR, "accidents")
 DENSITIES_DIR <- file.path(DATA_DIR, "densities")
 
 
+# path to folder where the final product used in shiny in stored
+SHINY_DIR <- file.path(DIR_ORIGIN, "shiny")
+
+
 # logging
 LOG_DIR <- file.path(DIR_ORIGIN, "log")

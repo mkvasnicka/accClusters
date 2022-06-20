@@ -88,3 +88,20 @@ tm_shape(full_map |> activate("edges") |> st_as_sf()) + tm_lines() +
 tm_shape(clstrs2) + tm_lines(col = "blue", lwd =5 ) + tm_shape(clstrs) + tm_lines(col = "red", lwd = 3)
 tm_shape(clstrs) + tm_lines(col = "cost", lwd = 3)
 tm_shape(clstrs) + tm_lines(col = "cost_per_meter", lwd = 3)
+
+
+densities_file = densities_file_name(districts, DENSITIES_DIR,
+                                     from_date = "2019-01-01",
+                                     to_date = "2021-12-31")
+lixel_nb_file = lixel_nb_file_name(districts, LIXEL_MAPS_DIR)
+accident_file = accidents_file_name(districts, ACCIDENTS_DIR)
+shiny_file = shiny_file_name(districts, SHINY_DIR,
+                             from_date = "2019-01-01",
+                             to_date = "2021-12-31")
+cluster_min_quantile <- 0.995
+cluster_steps <- 5
+visual_min_quantile <- 0.95
+one_district(densities_file, lixel_nb_file, accident_file,
+             shiny_file,
+             cluster_min_quantile, cluster_steps,
+             visual_min_quantile)

@@ -394,3 +394,44 @@ optimize_cluster_parameters <- function(lixels, nb, accidents,
     dplyr::filter(grid, !is.na(pai)) |>
         dplyr::arrange(desc(pai))
 }
+
+
+
+# cluster preparation ----------------------------------------------------------
+
+one_district <- function(densities_file, lixel_nb_file, accident_file,
+                         shiny_file,
+                         cluster_min_quantile, cluster_steps,
+                         visual_min_quantile) {
+    lixels <- readr::read_rds(densities_file)
+    nb <- readr::read_rds(lixel_nb_file)
+    accidents <- readr::read_rds(accident_file)
+    threshold <- quantile(lixels$density, cluster_min_quantile)
+    cls <- compute_cluster_tibble(lixels, nb, threshold, cluster_steps)
+    clss <- cluster_statistics(lixels, accidents, cls)
+    visual_threshold <- quantile(lixels$density, visual_min_quantile)
+
+    lixels <- lixels |>
+        add_clusters_to_lixels(cls) |>
+        dplyr::filter(density >= visual_threshold | !is.na(cluster)) |>
+        dplyr::select(lixel_id, density, cluster)
+    accidents <- accidents |>
+        add_clusters_to_accidents(cls) |>
+        sf::st_drop_geometry() |>
+        dplyr::filter(!is.na(cluster)) |>
+        dplyr::select(p1, cluster, accident_cost)
+    cluster_statistics <- clss
+    write_dir_rdata(lixels, accidents, cluster_statistics,
+                    file = shiny_file)
+}
+
+# tab <- tibble::tibble(
+#     densities_file = densities_file_name(districts, DENSITIES_DIR,
+#                                          from_date = "2019-01-01",
+#                                          to_date = "2021-12-31"),
+#     lixel_nb_file = lixel_nb_file_name(districts, LIXEL_MAPS_DIR),
+#     accident_file = accidents_file_name(districts, ACCIDENTS_DIR),
+#     shiny_file = shiny_file_name(districts, SHINY_DIR,
+#                                  from_date = "2019-01-01",
+#                                  to_date = "2021-12-31")
+# )
