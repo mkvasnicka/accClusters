@@ -236,8 +236,11 @@ join_clusters <- function(clusters) {
 #   from start lixel which have density >= threshold, and then 2) recursively
 #   adds all neighboring lixels in steps steps
 compute_cluster_tibble <- function(lixels, nb, threshold, steps) {
-    make_clusters(lixels, nb, threshold, steps) |>
-        join_clusters() |>
+    lst <- make_clusters(lixels, nb, threshold, steps) |>
+        join_clusters()
+    if (length(lst) == 0)
+        return(tibble::tibble(cluster = integer(0), lixel_id = integer(0)))
+    lst |>
         purrr::map(~tibble(lixel_id = unlist(.))) |>
         dplyr::bind_rows(.id = "cluster") |>
         dplyr::mutate(cluster = as.integer(cluster))
@@ -330,18 +333,24 @@ cluster_pai <- function(cluster, accidents, lixels) {
 }
 
 
-optimize_cluster_parameters <- function(lixels, nb, accidents) {
-    f <- function(x) {
-        threshold <- x[1]
-        no_of_steps <- round(x[2])
+optimize_cluster_parameters <- function(lixels, nb, accidents,
+                                        threshold_range = seq(from = 0.975,
+                                                              to = 0.999,
+                                                              by = 0.001),
+                                        step_range = 1:30) {
+    f <- function(lixels, nb, accidents, threshold, no_of_steps) {
         cls <- compute_cluster_tibble(lixels, nb, threshold, no_of_steps)
         clstrs <- gr_clusters(lixels, accidents, cls)
-        pai <- cluster_pai(clstrs, accidents, lixels)
-        ifelse(is.na(pai), Inf, -pai)
+        cluster_pai(clstrs, accidents, lixels)
     }
-    optim(par = c(0.995, 10),
-          fn = f,
-          lower = c(0.95, 1), upper = c(1, 60),
-          lixels = lixels, nb = nb, accidents = accidents
-    )
+    grid <- tidyr::expand_grid(
+        threshold_quantile = threshold_range,
+        no_of_steps = step_range) |>
+        dplyr::mutate(threshold = quantile(lixels$density, threshold_quantile))
+    grid$pai <- purrr::map_dbl(seq_len(nrow(grid)),
+                               ~f(lixels, nb, accidents,
+                                  threshold = grid$threshold[.],
+                                  no_of_steps = grid$no_of_steps[.]))
+    dplyr::filter(grid, !is.na(pai)) |>
+        dplyr::arrange(desc(pai))
 }

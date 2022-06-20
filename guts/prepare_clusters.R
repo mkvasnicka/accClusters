@@ -32,23 +32,25 @@ tmap_mode("view")
 
 # TEMP
 districts <- districts |>
-    dplyr::filter(stringr::str_detect(district_name, "Beroun"))
+    dplyr::filter(stringr::str_detect(district_name, "Brno-město"))
 
 
 full_map <- read_rds(sf_file_name(districts, SF_MAPS_DIR))
-lixels <- read_rds(densities_file_name(districts, DENSITIES_DIR))
+lixels <- read_rds(densities_file_name(districts, DENSITIES_DIR,
+                                       from_date = "2019-01-01",
+                                       to_date = "2021-12-31"))
 nb <- read_rds(lixel_nb_file_name(districts, LIXEL_MAPS_DIR))
 accidents <- read_rds(accidents_file_name(districts, ACCIDENTS_DIR))
 
 
-threshold <- quantile(lixels$density, 0.99)
-no_of_steps <- 20
+threshold <- quantile(lixels$density, 0.995)
+no_of_steps <- 1
 
 
 system.time({
     cls <- compute_cluster_tibble(lixels, nb, threshold, no_of_steps)
-    # clstrs <- graphic_clusters(lixels, accidents, cls, unit_costs = UNIT_COSTS)
-    clstrs <- gr_clusters(lixels, accidents, cls)
+    clstrs <- graphic_clusters(lixels, accidents, cls, unit_costs = UNIT_COSTS)
+    # clstrs <- gr_clusters(lixels, accidents, cls)
 })
 
 
@@ -63,7 +65,9 @@ cluster_pai(clstrs, accidents, lixels)
 # treshold = 0.995 quantile, no_of_steps = 60 => PAI = 4.564866
 
 
-optimize_cluster_parameters(lixels, nb, accidents)
+system.time(
+    opt_par <- optimize_cluster_parameters(lixels, nb, accidents)
+)
 
 
 system.time(
@@ -79,5 +83,6 @@ tm_shape(full_map |> activate("edges") |> st_as_sf()) + tm_lines() +
     tm_dots(col = "cluster")
 
 
+tm_shape(clstrs2) + tm_lines(col = "blue", lwd =5 ) + tm_shape(clstrs) + tm_lines(col = "red", lwd = 3)
 tm_shape(clstrs) + tm_lines(col = "cost", lwd = 3)
 tm_shape(clstrs) + tm_lines(col = "cost_per_meter", lwd = 3)
