@@ -68,6 +68,15 @@ UNIT_COSTS <- list(
 )
 
 
+# NKDE parameters
+NKDE_WEIGHTS <- "accident_cost" # weights
+NKDE_BW <- 300                  # bw
+NKDE_ADAPTIVE <- FALSE          # adaptive
+NKDE_TRIM_BW <- 600             # trim_bw
+NKDE_METHOD <- "discontinuous"  # method
+NKDE_AGG = 1                    # agg
+
+
 
 # paths ------------------------------------------------------------------------
 
