@@ -33,10 +33,11 @@ require(logging)
 # value:
 #   character vector of paths to specific files;
 #   if is.null(folder), only file name is returned
-basic_file_name <- function(folder, districts, txt) {
-    fname <- glue::glue(txt,
-                      id = districts$district_id,
-                      name = districts$district_name) |>
+basic_file_name <- function(folder, districts, txt, ...) {
+    pars <- list(...)
+    pars$id <- districts$district_id
+    pars$name <- districts$district_name
+    fname <- glue::glue(txt, .envir = pars) |>
         as.character()
     if (is.null(folder))
         return(fname)
@@ -54,47 +55,52 @@ basic_file_name <- function(folder, districts, txt) {
 #   character vector of paths to specific files; see folder input
 
 # paths to geojson files describing individual districts
-geojson_file_name <- function(districts, folder = NULL) {
+geojson_file_name <- function(districts, folder = NULL, ...) {
     basic_file_name(folder, districts, "district_{id}.geojson")
 }
 
 # paths to osm files including selected roads in particual districts
-osm_file_name <- function(districts, folder = NULL) {
+osm_file_name <- function(districts, folder = NULL, ...) {
     basic_file_name(folder, districts, "district_{id}.osm")
 }
 
 # paths to sfnetwork files including selected roads in particual districts
-sf_file_name <- function(districts, folder = NULL) {
+sf_file_name <- function(districts, folder = NULL, ...) {
     basic_file_name(folder, districts, "district_{id}.rds")
 }
 
 # paths to files including lixelated selected roads in particual districts
-lixel_file_name <- function(districts, folder = NULL) {
+lixel_file_name <- function(districts, folder = NULL, ...) {
     basic_file_name(folder, districts, "lixel_{id}.rds")
 }
 
 # paths to files including mid-points of lixelated selected roads in particual
 # districts
-lixel_sample_file_name <- function(districts, folder = NULL) {
+lixel_sample_file_name <- function(districts, folder = NULL, ...) {
     basic_file_name(folder, districts, "lixel_sample_{id}.rds")
 }
 
 # paths to files including neighbors' lists of lixelated selected roads in
 # particual districts
-lixel_nb_file_name <- function(districts, folder = NULL) {
+lixel_nb_file_name <- function(districts, folder = NULL, ...) {
     basic_file_name(folder, districts, "lixel_nb_{id}.rds")
 }
 
 # paths to files including accidents cropped to particular districts snapped to
 # selected roads there
-accidents_file_name <- function(districts, folder = NULL) {
+accidents_file_name <- function(districts, folder = NULL, ...) {
     basic_file_name(folder, districts, "accidents_{id}.rds")
 }
 
 # paths to files including lixelated selected roads in particual districts with
 # added NKDE densities
-densities_file_name <- function(districts, folder = NULL) {
-    basic_file_name(folder, districts, "densities_{id}.rds")
+densities_file_name <- function(districts, folder = NULL, ...) {
+    pars <- list(...)
+    stopifnot("from_date" %in% names(pars) && "to_date" %in% names(pars))
+    basic_file_name(folder, districts,
+                    stringr::str_c("densities_{id}_{as.character(from_date)}_",
+                                   "{as.character(to_date)}.rds"),
+                    ...)
 }
 
 
@@ -171,30 +177,9 @@ is_behind <- function(target, source) {
 #   targets must be created because they either don't exist or are behind
 districts_behind <- function(districts, target_fun, source_fun,
                              target_folder, source_folder,
-                             other_files = NULL) {
-    target_files <- target_fun(districts, target_folder)
-    source_files <- source_fun(districts, source_folder)
-
-    mtarget <- file.mtime(target_files)
-    msource <- file.mtime(source_files)
-    if (is.null(other_files)) {
-        mother <- -Inf
-    } else{
-        mother <- max(file.mtime(other_files))
-    }
-
-    if (any(is.na(msource)))
-        stop("Some sources don't exist: ",
-             str_c(source_files[is.na(msource)], collapse = ", "))
-
-    ids <- is.na(mtarget) | (mtarget < msource) | (mtarget < mother)
-
-    districts[ids, ]
-}
-districts_behind <- function(districts, target_fun, source_fun,
-                             target_folder, source_folder,
-                             other_files = NULL) {
-    target_files <- target_fun(districts, target_folder)
+                             other_files = NULL,
+                             ...) {
+    target_files <- target_fun(districts, target_folder, ...)
     mtarget <- file.mtime(target_files)
 
     if (is.list(source_fun)) {
@@ -204,11 +189,11 @@ districts_behind <- function(districts, target_fun, source_fun,
                  "be a list of the same length.")
         msource <- -Inf
         for (k in seq_along(source_fun)) {
-            source_files <- source_fun[[k]](districts, source_folder[[k]])
+            source_files <- source_fun[[k]](districts, source_folder[[k]], ...)
             msource <- pmax(msource, file.mtime(source_files))
         }
     } else {
-        source_files <- source_fun(districts, source_folder)
+        source_files <- source_fun(districts, source_folder, ...)
         msource <- file.mtime(source_files)
     }
 
