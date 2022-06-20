@@ -250,11 +250,31 @@ compute_cluster_tibble <- function(lixels, nb, threshold, steps) {
 
 # cluster to lixels/accidents --------------------------------------------------
 
+# add_clusters_to_lixels(lixels, clusters) adds column cluster to lixels; it
+# indicates to which cluster lixels belong
+#
+# inputs:
+# - lixels ... (sf tibble) lixelized roads or lizelized roads with densities
+# - clusters ... (tibble) table created by compute_cluster_tibble()
+#
+# value:
+#   sf tibble lixels with added column cluster (NA for lixels that are part of
+#   no cluster)
 add_clusters_to_lixels <- function(lixels, clusters) {
     dplyr::left_join(lixels, clusters, by = "lixel_id")
 }
 
 
+# add_clusters_to_accidents(accidents, clusters) adds column cluster to
+# accidents table; it indicates to which cluster lixels belong
+#
+# inputs:
+# - accidents ... (sf tibble) accidents snapped to roads
+# - clusters ... (tibble) table created by compute_cluster_tibble()
+#
+# value:
+#   sf tibble lixels with added column cluster (NA for lixels that are part of
+#   no cluster)
 add_clusters_to_accidents <- function(accidents, clusters) {
     dplyr::left_join(accidents, clusters, by = "lixel_id")
 }
@@ -263,49 +283,64 @@ add_clusters_to_accidents <- function(accidents, clusters) {
 
 # compute cluster costs --------------------------------------------------------
 
-cluster_cost <- function(accidents, unit_costs) {
+# cluster_cost(accidents, accident_cost) computes cost of each cluster
+#
+# inputs:
+# - accidents ... (sf tibble) table of accidents snapped to roads in particular
+#   district
+# - accident_cost ... (character scalar) name of column in accidents that
+#   includes the cost of individual accidents
+#
+# value:
+cluster_cost <- function(accidents, accident_cost = "accident_cost") {
+    accidents$.acccost <- accidents[["accident_cost"]]
     accidents |>
-        sf::st_drop_geometry() |>
         dplyr::filter(!is.na(cluster)) |>
         dplyr::group_by(cluster) |>
-        dplyr::summarise(cost = sum(accident_cost), .groups = "drop")
+        dplyr::summarise(cost = sum(.acccost), .groups = "drop")
 }
 
 
-
-graphic_clusters <- function(lixels, accidents, clusters, unit_costs) {
-    clstrs <- add_clusters_to_lixels(lixels, clusters) |>
-        dplyr::filter(!is.na(cluster)) |>
-        dplyr::group_by(cluster) |>
-        dplyr::summarise(total_length = sum(len),
-                         total_density = sum(density),
-                         geometry = st_union(geometry),
-                         .groups = "drop")
-    accdnts <- add_clusters_to_accidents(accidents, clusters)
-    costs <- cluster_cost(accdnts, unit_costs)
-    dplyr::left_join(clstrs, costs, by = "cluster") |>
-        dplyr::mutate(cost_per_meter = cost / total_length)
-}
-
-
-# faster than graphic_clusters, no graphical representation
-gr_clusters <- function(lixels, accidents, clusters) {
+# cluster_statistics() computes tibble with basic statistics for each cluster
+#
+# inputs:
+# - lixels
+# - accidents
+# - clusters
+# - accident_cost
+#
+# value:
+#   tibble with four columns:
+#   - cluster ... (integer) cluster id
+#   - total_length ... (double) clusters' total lengths in meters
+#   - total_density ... (double) sum of densities of lixels within clusters
+#   - cost ... (double) sum of cost of accidents lying on lixels within clusters
+#       in mil. CZK
+#   - cost_per_meter (double) cost / total_length
+cluster_statistics <- function(lixels, accidents, clusters,
+                               accident_cost = "accident_cost") {
     clstrs <- lixels |>
-        st_drop_geometry() |>
+        sf::st_drop_geometry() |>
         add_clusters_to_lixels(clusters) |>
         dplyr::filter(!is.na(cluster)) |>
         dplyr::group_by(cluster) |>
-        dplyr::summarise(total_length = sum(len),
+        dplyr::summarise(total_length = as.numeric(sum(len)),
                          total_density = sum(density),
                          .groups = "drop")
     accdnts <- accidents |>
-        st_drop_geometry() |>
+        sf::st_drop_geometry() |>
         add_clusters_to_accidents(clusters) |>
-        dplyr::filter(!is.na(cluster)) |>
-        dplyr::group_by(cluster) |>
-        dplyr::summarise(cost = sum(accident_cost), .groups = "drop")
+        cluster_cost(accident_cost)
     dplyr::left_join(clstrs, accdnts, by = "cluster") |>
         dplyr::mutate(cost_per_meter = cost / total_length)
+}
+
+
+# graphic_clusters() just for fast visualization
+graphic_clusters <- function(lixels, clusters, cluster_statistics) {
+    dplyr::left_join(lixels, clusters, by = "lixel_id") |>
+        dplyr::filter(!is.na(cluster)) |>
+    dplyr::left_join(cluster_statistics, by = "cluster")
 }
 
 
@@ -333,6 +368,11 @@ cluster_pai <- function(cluster, accidents, lixels) {
 }
 
 
+# optimize_cluster_parameters() finds threshold and no_of_steps used in
+# compute_cluster_tibble() to maximize PAI based on accident cost
+#
+# WARNING:
+# - this function probably returns too high quantile and too low no_of_steps
 optimize_cluster_parameters <- function(lixels, nb, accidents,
                                         threshold_range = seq(from = 0.975,
                                                               to = 0.999,
@@ -340,7 +380,7 @@ optimize_cluster_parameters <- function(lixels, nb, accidents,
                                         step_range = 1:30) {
     f <- function(lixels, nb, accidents, threshold, no_of_steps) {
         cls <- compute_cluster_tibble(lixels, nb, threshold, no_of_steps)
-        clstrs <- gr_clusters(lixels, accidents, cls)
+        clstrs <- cluster_statistics(lixels, accidents, cls)
         cluster_pai(clstrs, accidents, lixels)
     }
     grid <- tidyr::expand_grid(

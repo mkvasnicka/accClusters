@@ -49,8 +49,10 @@ no_of_steps <- 1
 
 system.time({
     cls <- compute_cluster_tibble(lixels, nb, threshold, no_of_steps)
-    clstrs <- graphic_clusters(lixels, accidents, cls, unit_costs = UNIT_COSTS)
+    clss <- cluster_statistics(lixels, accidents, cls)
+    # clstrs <- graphic_clusters(lixels, accidents, cls, unit_costs = UNIT_COSTS)
     # clstrs <- gr_clusters(lixels, accidents, cls)
+    clstrs <- graphic_clusters(lixels, cls, clss)
 })
 
 
