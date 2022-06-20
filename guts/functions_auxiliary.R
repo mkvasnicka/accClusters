@@ -127,6 +127,22 @@ write_dir_rds <- function(object, file) {
 }
 
 
+# read_time_window_file(path) reads in table with time windows for which
+# accidnets cluster should be computed
+#
+# inputs:
+# - path ... (character scalar) path to the file defining time windows;
+#   - file must be TSV, i.e., TAB separated textual file
+#   - its header must be from-date and to-date
+#   - dates must be in format YYYY-MM-DD
+#
+# value:
+#   tibble with two Date columns (from_date and to_date)
+read_time_window_file <- function(path) {
+    read_tsv(path, col_types = cols(.default = col_date(format = "%Y-%m-%d")))
+}
+
+
 
 # updating files ---------------------------------------------------------------
 

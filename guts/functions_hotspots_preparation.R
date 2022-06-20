@@ -14,15 +14,44 @@ require(readr)
 require(tibble)
 
 
-compute_densities <- function(districts,
-                              maps_dir, lixel_dir, sample_dir, accidents_dir,
-                              density_dir,
-                              from_date, to_date,
-                              weights = NULL, bw = 300,
-                              adaptive = FALSE, trim_bw = 600,
-                              method = "discontinuous", agg = 1,
-                              workers = NULL,
-                              other_files = NULL) {
+
+# density computation ----------------------------------------------------------
+
+# compute_one_time_densities() computes densities for one time window given by
+# parameters from_date and to_date
+#
+# inputs:
+# - districts ... (sf tibble) districts table
+# - maps_dir ... (character scalar) path to folder where sfnetworks maps of
+#   roads in individual districts are stored
+# - lixel_dir ... (character scalar) path to folder where where lixelized roads
+#   in individual districts are stored
+# - sample_dir ... (character scalar) path to folder where samples of lixelized
+#   roads in individual districts are stored
+# - accidents_dir ... (character scalar) path to folder where accidents snapped
+#   to roads in individual districts are stored
+# - density_dir ... (character scalar) path to folder where computed densities
+#   will be stored
+# - from_date, to_date ... (Date scalars) describe date range of accidents that
+#   are used
+# - weights, bw, adaptive, trim_bw, method, agg ... parameters sent to
+#   spNetwork::nkde()
+# - workers ... (NULL or integer scalar) number of cores used in parallel
+# - other_files ... (character vector) pathes to other files that can determine
+#   whether existing files are up-to-date
+#
+# value:
+#   none; data are written to disk
+compute_one_time_densities <- function(districts,
+                                       maps_dir, lixel_dir, sample_dir,
+                                       accidents_dir,
+                                       density_dir,
+                                       from_date, to_date,
+                                       weights = NULL, bw = 300,
+                                       adaptive = FALSE, trim_bw = 600,
+                                       method = "discontinuous", agg = 1,
+                                       workers = NULL,
+                                       other_files = NULL) {
   one_district <- function(map_path, lixel_path, sample_path, accidents_path,
                            density_path,
                            from_date, to_date,
@@ -88,4 +117,58 @@ compute_densities <- function(districts,
         from_date, to_date,
         weights = weights, bw = bw, adaptive = adaptive, trim_bw = trim_bw,
         method = method, agg = agg)
+}
+
+
+# compute_densities() computes densities for all time periods given by time
+# window
+#
+# inputs:
+# - districts ... (sf tibble) districts table
+# - maps_dir ... (character scalar) path to folder where sfnetworks maps of
+#   roads in individual districts are stored
+# - lixel_dir ... (character scalar) path to folder where where lixelized roads
+#   in individual districts are stored
+# - sample_dir ... (character scalar) path to folder where samples of lixelized
+#   roads in individual districts are stored
+# - accidents_dir ... (character scalar) path to folder where accidents snapped
+#   to roads in individual districts are stored
+# - density_dir ... (character scalar) path to folder where computed densities
+#   will be stored
+# - path_to_time_window_file ... (character scalar) path to TSV file where time
+#   windows are stored; see help for read_time_window_file()
+# - weights, bw, adaptive, trim_bw, method, agg ... parameters sent to
+#   spNetwork::nkde()
+# - workers ... (NULL or integer scalar) number of cores used in parallel
+# - other_files ... (character vector) pathes to other files that can determine
+#   whether existing files are up-to-date
+#
+# value:
+#   none; data are written to disk
+compute_densities <- function(districts,
+                              maps_dir, lixel_dir, sample_dir, accidents_dir,
+                              density_dir,
+                              path_to_time_window_file,
+                              weights = NULL, bw = 300,
+                              adaptive = FALSE, trim_bw = 600,
+                              method = "discontinuous", agg = 1,
+                              workers = NULL,
+                              other_files = NULL) {
+    time_window <- read_time_window_file(path_to_time_window_file)
+    purrr::walk(seq_len(nrow(time_window)),
+                ~compute_one_time_densities(districts = districts,
+                                            maps_dir = maps_dir,
+                                            lixel_dir = lixel_dir,
+                                            sample_dir = sample_dir,
+                                            accidents_dir = accidents_dir,
+                                            density_dir = density_dir,
+                                            from_date = time_window$from_date[.],
+                                            to_date = time_window$to_date[.],
+                                            weights = weights, bw = bw,
+                                            adaptive = adaptive,
+                                            trim_bw = trim_bw,
+                                            method = method, agg = agg,
+                                            workers = workers,
+                                            other_files = other_files)
+    )
 }

@@ -74,6 +74,11 @@ UNIT_COSTS <- list(
 # start of all paths
 DIR_ORIGIN <- "guts"
 
+
+# path to time-window file
+PATH_TO_TIME_WINDOW <- file.path(DIR_ORIGIN, "time_windows.tsv")
+
+
 # path to raw data
 RAW_DATA_DIR <- file.path(DIR_ORIGIN, "rawdata")
 
@@ -87,7 +92,6 @@ PATH_TO_RAW_ROADS_OSM <- file.path(RAW_MAPS_DIR, "czech-republic-latest.osm.pbf"
 RAW_ACCIDENTS_DIR <- file.path(RAW_DATA_DIR, "accidents")
 # PATH_TO_RAW_ACCIDENTS <- file.path(RAW_ACCIDENTS_DIR, "pcrdata.RData")
 PATH_TO_RAW_ACCIDENTS <- file.path(RAW_ACCIDENTS_DIR, "raw_accidents.rds")
-
 
 
 # paths to created data
@@ -107,7 +111,6 @@ ACCIDENTS_DIR <- file.path(DATA_DIR, "accidents")
 
 # path to NKDEs by districts
 DENSITIES_DIR <- file.path(DATA_DIR, "densities")
-
 
 
 # logging
