@@ -78,6 +78,12 @@ NKDE_METHOD <- "discontinuous"  # method
 NKDE_AGG = 1                    # agg
 
 
+# cluster parameters
+CLUSTER_MIN_QUANTILE <- 0.995
+CLUSTER_ADDITIONAL_STEPS <- 5
+VISUAL_MIN_QUANTILE <- 0.95
+
+
 
 # paths ------------------------------------------------------------------------
 

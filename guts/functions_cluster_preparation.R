@@ -425,13 +425,77 @@ one_district <- function(densities_file, lixel_nb_file, accident_file,
                     file = shiny_file)
 }
 
-# tab <- tibble::tibble(
-#     densities_file = densities_file_name(districts, DENSITIES_DIR,
-#                                          from_date = "2019-01-01",
-#                                          to_date = "2021-12-31"),
-#     lixel_nb_file = lixel_nb_file_name(districts, LIXEL_MAPS_DIR),
-#     accident_file = accidents_file_name(districts, ACCIDENTS_DIR),
-#     shiny_file = shiny_file_name(districts, SHINY_DIR,
-#                                  from_date = "2019-01-01",
-#                                  to_date = "2021-12-31")
-# )
+
+compute_one_time_clusters <- function(districts,
+                                      densities_dir,
+                                      lixel_maps_dir,
+                                      accidents_dir,
+                                      cluster_dir,
+                                      from_date, to_date,
+                                      cluster_min_quantile, cluster_steps,
+                                      visual_min_quantile,
+                                      workers = NULL,
+                                      other_files) {
+    one_district <- function(densities_file, lixel_nb_file, accident_file,
+                             shiny_file,
+                             cluster_min_quantile, cluster_steps,
+                             visual_min_quantile) {
+        lixels <- readr::read_rds(densities_file)
+        nb <- readr::read_rds(lixel_nb_file)
+        accidents <- readr::read_rds(accident_file)
+        threshold <- quantile(lixels$density, cluster_min_quantile)
+        cls <- compute_cluster_tibble(lixels, nb, threshold, cluster_steps)
+        clss <- cluster_statistics(lixels, accidents, cls)
+        visual_threshold <- quantile(lixels$density, visual_min_quantile)
+
+        lixels <- lixels |>
+            add_clusters_to_lixels(cls) |>
+            dplyr::filter(density >= visual_threshold | !is.na(cluster)) |>
+            dplyr::select(lixel_id, density, cluster)
+        accidents <- accidents |>
+            add_clusters_to_accidents(cls) |>
+            sf::st_drop_geometry() |>
+            dplyr::filter(!is.na(cluster)) |>
+            dplyr::select(p1, cluster, accident_cost)
+        cluster_statistics <- clss
+        write_dir_rdata(lixels, accidents, cluster_statistics,
+                        file = shiny_file)
+    }
+
+    from_date <- as.Date(from_date)
+    to_date <- as.Date(to_date)
+    stopifnot(from_date <= to_date)
+
+    profile_name <- NULL
+    if (exists("PROFILE_NAME"))
+        profile_name <- PROFILE_NAME
+
+    workers <- get_number_of_workers(workers)
+    districts <- districts_behind(districts,
+                                  target_fun = shiny_file_name,
+                                  source_fun = list(lixel_nb_file_name,
+                                                    accidents_file_name),
+                                  target_folder = densities_dir,
+                                  source_folder = list(lixel_maps_dir,
+                                                       accidents_dir),
+                                  other_files = other_files,
+                                  from_date = from_date, to_date = to_date,
+                                  profile_name = profile_name)
+    tab <- tibble::tibble(
+        densities_file = densities_file_name(districts, densities_dir,
+                                             from_date = "2019-01-01",
+                                             to_date = "2021-12-31",
+                                             profile_name = profile_name),
+        lixel_nb_file = lixel_nb_file_name(districts, lixel_maps_dir),
+        accident_file = accidents_file_name(districts, accidents_dir),
+        shiny_file = shiny_file_name(districts, cluster_dir,
+                                     from_date = from_date,
+                                     to_date = to_date,
+                                     profile_name = profile_name)
+    )
+    PWALK(tab, one_district,
+          # from_date, to_date,
+          cluster_min_quantile = cluster_min_quantile,
+          cluster_steps = cluster_steps,
+          visual_min_quantile = visual_min_quantile)
+}
