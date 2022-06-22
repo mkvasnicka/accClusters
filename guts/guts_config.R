@@ -61,10 +61,10 @@ SUPPORTED_ROAD_CLASSES <- c("motorway", "motorway_link",
 
 
 # cost of various damages in mil. CZK
+# UNIT_COSTS <- c(dead = 12, serious_injury = 3, light_injury = 0.5)
 UNIT_COSTS <- list(
-    dead = 12,
-    serious_injury = 3,
-    light_injury = 0.5
+    basic_cost = c(dead = 12, serious_injury = 3, light_injury = 0.5),
+    higher_cost = c(dead = 30, serious_injury = 30/4, light_injury = 30/24)
 )
 
 
