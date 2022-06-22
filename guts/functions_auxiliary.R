@@ -122,21 +122,23 @@ accidents_file_name <- function(districts, folder = NULL, ...) {
 # added NKDE densities
 densities_file_name <- function(districts, folder = NULL, ...) {
     pars <- list(...)
-    stopifnot("from_date" %in% names(pars) && "to_date" %in% names(pars))
-    basic_file_name(folder, districts,
-                    stringr::str_c("densities_{id}_{as.character(from_date)}_",
-                                   "{as.character(to_date)}.rds"),
-                    ...)
+    stopifnot(all(c("from_date", "to_date") %in% names(pars)))
+    txt <- stringr::str_c(
+        "densities_{id}_",
+        if_else("profile_name" %in% names(pars), "{profile_name}_", ""),
+        "{as.character(from_date)}_{as.character(to_date)}.rds")
+    basic_file_name(folder, districts, txt, ...)
 }
 
 # paths to files including the final product used in Shiny
 shiny_file_name <- function(districts, folder = NULL, ...) {
     pars <- list(...)
-    stopifnot("from_date" %in% names(pars) && "to_date" %in% names(pars))
-    basic_file_name(folder, districts,
-                    stringr::str_c("shiny_{id}_{as.character(from_date)}_",
-                                   "{as.character(to_date)}.RData"),
-                    ...)
+    stopifnot(all(c("from_date", "to_date") %in% names(pars)))
+    txt <- stringr::str_c(
+        "shiny_{id}_",
+        if_else("profile_name" %in% names(pars), "{profile_name}_", ""),
+        "{as.character(from_date)}_{as.character(to_date)}.RData")
+    basic_file_name(folder, districts, txt, ...)
 }
 
 
