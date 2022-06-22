@@ -1,0 +1,67 @@
+Vizualizace map
+===============
+
+Skrytí vrsty v tmap
+-------------------
+https://stackoverflow.com/questions/53094379/in-r-tmap-how-do-i-control-layer-visibility-in-interactive-mode
+
+```{r}
+library(tmap)
+library(leaflet)
+
+tmap_mode("view")
+
+data("World", "metro")
+
+tm <-
+  tm_shape(World) +
+  tm_polygons() +
+  tm_shape(metro) +
+  tm_dots("pop2010",
+          col = "red") +
+  tm_format("World")
+
+# Pipe the tmap object into tmap_leaflet() to create a leaflet widget,
+# so that we can use leaflet::hideGroup().
+tm %>%
+  tmap_leaflet() %>%
+  leaflet::hideGroup("metro")
+```
+
+
+
+Uložení Leafletu do HTML
+------------------------
+https://stackoverflow.com/questions/30110377/saving-leaflet-output-as-html
+
+Přímo:
+
+```{r, eval=FALSE}
+library(htmlwidgets)
+saveWidget(m, file="m.html")
+```
+
+V R Markdownu:
+
+````
+---
+title: "Leaflet Map"
+output: html_document
+---
+
+```{r}
+library(leaflet)
+rand_lng = function(n = 10) rnorm(n, -93.65, .01)
+rand_lat = function(n = 10) rnorm(n, 42.0285, .01)
+m = leaflet() %>% addTiles() %>% addCircles(rand_lng(50), rand_lat(50), radius = runif(50, 10, 200))
+m
+```
+````
+
+
+
+Flex Dashboard
+--------------
+https://pkgs.rstudio.com/flexdashboard/
+
+Nevyžaduje Shiny
