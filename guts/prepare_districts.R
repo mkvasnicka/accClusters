@@ -11,21 +11,20 @@
 # Copyright(c) Michal Kvasnička
 # -------------------------------------
 
+# supply path to RSCRIPTDIR if it was not supplied outside
+if (!exists("RSCRIPTDIR")) RSCRIPTDIR <- "guts"
+
+
 # source necessary scripts
-RSCRIPTDIR <- "guts"
 source(file.path(RSCRIPTDIR, "guts_config.R"))
 source(file.path(RSCRIPTDIR, "functions_auxiliary.R"))
 source(file.path(RSCRIPTDIR, "functions_districts_preparation.R"))
 
 
-#' Načtou se distrikty (tady okresy) a převedou se do stejné planární
-#' transformace jako silnice. To, co potřebujeme, jsou polygony ploch distriktů.
-#' Navíc přidáme naše vlastní jména distriktů a jejich id. To umožní abstrakci
-#' nad tím, co jsou distrikty (nemusí být nutně okresy) a jaké mapy se použijí,
-#' tj. jak to mají pojmenované.
-# if (is_behind(PATH_TO_DISTRICTS, PATH_TO_RAW_DISTRICTS)) {
-#     districts <- read_arccr_districts(PATH_TO_RAW_DISTRICTS)
-#     write_dir_rds(districts, file = PATH_TO_DISTRICTS)
-# }
+# process command-line parameters
+process_command_line_arguments(RSCRIPTDIR)
+
+
+# create major districts table
 create_districts(path_do_districts = PATH_TO_DISTRICTS,
                  path_to_raw_districts = PATH_TO_RAW_DISTRICTS)

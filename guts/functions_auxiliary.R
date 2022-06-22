@@ -18,6 +18,32 @@ require(logging)
 
 
 
+# parsing command-line parameters ----------------------------------------------
+
+# process_command_line_arguments() processes optional command-line parameters;
+# only --profile=filename.R is handled now
+#
+# presently, the function finds all --profile==filename.R paramters and sources
+# them---in their order in the command line
+#
+# inputs:
+#   none
+#
+# value:
+#   none
+process_command_line_arguments <- function(rdir) {
+    get_parameter <- function(params, key) {
+        stringr::str_subset(params, stringr::str_c("--", key, "=.*")) |>
+            stringr::str_remove(stringr::str_c("--", key, "="))
+    }
+
+    cl_pars <- commandArgs()
+    profile <- get_parameter(cl_pars, "profile")
+    purrr::walk(profile, ~source(file.path(rdir, .)))
+}
+
+
+
 # paths to files ---------------------------------------------------------------
 
 # general template for paths to individual district files

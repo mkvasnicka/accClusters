@@ -13,11 +13,18 @@
 require(readr)
 
 
+# supply path to RSCRIPTDIR if it was not supplied outside
+if (!exists("RSCRIPTDIR")) RSCRIPTDIR <- "guts"
+
+
 # source necessary scripts
-RSCRIPTDIR <- "guts"
 source(file.path(RSCRIPTDIR, "guts_config.R"))
 source(file.path(RSCRIPTDIR, "functions_auxiliary.R"))
 source(file.path(RSCRIPTDIR, "functions_point_preparation.R"))
+
+
+# process command-line parameters
+process_command_line_arguments(RSCRIPTDIR)
 
 
 # read in districts
