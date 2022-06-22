@@ -3,8 +3,12 @@ TODO
 
 Pokračovat
 ----------
-ve functions_cluster_preparation.R dole; funguje pro jeden distrikt a jedno časové okno
-- nutno napsat wrapper, který to vyřeší
+- ve functions_cluster_preparation.R dole; funguje pro jeden distrikt a jedno časové okno
+    - nutno napsat wrapper, který to vyřeší
+- profily v Bashi
+    - profily do jmen
+    - vytvořit profily
+- víc cost functions
 
 
 Předání dat Štěpánovi
@@ -77,3 +81,8 @@ Všude
 - odstranit jména souborů z tabulky districts a všude, kde se na to odkazuje, a nahradit to funkcemi, které budou používat id z districts
 - spojit všechny prepare_*.R do jednoho souboru a přidat logování
 - najít všechna volání purrr a paralelizovat, co je možné
+
+
+GIS
+---
+- napsat export klastrů do GISu
