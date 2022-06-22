@@ -341,10 +341,11 @@ create_districts_accidents <- function(districts, accidents, max_distance,
         snapped_points <- snap_points_to_lines(accidents, lines,
                                                dist = max_distance)
         acc_costs <- purrr::map_dfc(
-            ~accident_damage_cost(dead = p13a,
-                                  serious_injury = p13b,
-                                  light_injury = p13c,
-                                  material_cost = p14,
+            seq_along(unit_costs),
+            ~accident_damage_cost(dead = snapped_points$p13a,
+                                  serious_injury = snapped_points$p13b,
+                                  light_injury = snapped_points$p13c,
+                                  material_cost = snapped_points$p14,
                                   unit_costs = unit_costs[[.]])) |>
             purrr::set_names(names(unit_costs))
         snapped_points <- dplyr::bind_cols(snapped_points, acc_costs)
