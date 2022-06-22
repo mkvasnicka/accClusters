@@ -64,7 +64,9 @@ Funkce:
 - funkce create_sf_nb() používá sf_touches() -- použít raději from -- to v lixelech?
 
 Tvorba OSM
-- osmium nechce pokračovat, když soubory .osm existují -- na začátku funkce, která je má vytvořit, je třeba je vymazat
+- osmium nechtělo pokračovat, když soubory .osm existují
+    - na začátku funkce, která je má vytvořit, je třeba je vymazat
+    - zatím jsem to vyřešil pomocí --overwrite
 
 
 Nehody

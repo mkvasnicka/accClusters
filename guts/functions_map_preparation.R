@@ -101,13 +101,15 @@ filter_osm_roads <- function(input_path, output_path, road_types = NULL,
         message("Filtering roads...")
     if (is.null(road_types)) {
         system(
-            glue("osmium tags-filter {input_path} nw/highway -o {output_path}")
+            glue("osmium tags-filter {input_path} nw/highway -o {output_path}",
+                 " --overwrite")
         )
     } else {
         road_types <- paste(road_types, collapse = ",")
         system(
             glue::glue("osmium tags-filter {input_path} ",
-                       "w/highway={road_types} -o {output_path}"))
+                       "w/highway={road_types} -o {output_path} ",
+                       "--overwrite"))
     }
 }
 
@@ -143,7 +145,8 @@ filter_osm_roads <- function(input_path, output_path, road_types = NULL,
 filter_osm_one_district_roads <- function(district, input_path, folder, pb = NULL) {
     geojson <- file.path(folder, glue("district_{district$district_id}.geojson"))
     outfile <- file.path(folder, glue("district_{district$district_id}.osm"))
-    system(glue("osmium extract -p {geojson} {input_path} -o {outfile}"))
+    system(glue("osmium extract -p {geojson} {input_path} -o {outfile} ",
+                "--overwrite"))
     if (!is.null(pb))
         pb$tick(1)
 }
@@ -232,7 +235,7 @@ filter_all_osm_district_roads <- function(districts, input_path, folder,
         idx <- k:(k + districts_in_one_go - 1)
         idx <- idx[idx <= nrow(districts)]
         create_json_do_file(districts[idx, ], folder, verbose = FALSE)
-        system(glue("osmium extract -c {do_all_file} {input_path}"))
+        system(glue("osmium extract -c {do_all_file} {input_path} --overwrite"))
         if (!is.null(pb))
             pb$tick(districts_in_one_go)
     }
