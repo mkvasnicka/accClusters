@@ -31,6 +31,10 @@ process_command_line_arguments(RSCRIPTDIR)
 districts <- readr::read_rds(PATH_TO_DISTRICTS)
 
 
+# TEMP
+# districts <- districts |> dplyr::filter(district_name == "Brno-město")
+
+
 # compute hotspots, i.e., NKDE
 compute_densities(districts,
                   maps_dir = SF_MAPS_DIR,

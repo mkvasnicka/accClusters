@@ -104,6 +104,9 @@ compute_one_time_densities <- function(districts,
                                                      sample_dir, accidents_dir),
                                 other_files = other_files,
                                 from_date = from_date, to_date = to_date)
+  profile_name <- NULL
+  if (exists("PROFILE_NAME"))
+      profile_name <- PROFILE_NAME
   tab <- tibble::tibble(
       map_path = sf_file_name(districts, maps_dir),
       lixel_path = lixel_file_name(districts, lixel_dir),
@@ -111,7 +114,8 @@ compute_one_time_densities <- function(districts,
       accidents_path = accidents_file_name(districts, accidents_dir),
       density_path = densities_file_name(districts, density_dir,
                                          from_date = from_date,
-                                         to_date = to_date)
+                                         to_date = to_date,
+                                         profile_name = profile_name)
   )
   PWALK(tab, one_district, workers = get_number_of_workers(workers),
         from_date, to_date,

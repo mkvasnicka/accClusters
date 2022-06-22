@@ -125,7 +125,10 @@ densities_file_name <- function(districts, folder = NULL, ...) {
     stopifnot(all(c("from_date", "to_date") %in% names(pars)))
     txt <- stringr::str_c(
         "densities_{id}_",
-        if_else("profile_name" %in% names(pars), "{profile_name}_", ""),
+        if ("profile_name" %in% names(pars) && !is.null(pars$profile_name))
+            "{profile_name}_"
+        else
+            "",
         "{as.character(from_date)}_{as.character(to_date)}.rds")
     basic_file_name(folder, districts, txt, ...)
 }
@@ -136,7 +139,10 @@ shiny_file_name <- function(districts, folder = NULL, ...) {
     stopifnot(all(c("from_date", "to_date") %in% names(pars)))
     txt <- stringr::str_c(
         "shiny_{id}_",
-        if_else("profile_name" %in% names(pars), "{profile_name}_", ""),
+        if ("profile_name" %in% names(pars) && !is.null(pars$profile_name))
+            "{profile_name}_"
+        else
+            "",
         "{as.character(from_date)}_{as.character(to_date)}.RData")
     basic_file_name(folder, districts, txt, ...)
 }
