@@ -43,9 +43,6 @@ if (is_behind(PATH_TO_RAW_ACCIDENTS,
 
 
 # crop the accidents to buffered districts and snap them to selected roads
-# if (is_behind(accidents_file_name(districts, ACCIDENTS_DIR),
-#               c(lixel_file_name(districts, LIXEL_MAPS_DIR),
-#                 PATH_TO_DISTRICTS, PATH_TO_RAW_ACCIDENTS))) {
     create_districts_accidents(districts, accidents,
                                max_distance = ACCIDENT_TO_ROAD_MAX_DISTANCE,
                                lixel_dir = LIXEL_MAPS_DIR,
@@ -54,4 +51,3 @@ if (is_behind(PATH_TO_RAW_ACCIDENTS,
                                workers = NO_OF_WORKERS_ACCIDENTS,
                                other_dependencies = c(PATH_TO_DISTRICTS,
                                                       PATH_TO_RAW_ACCIDENTS))
-# }
