@@ -399,6 +399,37 @@ optimize_cluster_parameters <- function(lixels, nb, accidents,
 
 # cluster preparation ----------------------------------------------------------
 
+# compute_one_time_clusters() computes hotspot clusters for one time period
+# given by parameters from_date and to_date
+#
+# inputs:
+# - districts ... (sf tibble) districts table
+# - densities_dir ... (character scalar) path to folder where densities are
+#   stored
+# - lixel_maps_dir ... (character scalar) path to folder where where nbs for
+#   lixelized roads in individual districts are stored
+# - accidents_dir ... (character scalar) path to folder where accidents snapped
+#   to roads in individual districts are stored
+# - from_date, to_date ... (Date scalars) describe date range of accidents that
+#   are used
+# - cluster_min_quantile ... (numeric scalar in (0, 1)) threshold for lixels to
+#   constitute clusters in step 1, see notes
+# - cluster_steps ... (non-negative integer scalar) how many lixels are
+#   recursively added to clusters
+# - visual_min_quantile ... (numeric scalar in (0, 1)) threshold for lixel
+#   density for lixels that will be stored in lixel table
+# - workers ... (NULL or integer scalar) number of cores used in parallel
+# - other_files ... (character vector) pathes to other files that can determine
+#   whether existing files are up-to-date
+#
+# value:
+#   none; data are written to disk
+#
+# notes:
+# - clusters are found in two steps:
+#   1. all consecutive lixels with densities above or at cluster_min_quantile
+#       constitute clusters
+#   2. cluster_steps lixels are recursively added to all clusters
 compute_one_time_clusters <- function(districts,
                                       densities_dir,
                                       lixel_maps_dir,
@@ -476,6 +507,37 @@ compute_one_time_clusters <- function(districts,
 }
 
 
+# compute_clusters() computes hotspot clusters for all periods in specified time
+# windows
+#
+# inputs:
+# - districts ... (sf tibble) districts table
+# - densities_dir ... (character scalar) path to folder where densities are
+#   stored
+# - lixel_maps_dir ... (character scalar) path to folder where where nbs for
+#   lixelized roads in individual districts are stored
+# - accidents_dir ... (character scalar) path to folder where accidents snapped
+#   to roads in individual districts are stored
+# - path_to_time_window_file ... (character scalars) path to file where time
+#   window table is stored
+# - cluster_min_quantile ... (numeric scalar in (0, 1)) threshold for lixels to
+#   constitute clusters in step 1, see notes
+# - cluster_steps ... (non-negative integer scalar) how many lixels are
+#   recursively added to clusters
+# - visual_min_quantile ... (numeric scalar in (0, 1)) threshold for lixel
+#   density for lixels that will be stored in lixel table
+# - workers ... (NULL or integer scalar) number of cores used in parallel
+# - other_files ... (character vector) pathes to other files that can determine
+#   whether existing files are up-to-date
+#
+# value:
+#   none; data are written to disk
+#
+# notes:
+# - clusters are found in two steps:
+#   1. all consecutive lixels with densities above or at cluster_min_quantile
+#       constitute clusters
+#   2. cluster_steps lixels are recursively added to all clusters
 compute_clusters <- function(districts,
                              densities_dir,
                              lixel_maps_dir,
