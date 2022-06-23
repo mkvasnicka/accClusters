@@ -38,8 +38,12 @@ process_command_line_arguments <- function(rdir) {
     }
 
     cl_pars <- commandArgs()
+
     profile <- get_parameter(cl_pars, "profile")
     purrr::walk(profile, ~source(file.path(rdir, .)))
+
+    workers <- get_parameter(cl_pars, "workers")
+    NO_OF_WORKERS <<- workers
 }
 
 
