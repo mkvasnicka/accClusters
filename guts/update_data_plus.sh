@@ -21,5 +21,6 @@ runRscript "prepare_districts"
 runRscript "prepare_maps"
 runRscript "prepare_points"
 runRscript "prepare_hotspots"
+runRscript "prepare_clusters"
 
 # runRscript "test"
