@@ -23,27 +23,42 @@ require(logging)
 # process_command_line_arguments() processes optional command-line parameters;
 # only --profile=filename.R is handled now
 #
-# presently, the function finds all --profile==filename.R paramters and sources
-# them---in their order in the command line
+# presently, the function handles:
+# - --profile=filename.R parameters---it sources them---in their order in the
+#   command line
+# - --workers=# where # is either positive integer scalar or "auto"
 #
 # inputs:
 #   none
 #
 # value:
 #   none
+#
+# WARNINGS:
+# - there must be no space in names, etc., as any white space is supposed to
+#   separate parameters
 process_command_line_arguments <- function(rdir) {
     get_parameter <- function(params, key) {
         stringr::str_subset(params, stringr::str_c("--", key, "=.*")) |>
             stringr::str_remove(stringr::str_c("--", key, "="))
     }
 
-    cl_pars <- commandArgs()
+    cl_pars <- commandArgs() |>
+        stringr::str_split("\\s+", simplify = TRUE) |>
+        as.vector()
 
     profile <- get_parameter(cl_pars, "profile")
     purrr::walk(profile, ~source(file.path(rdir, .)))
 
     workers <- get_parameter(cl_pars, "workers")
-    NO_OF_WORKERS <<- workers
+    if (length(workers) > 0) {
+        stopifnot(length(workers) == 1)
+        if (workers != "auto") {
+            workers <- as.numeric(workers)
+            stopifnot(!is.na(workers) && workers == round(workers))
+        }
+        NO_OF_WORKERS <<- workers
+    }
 }
 
 
