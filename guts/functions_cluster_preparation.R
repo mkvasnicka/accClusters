@@ -399,33 +399,6 @@ optimize_cluster_parameters <- function(lixels, nb, accidents,
 
 # cluster preparation ----------------------------------------------------------
 
-one_district <- function(densities_file, lixel_nb_file, accident_file,
-                         shiny_file,
-                         cluster_min_quantile, cluster_steps,
-                         visual_min_quantile) {
-    lixels <- readr::read_rds(densities_file)
-    nb <- readr::read_rds(lixel_nb_file)
-    accidents <- readr::read_rds(accident_file)
-    threshold <- quantile(lixels$density, cluster_min_quantile)
-    cls <- compute_cluster_tibble(lixels, nb, threshold, cluster_steps)
-    clss <- cluster_statistics(lixels, accidents, cls)
-    visual_threshold <- quantile(lixels$density, visual_min_quantile)
-
-    lixels <- lixels |>
-        add_clusters_to_lixels(cls) |>
-        dplyr::filter(density >= visual_threshold | !is.na(cluster)) |>
-        dplyr::select(lixel_id, density, cluster)
-    accidents <- accidents |>
-        add_clusters_to_accidents(cls) |>
-        sf::st_drop_geometry() |>
-        dplyr::filter(!is.na(cluster)) |>
-        dplyr::select(p1, cluster, accident_cost)
-    cluster_statistics <- clss
-    write_dir_rdata(lixels, accidents, cluster_statistics,
-                    file = shiny_file)
-}
-
-
 compute_one_time_clusters <- function(districts,
                                       densities_dir,
                                       lixel_maps_dir,
@@ -500,4 +473,32 @@ compute_one_time_clusters <- function(districts,
           cluster_min_quantile = cluster_min_quantile,
           cluster_steps = cluster_steps,
           visual_min_quantile = visual_min_quantile)
+}
+
+
+compute_clusters <- function(districts,
+                             densities_dir,
+                             lixel_maps_dir,
+                             accidents_dir,
+                             cluster_dir,
+                             path_to_time_window_file,
+                             cluster_min_quantile, cluster_steps,
+                             visual_min_quantile,
+                             workers = NULL,
+                             other_files) {
+    time_window <- read_time_window_file(path_to_time_window_file)
+    purrr::walk(seq_len(nrow(time_window)),
+                ~compute_one_time_clusters(districts = districts,
+                                           densities_dir = densities_dir,
+                                           lixel_maps_dir = lixel_maps_dir,
+                                           accidents_dir = accidents_dir,
+                                           cluster_dir = cluster_dir,
+                                           from_date = time_window$from_date[.],
+                                           to_date = time_window$to_date[.],
+                                           cluster_min_quantile = cluster_min_quantile,
+                                           cluster_steps = cluster_steps,
+                                           visual_min_quantile = visual_min_quantile,
+                                           workers = workers,
+                                           other_files = other_files)
+    )
 }
