@@ -4,11 +4,6 @@ TODO
 Pokračovat
 ----------
 - zkontrolovat úpravy ve funkcích pro hotspots preparation
-- ve functions_cluster_preparation.R dole; funguje pro jeden distrikt a jedno časové okno
-    - mám napsaný začátek wrapperu, který to vyřeší pro jedno období, ale nefunguje
-        - zřejmě tam něco padá -- zjistit, kde
-        - možná jsou nekonzistentní data -- přegenerovaná přes noc pro Brno město a venkov
-    - napsat wrapper pro všechna období z tabulky
 - vytvořit profily -- zatím je jen jeden
 - do všech funkcí přidat logování -- při paralelním nutno přidat do každého jádra
     - see: https://github.com/HenrikBengtsson/future/issues/306
