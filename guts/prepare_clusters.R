@@ -35,8 +35,8 @@ districts <- readr::read_rds(PATH_TO_DISTRICTS)
 
 
 # TEMP
-districts <- districts |>
-    dplyr::filter(stringr::str_detect(district_name, "Brno"))
+# districts <- districts |>
+#     dplyr::filter(stringr::str_detect(district_name, "Brno"))
 
 
 # tmap_mode("view")

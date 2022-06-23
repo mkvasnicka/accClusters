@@ -143,7 +143,7 @@ shiny_file_name <- function(districts, folder = NULL, ...) {
             "{profile_name}_"
         else
             "",
-        "{as.character(from_date)}_{as.character(to_date)}.RData")
+        "{as.character(from_date)}_{as.character(to_date)}.rds")
     basic_file_name(folder, districts, txt, ...)
 }
 
@@ -192,6 +192,8 @@ write_dir_rds <- function(object, file) {
 #
 # value:
 #   none
+#
+# WARNING: this function may not work when used deep in functions
 write_dir_rdata <- function(..., file) {
     create_dir_for_file(file)
     save(..., file = file, compress = FALSE)

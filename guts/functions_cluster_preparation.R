@@ -458,8 +458,10 @@ compute_one_time_clusters <- function(districts,
             dplyr::filter(!is.na(cluster)) |>
             dplyr::select(p1, cluster, accident_cost)
         cluster_statistics <- clss
-        write_dir_rdata(lixels, accidents, cluster_statistics,
-                        file = shiny_file)
+        write_dir_rds(
+            list(lixels = lixels, accidents = accidents,
+                 cluster_statistics = cluster_statistics),
+            file = shiny_file)
     }
 
     from_date <- as.Date(from_date)
