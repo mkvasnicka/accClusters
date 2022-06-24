@@ -1,6 +1,23 @@
 TODO
 ====
 
+Refactoring
+-----------
+- opravit výpočty s time window -- v jednom běhu ~ efektivnější využití jádra
+    - prvně se map() vytvoří víc tabulek tab (pro každý řádek time window 1), pak se spojí a spustí
+-opravit pravní parametrů -- špatné pořadí
+    - možná bude stačit transponovat matici
+    - důležité, pokud se bude předávat obecný konfig a profil za sebou, aby bylo správné pořadí
+- guts_config.R bude pevně v jádře
+    - parametry, které zadají uživatelé se budou volat v bashi přes --profile
+    - přejmenovat --profile na --config
+- vytvořit a do všech prepar*.R přidat funkci, která zkontroluje, že jsou zadané všechny konfigurační parametry a že mají validní hodnotu
+- do konfigurace jména, která řeknou, které sloupce jsou id nehody, ... (p1, ...)
+- začít psát dokumentaci
+- time window nebude v samostatném souboru, ale jako tribble() v uživatelském profilu/configu
+- přidat hlídání chyb a logování
+
+
 Pokračovat
 ----------
 - zkontrolovat úpravy ve funkcích pro hotspots preparation
