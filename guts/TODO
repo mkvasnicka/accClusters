@@ -6,19 +6,25 @@ Refactoring
 - guts_config.R bude pevně v jádře
     - parametry, které zadají uživatelé se budou volat v bashi přes --profile
     - přejmenovat --profile na --config
-- vytvořit a do všech prepar*.R přidat funkci, která zkontroluje, že jsou zadané všechny konfigurační parametry a že mají validní hodnotu
-- do konfigurace jména, která řeknou, které sloupce jsou id nehody, ... (p1, ...)
-- začít psát dokumentaci
-- time window nebude v samostatném souboru, ale jako tribble() v uživatelském profilu/configu
-- přidat hlídání chyb a logování
 
 
 Pokračovat
 ----------
-- zkontrolovat úpravy ve funkcích pro hotspots preparation
-- vytvořit profily -- zatím je jen jeden
-- do všech funkcí přidat logování -- při paralelním nutno přidat do každého jádra
-    - see: https://github.com/HenrikBengtsson/future/issues/306
+- vytvořit a do všech prepar*.R přidat funkci, která zkontroluje, že jsou zadané všechny konfigurační parametry a že mají validní hodnotu
+- do konfigurace jména, která řeknou, které sloupce jsou id nehody, ... (p1, ...)
+- začít psát dokumentaci
+- přidat hlídání chyb a logování
+    - do všech funkcí přidat logování
+    - při paralelním nutno přidat do každého jádra
+        - see: https://github.com/HenrikBengtsson/future/issues/306
+- zkontrolovat úpravy ve funkcích pro hotspot a cluster preparation
+
+
+Vizuální pohled na klastry
+--------------------------
+- podívat se očima na klastry v guts/shiny
+    - bez ohledu na název jsou všechny pro stejné období, IMHO 2019--2021
+- napsat funkci pro vizualizace ve statické mapě
 
 
 Předání dat Štěpánovi
