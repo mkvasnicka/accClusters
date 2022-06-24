@@ -654,7 +654,7 @@ compute_clusters <- function(districts,
                           target_fun = shiny_file_name,
                           source_fun = list(lixel_nb_file_name,
                                             accidents_file_name),
-                          target_folder = densities_dir,
+                          target_folder = cluster_dir,
                           source_folder = list(lixel_maps_dir,
                                                accidents_dir),
                           other_files = other_files,
@@ -664,8 +664,8 @@ compute_clusters <- function(districts,
         dplyr::bind_rows()
     tab <- tibble::tibble(
         densities_file = densities_file_name(districts, densities_dir,
-                                             from_date = "2019-01-01",
-                                             to_date = "2021-12-31",
+                                             from_date = districts$from_date,
+                                             to_date = districts$to_date,
                                              profile_name = profile_name),
         lixel_nb_file = lixel_nb_file_name(districts, lixel_maps_dir),
         accident_file = accidents_file_name(districts, accidents_dir),
@@ -674,7 +674,7 @@ compute_clusters <- function(districts,
                                      to_date = districts$to_date,
                                      profile_name = profile_name)
     )
-    PWALK(tab, one_district,
+    PWALK(tab, one_district, workers = workers,
           cluster_min_quantile = cluster_min_quantile,
           cluster_steps = cluster_steps,
           visual_min_quantile = visual_min_quantile)
