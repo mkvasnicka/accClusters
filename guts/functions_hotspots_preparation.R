@@ -262,17 +262,7 @@ compute_densities <- function(districts,
 
     workers <- get_number_of_workers(workers)
 
-    if (is.character(time_window))
-        time_window <- read_time_window_file(time_window)
-    stopifnot(tibble::is_tibble(time_window),
-              nrow(time_window) > 0,
-              all(c("from_date", "to_date") %in% names(time_window)))
-    time_window <- time_window |>
-        mutate(from_date = as.Date(from_date),
-               to_date = as.Date(to_date))
-    stopifnot(all(!is.na(time_window$from_date)),
-              all(!is.na(time_window$to_date)),
-              all(time_window$from_date <= time_window$to_date))
+    time_window <- handle_time_window(time_window)
 
     districts <- purrr::map2(
         time_window$from_date, time_window$to_date,
