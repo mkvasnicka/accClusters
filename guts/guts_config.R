@@ -91,8 +91,14 @@ VISUAL_MIN_QUANTILE <- 0.95
 DIR_ORIGIN <- "guts"
 
 
-# path to time-window file
-PATH_TO_TIME_WINDOW <- file.path(DIR_ORIGIN, "time_windows.tsv")
+# time window---either path to TSV file, or tibble with from_date and to_date
+# columns
+# TIME_WINDOW <- file.path(DIR_ORIGIN, "time_windows.tsv")
+TIME_WINDOW <- tibble::tribble(
+    ~from_date,    ~to_date,
+    "2019-01-01",  "2021-12-31",
+    "2018-01-01",  "2020-12-31"
+)
 
 
 # path to raw data
