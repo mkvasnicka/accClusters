@@ -50,7 +50,6 @@ process_command_line_arguments <- function(rdir) {
         t() |>
         as.vector() |>
         str_subset("^\\-\\-.+$")
-    message("cl_pars:\n", str_c(cl_pars, collapse = "\n"), "\n\n")
 
     profile <- get_parameter(cl_pars, "profile")
     purrr::walk(profile, ~source(file.path(rdir, .)))
