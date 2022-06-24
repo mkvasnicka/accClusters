@@ -261,8 +261,9 @@ handle_time_window <- function(time_window) {
               nrow(time_window) > 0,
               all(c("from_date", "to_date") %in% names(time_window)))
     time_window <- time_window |>
-        mutate(from_date = as.Date(from_date),
-               to_date = as.Date(to_date))
+        dplyr::mutate(from_date = as.Date(from_date),
+                      to_date = as.Date(to_date)) |>
+        dplyr::distinct()
     stopifnot(all(!is.na(time_window$from_date)),
               all(!is.na(time_window$to_date)),
               all(time_window$from_date <= time_window$to_date))

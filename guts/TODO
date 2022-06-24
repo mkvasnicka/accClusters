@@ -3,8 +3,6 @@ TODO
 
 Refactoring
 -----------
-- opravit výpočty s time window -- v jednom běhu ~ efektivnější využití jádra
-    - prvně se map() vytvoří víc tabulek tab (pro každý řádek time window 1), pak se spojí a spustí
 - guts_config.R bude pevně v jádře
     - parametry, které zadají uživatelé se budou volat v bashi přes --profile
     - přejmenovat --profile na --config
