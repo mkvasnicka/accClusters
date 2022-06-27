@@ -1,0 +1,127 @@
+---
+title: "Dokumentace systému pro vizualizaci dopravních nehod"
+output: 
+  pdf_document: 
+    toc: yes
+    fig_caption: yes
+    number_sections: yes
+    keep_tex: no
+    pandoc_args: --highlight-style=dokumentace.theme
+header-includes:
+   - \usepackage{babel}
+   - \usepackage{indentfirst}
+   - \usepackage[utf8]{inputenc}
+   - \usepackage[T1]{fontenc}
+   - \usepackage{charter}
+   - \usepackage[charter]{mathdesign}
+   - \usepackage[scaled]{berasans}
+   - \selectlanguage{czech}
+   - \captionsczech
+   - \renewcaptionname{czech}{\contentsname}{Obsah}
+   - \addtokomafont{section}{\clearpage}
+   - \let\OriMakeTitle\maketitle
+   - \def\maketitle{\OriMakeTitle\vskip1\baselineskip\includegraphics[width=\linewidth]{fuze.pdf}\vskip11\baselineskip Software byl vytvořen týmem Masarykovy univerzity s~podporou grantu TAČR TL02000122 {\em Systém pro podporu rozhodování při posuzování fúzí na trzích s\ homogenním produktem a prostorovou diferenciací}.\thispagestyle{empty}}
+   - \pagestyle{empty}
+   - \tolerance=4500
+   - \emergencystretch=11pt
+documentclass: scrartcl
+classoption: a4paper
+fontsize: 11pt
+geometry: left=25mm, right=25mm, top=25mm, bottom=40mm
+---
+
+<!--
+Návod k nastavení LaTeXové třídy scrartcl je zde:
+http://mirrors.ibiblio.org/CTAN/macros/latex/contrib/koma-script/doc/scrguien.pdf
+
+Návod k nastavení barevného zvýraznění kódu:
+https://community.rstudio.com/t/edit-tango-highlight/39106/2
+
+Jak nastavit barevné zvýraznění v YAML:
+https://stackoverflow.com/questions/24682878/set-highlight-style-from-pandoc-yaml-front-matter
+
+Příklady vestavěného barevného zvýraznění kódu:
+https://www.garrickadenbuie.com/blog/pandoc-syntax-highlighting-examples/
+-->
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, dev = 'png', dpi = 600)
+```
+
+```{r packages, echo=FALSE, message=FALSE, warning=FALSE}
+library(dplyr)
+library(knitr)
+```
+
+
+
+\newpage
+\pagestyle{plain}
+\setcounter{page}{1}
+
+
+
+# Úvod
+
+Tento text popisuje instalaci a použití softwaru **MergerSim** pro podporu rozhodování při posuzování fúzí na trzích s\ homogenním produktem a prostorovou diferenciací.
+Tvorba tohoto softwaru byla podpořena grantem TAČR TL02000122 *Systém pro podporu rozhodování při posuzování fúzí na trzích s\ homogenním produktem a prostorovou diferenciací*.
+Předpokládaným uživatelem softwaru je zejména Úřad pro ochranu hospodářské soutěže (ÚOHS), který na vzniku tohoto softwaru spolupracoval.
+
+Software **MergerSim** je implementován ve statistickém výpočetním systému\ R. Skládá se z\ jednotlivých skriptů, které implementují obecně použitelné funkce, zavádějí potřebné korekce dat a ukazují použití systému.
+Toto otevřené řešení bylo zvoleno z\ několika důvodů: 1)\ použitý statistický software je zdarma k\ dispozici pro všechny hlavní operační systémy, 2)\ implementuje metody metody  pro statistickou a ekonometrickou analýzu prostorových dat, a\ 3)\ jednotlivé implementované funkce jsou uživateli přímo k\ dispozici, takže může prostudovat jejich kód a případně si je upravit podle svých potřeb.
+
+Všechny funkce, u\ kterých se předpokládá využití koncovým uživatelem, jsou detailně dokumentované v\ jednotlivých skriptech. Před definicí funkce je vždy uvedeno, co funkce dělá, jaké očekává vstupy a jaký vrací výstup. Dále jsou zde popsány podstatné detaily fungování dané funkce. Dokumentace také ukazuje praktické využití jednotlivých funkcí.
+Tento text se proto nezaměřuje na jednotlivé funkce, nýbrž na celkový pohled a přístup k\ použití tohoto software. Ukazuje
+
+- jak software nainstalovat,
+- jak připravit data pro ekonometrickou analýzu,
+- jak odhadnout ekonometrický model konkurence na daném trhu,
+- jak simulovat dopady fúze velkých značek na tomto trhu a
+- jak vizualizovat původní data i výsledky simulací.
+
+[^pumpdroid]: Pumpdroid je aplikace, která sbírá data o\ cenách pohonných hmot od svých uživatelů. K\ dispozici je jak pro Android, tak (pod jménem iPumpuj) pro iPhone. Detaily viz http://www.pumpdroid.com/. Za poskytnutí těchto dat děkujeme panu Marcelu Matulovi z\ Pumpdroidu.
+
+Práce se softwarem **MergerSim** je v\ tomto dokumentu ilustrovaná na příkladu analýzy vlivu několika velkých fúzí na trhu benzínem Natural\ 95 (E5) v\ České republice, kdy firma Mol koupila v\ roce 2014 všechny čerpací stanice Lukoil a v\ roce 2015 všechny čerpací stanice Agip a kdy Benzina koupila v\ roce 2016 vybrané čerpací stanice OMV včetně některých čerpacích stanic fungujících pod značkou Avanti.
+Zdrojem dat o\ cenách pohonných hmot, které jsou zde použity, je Pumpdroid.[^pumpdroid]
+<!-- Alternativně by bylo možné použít data od CCS, Waze apod. -->
+
+V\ tomto dokumentu budeme jednotlivé provozovny, která prodávají vybraný produkt na určité adrese (v\ příkladech čerpací stanice), nazývat "stanice". Předpokládáme, že každá stanice patří jedné značce. Jedna firma může vlastnit více značek, které si pak nekonkurují, protože firma řídí cenotvorbu na jednotlivých stanicích centrálně.
+
+Poznámka: Protože je software **MergerSim** implementován ve výpočetním systému\ R, předpokládá tento dokument od uživatele pracovní znalost jazyka\ R včetně balíků ze skupiny **tidyverse**. Zároveň předpokládá odpovídající znalosti statistiky a ekonometrie.
+
+
+
+
+
+# Systémové nároky a instalace softwaru
+
+Tato kapitola popisuje, jaké hardwarové a softwarové vybavení je pro analýzu potřeba, jak software **MergerSim** nainstalovat a jakou adresářovou strukturu software předpokládá.
+
+
+
+## Potřebná konfigurace hardwaru a softwaru {#sec:hw-sw-config}
+
+Výpočty jsou poměrně hardwarově náročné. Proto se předpokládá následující konfigurace hardwaru a softwaru:
+
+- procesor třídy i5 nebo vyšší (větší počet jader je výhodou),
+- minimálně 32\ GB operační paměti,
+- operační systém Linux nebo Windows 10 (software pravděpodobně funguje i\ na nových verzích macOS, nebyl však na tomto systému testován),
+- R verze 4.0.3 nebo novější s\ aktualizovanými balíky a
+- Sun Java verze 14.0.2 nebo novější.
+
+
+
+# Instalace softwaru
+
+
+
+
+# Očekávaná struktura vstupních dat {#kap:input-data}
+
+Tato kapitole popisuje, v\ jaké struktuře musí být nachystána vstupní data než se začnou připravovat pro ekonometrickou analýzu. (Jak připravit data pro ekonometrickou analýzu popisuje kapitola\ \ref{kap:data-prep-general}. Kapitola\ \ref{kap:pumpdroiddata} ukazuje, jak do standardní vstupní struktury převést data poskytnutá Pumpdroidem.)
+V\ systému\ R musejí mít vstupní data podobu několika tabulek třídy *tibble*. Tři tabulky jsou nezbytné: tabulka cen, tabulka lokací a tabulka vlastnictví. Další tabulky (tabulky vlastností a společného vlastnictví) jsou volitelné.
+
+
+
+
+
+# Příprava dat {#kap:data-prep-general}
