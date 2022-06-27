@@ -135,8 +135,15 @@ ACCIDENTS_DIR <- file.path(DATA_DIR, "accidents")
 DENSITIES_DIR <- file.path(DATA_DIR, "densities")
 
 
+
+# outputs
+OUTPUT_DIR <- file.path(DIR_ORIGIN, "output")
+
 # path to folder where the final product used in shiny in stored
-SHINY_DIR <- file.path(DIR_ORIGIN, "shiny")
+SHINY_DIR <- file.path(OUTPUT_DIR, "shiny")
+
+# path to folder where finald product for GIS (shape file) is stored
+GIS_DIR <- file.path(OUTPUT_DIR, "gis")
 
 
 # logging
