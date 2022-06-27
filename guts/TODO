@@ -6,6 +6,9 @@ Refactoring
 - guts_config.R bude pevně v jádře
     - parametry, které zadají uživatelé se budou volat v bashi přes --profile
     - přejmenovat --profile na --config
+- zafixovat adresářovou strukturu tak, aby stačilo zadat začátky cest
+    - k rawdata
+    - k data
 
 
 Pokračovat

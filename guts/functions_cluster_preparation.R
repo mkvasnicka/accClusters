@@ -9,6 +9,8 @@
 # Copyright(c) Michal Kvasnička
 # -------------------------------------
 
+require(sf)
+require(sfnetworks)
 require(spdep)
 require(dplyr)
 
@@ -632,12 +634,21 @@ compute_clusters <- function(districts,
             sf::st_drop_geometry() |>
             dplyr::filter(!is.na(cluster)) |>
             dplyr::select(p1, cluster, accident_cost)
+        f <- function(geo) {
+            geo |>
+                sfnetworks::as_sfnetwork(directed = FALSE) |>
+                tidygraph::convert(sfnetworks::to_spatial_smooth) |>
+                sfnetworks::activate("edges") |>
+                sf::st_as_sf() |>
+                sf::st_union()
+        }
         cluster_statistics <- lixels |>
-            filter(!is.na(cluster)) |>
-            # left_join(clss, by = "cluster") |>
-            group_by(cluster) |>
-            summarise(geometry = st_union(geometry)) |>
-            left_join(clss, by = "cluster")
+            dplyr::filter(!is.na(cluster)) |>
+            dplyr::group_by(cluster) |>
+            dplyr::summarise(geometry = f(geometry), .groups = "drop") |>
+            dplyr::left_join(clss, by = "cluster")
+
+
 
         write_dir_rds(
             list(lixels = lixels, accidents = accidents,

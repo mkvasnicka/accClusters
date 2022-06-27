@@ -14,17 +14,7 @@ library(dplyr)
 library(readr)
 library(sf)
 library(tmap)
-
-
-# simplify_clusters <- function(cluster_list) {
-#     cluster_list$lixels |>
-#         filter(!is.na(cluster)) |>
-#         left_join(cluster_list$cluster_statistics, by = "cluster") |>
-#         group_by(cluster) |>
-#         summarise(geometry = st_union(geometry)) |>
-#         left_join(cluster_list$cluster_statistics)
-# }
-
+library(sfnetworks)
 
 brno1921 <- read_rds("guts/shiny/shiny_40711_2019-01-01_2021-12-31.rds")
 # clusters1921 <- simplify_clusters(brno1921)
@@ -33,9 +23,7 @@ brno1820 <- read_rds("guts/shiny/shiny_40711_2018-01-01_2020-12-31.rds")
 # clusters1820 <- simplify_clusters(brno1820)
 clusters1820 <- brno1820$cluster_statistics
 
-
 tmap_mode("view")
-
 
 # metric comparison within one period
 tm_shape(clusters1921, name = "cost") +
