@@ -632,7 +632,13 @@ compute_clusters <- function(districts,
             sf::st_drop_geometry() |>
             dplyr::filter(!is.na(cluster)) |>
             dplyr::select(p1, cluster, accident_cost)
-        cluster_statistics <- clss
+        cluster_statistics <- lixels |>
+            filter(!is.na(cluster)) |>
+            # left_join(clss, by = "cluster") |>
+            group_by(cluster) |>
+            summarise(geometry = st_union(geometry)) |>
+            left_join(clss, by = "cluster")
+
         write_dir_rds(
             list(lixels = lixels, accidents = accidents,
                  cluster_statistics = cluster_statistics),
