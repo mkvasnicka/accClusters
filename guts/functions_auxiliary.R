@@ -290,9 +290,12 @@ is_behind <- function(target, source) {
     mtarget <- file.mtime(target)
     msource <- file.mtime(source)
 
-    if (any(is.na(msource)))
+    if (any(is.na(msource))) {
+        logging::logerror("Some sources don't exist: %s.",
+                          str_c(source[is.na(msource)], collapse = ", "))
         stop("Some sources don't exist: ",
              str_c(source[is.na(msource)], collapse = ", "))
+    }
 
     if (any(is.na(mtarget)))
         return(TRUE)
