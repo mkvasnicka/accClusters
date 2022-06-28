@@ -431,6 +431,8 @@ create_log_file <- function(log_folder) {
 # notes:
 # - for reason why it is done this way, see notes to create_log_file()
 start_logging <- function(log_folder, console = FALSE) {
+    if (is.null(log_folder))
+        return(invisible(NULL))
     logging::basicConfig()
     log_file <- list.files(log_folder, pattern = "\\.log", full.names = TRUE) |>
         file.info() |>

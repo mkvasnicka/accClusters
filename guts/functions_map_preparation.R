@@ -263,23 +263,30 @@ filter_all_osm_district_roads <- function(districts, input_path, folder,
 #
 # TODO: verbose nefunguje -- chybí progress bar
 # TODO: cleaning: odstranit roads.osm a různé .json a .geojson soubory
-create_osm_district_roads <- function(districts, input_path, road_types = NULL,
-                                      buffer_size, folder, districts_in_one_go = 10,
+create_osm_district_roads <- function(districts,
+                                      input_path,
+                                      road_types = NULL,
+                                      buffer_size, folder,
+                                      districts_in_one_go = 10,
                                       verbose = FALSE) {
-    if (!dir.exists(folder))
-        dir.create(folder)
-    road_map <- file.path(folder, "roads.osm")
-    filter_osm_roads(input_path, road_map, road_types, verbose = verbose)
-    write_districts_geojson(districts, buffer_size, folder, verbose)
-    # old version: each district is processed by itself -- slow but conserves
-    # memory
-    # # create_json_do_file(districts, folder, verbose = verbose)
-    # # filter_osm_district_roads(districts, road_map, folder, verbose = verbose)
-    # new version: districts_in_one_go districts are processed in one go -- it
-    # faster but needs a lot more memory
-    filter_all_osm_district_roads(districts, road_map, folder,
-                                  districts_in_one_go = districts_in_one_go,
-                                  verbose = verbose)
+    if (is_behind(osm_file_name(districts, OSM_MAPS_DIR),
+                  c(PATH_TO_RAW_ROADS_OSM, PATH_TO_DISTRICTS))) {
+
+        if (!dir.exists(folder))
+            dir.create(folder)
+        road_map <- file.path(folder, "roads.osm")
+        filter_osm_roads(input_path, road_map, road_types, verbose = verbose)
+        write_districts_geojson(districts, buffer_size, folder, verbose)
+        # old version: each district is processed by itself -- slow but conserves
+        # memory
+        # # create_json_do_file(districts, folder, verbose = verbose)
+        # # filter_osm_district_roads(districts, road_map, folder, verbose = verbose)
+        # new version: districts_in_one_go districts are processed in one go -- it
+        # faster but needs a lot more memory
+        filter_all_osm_district_roads(districts, road_map, folder,
+                                      districts_in_one_go = districts_in_one_go,
+                                      verbose = verbose)
+    }
 }
 
 

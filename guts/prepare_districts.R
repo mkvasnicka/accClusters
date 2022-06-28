@@ -25,7 +25,10 @@ source(file.path(RSCRIPTDIR, "functions_districts_preparation.R"))
 process_command_line_arguments(RSCRIPTDIR)
 
 
+# start logging
+start_logging(log_folder = LOG_DIR)
+
+
 # create major districts table
 create_districts(path_do_districts = PATH_TO_DISTRICTS,
-                 path_to_raw_districts = PATH_TO_RAW_DISTRICTS,
-                 log_folder = LOG_DIR)
+                 path_to_raw_districts = PATH_TO_RAW_DISTRICTS)
