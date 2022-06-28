@@ -135,7 +135,6 @@ ACCIDENTS_DIR <- file.path(DATA_DIR, "accidents")
 DENSITIES_DIR <- file.path(DATA_DIR, "densities")
 
 
-
 # outputs
 OUTPUT_DIR <- file.path(DIR_ORIGIN, "output")
 

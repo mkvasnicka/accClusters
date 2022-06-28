@@ -23,11 +23,6 @@ Pokračovat
 - zkontrolovat úpravy ve funkcích pro hotspot a cluster preparation
 
 
-GIS
----
-- napsat export klastrů do GISu
-
-
 Vizuální pohled na klastry
 --------------------------
 - podívat se očima na klastry v guts/shiny
