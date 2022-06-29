@@ -1,0 +1,20 @@
+Zdroje dat
+==========
+
+Okresy
+------
+- ARC ČR 4.1:   https://www.arcdata.cz/produkty/geograficka-data/arccr-4-0
+- ARC ČR starší
+- URLab:    http://web.natur.cuni.cz/ksgrrsek/urrlab_vystupy/download
+- Geoportal ČUZK Soubor správních hranic a hranic katastrálních území ČR: https://geoportal.cuzk.cz/(S(uufahw3bishqszcklzne0nex))/Default.aspx?mode=TextMeta&side=dSady_hranice10&metadataID=CZ-CUZK-SH-V&mapid=5&head_tab=sekce-02-gp&menu=2521
+    - přímý odkaz: https://geoportal.cuzk.cz/zakazky/SPH/SPH_SHP_JTSK.zip
+    - ale chybí deklarace projekce!
+
+Kraje
+-----
+- Eurostat: https://ec.europa.eu/eurostat/web/gisco/geodata/reference-data/administrative-units-statistical-units/nuts#nuts21
+
+
+Ostatní
+-------
+- Data 50: https://geoportal.cuzk.cz/(S(lqahe4r30qvqszn5rkbhsfxh))/Default.aspx?mode=TextMeta&side=mapy_data50&text=dSady_mapyData50&head_tab=sekce-02-gp&menu=2290
