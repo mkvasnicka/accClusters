@@ -61,16 +61,22 @@ read_arccr_districts <- function(path_to_districts, layer = "SPH_OKRES") {
 # create_districts() creates/updates districts table
 #
 # inputs:
-# - path_do_districts ... (character scalar) path where districts table should
-#   be written
-# - path_to_raw_districts ... (character scalar) path to folder where ARCČR data
-#   (AdministrativniCleneni_v13.gdb) are stored
+#   none
 #
 # value:
 #   none; data are written to disk
-create_districts <- function(path_do_districts, path_to_raw_districts) {
-    if (is_behind(path_do_districts, path_to_raw_districts)) {
+#
+# used paths:
+# - path_to_districts ... (character scalar) path where districts table should
+#   be written
+# - path_to_raw_districts ... (character scalar) path to folder where ARCČR data
+#   (AdministrativniCleneni_v13.gdb) are stored
+
+create_districts <- function() {
+    path_to_districts <- path_to_districts()
+    path_to_raw_districts <- path_to_raw_districts()
+    if (is_behind(path_to_districts, path_to_raw_districts)) {
         districts <- read_arccr_districts(path_to_raw_districts)
-        write_dir_rds(districts, file = path_do_districts)
+        write_dir_rds(districts, file = path_to_districts)
     }
 }

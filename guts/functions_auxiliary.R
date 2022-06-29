@@ -67,6 +67,99 @@ process_command_line_arguments <- function(rdir) {
 
 
 
+# paths to folders -------------------------------------------------------------
+
+
+# path to raw data
+raw_data_dir <- function() {
+    if (exists("RAW_DATA_DIR"))
+        RAW_DATA_DIR
+    else
+        file.path(DIR_ORIGIN, "rawdata")
+}
+
+# path to districts shape file folder
+path_to_raw_districts <- function() {
+    file.path(raw_data_dir(),
+              # "arccr", "arccr_4_1.gdb")
+              "cuzk")
+}
+
+# path to OSM maps
+path_to_raw_roads_osm <- function() {
+    file.path(raw_data_dir(), "osm", "czech-republic-latest.osm.pbf")
+}
+
+
+# path to original accidents file
+RAW_ACCIDENTS_DIR <- file.path(RAW_DATA_DIR, "accidents")
+# PATH_TO_RAW_ACCIDENTS <- file.path(RAW_ACCIDENTS_DIR, "pcrdata.RData")
+PATH_TO_RAW_ACCIDENTS <- file.path(RAW_ACCIDENTS_DIR, "raw_accidents.rds")
+
+
+# path to created data folder
+data_dir <- function() {
+    if (exists("DATA_DIR"))
+        DATA_DIR
+    else
+        file.path(DIR_ORIGIN, "data")
+}
+
+# path to districts
+path_to_districts <- function() {
+    file.path(data_dir(), "districts", "districts.rds")
+}
+
+# path to filtered/converted maps folder
+path_to_map_dir <- function() {
+    file.path(data_dir(), "maps")
+}
+
+# path to lixels' folder
+path_to_lixels_maps_dir <- function() {
+    file.path(data_dir(), "lixels")
+}
+
+# paths to accidents data by districts
+path_to_accidents_dir <- function() {
+    file.path(data_dir(), "accidents")
+}
+
+# path to NKDEs by districts
+path_to_densities_dir <- function() {
+    file.path(data_dir(), "densities")
+}
+
+
+# outputs
+output_dir <- function() {
+    if (exists("OUTPUT_DIR"))
+        OUTPUT_DIR
+    else
+        file.path(DIR_ORIGIN, "output")
+}
+
+# path to folder where the final product used in shiny in stored
+shiny_dir <- function() {
+    file.path(output_dir(), "shiny")
+}
+
+# path to folder where finald product for GIS (shape file) is stored
+gis_dir <- function() {
+    file.path(output_dir(), "gis")
+}
+
+
+# logging
+log_dir <- function() {
+    if (exists("LOG_DIR"))
+        LOG_DIR
+    else
+        file.path(DIR_ORIGIN, "log")
+}
+
+
+
 # paths to files ---------------------------------------------------------------
 
 # general template for paths to individual district files

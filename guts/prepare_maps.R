@@ -29,17 +29,14 @@ process_command_line_arguments(RSCRIPTDIR)
 
 
 # read in districts
-districts <- readr::read_rds(PATH_TO_DISTRICTS)
+districts <- readr::read_rds(path_to_districts())
 
 
 # for each district, create .osm files with filered roads
-if (is_behind(osm_file_name(districts, OSM_MAPS_DIR),
-              c(PATH_TO_RAW_ROADS_OSM, PATH_TO_DISTRICTS))) {
     create_osm_district_roads(districts, PATH_TO_RAW_ROADS_OSM,
                               road_types = SUPPORTED_ROAD_CLASSES,
                               buffer_size = DISTRICT_BUFFER_SIZE,
                               folder = OSM_MAPS_DIR)
-}
 
 
 # for each district, create simplified sfnetwork .rds files with filtered roads
