@@ -106,8 +106,11 @@ RAW_DATA_DIR <- file.path(DIR_ORIGIN, "rawdata")
 
 # path to original maps
 RAW_MAPS_DIR <- file.path(RAW_DATA_DIR, "maps")
-PATH_TO_RAW_DISTRICTS <- file.path(RAW_MAPS_DIR,
-                                   "arccr", "AdministrativniCleneni_v13.gdb/")
+# PATH_TO_RAW_DISTRICTS <- file.path(RAW_MAPS_DIR,
+#                                    "arccr", "AdministrativniCleneni_v13.gdb/")
+PATH_TO_RAW_DISTRICTS <- file.path(RAW_DATA_DIR,
+                                   # "arccr", "arccr_4_1.gdb")
+                                   "cuzk")
 PATH_TO_RAW_ROADS_OSM <- file.path(RAW_MAPS_DIR, "czech-republic-latest.osm.pbf")
 
 # path to original accidents file
