@@ -196,6 +196,17 @@ read_raw_accidents <- function(folder, skip = 6) {
 }
 
 
+#
+create_accidents <- function(path_to_raw_accidents, raw_accidents_dir) {
+    if (is_behind(path_to_raw_accidents,
+                  list.files(raw_accidents_dir, pattern = "csv",
+                             full.names = TRUE))) {
+        accidents <- read_raw_accidents(raw_accidents_dir)
+        write_dir_rds(accidents, path_to_raw_accidents)
+    }
+}
+
+
 
 # snap points to lines ---------------------------------------------------------
 

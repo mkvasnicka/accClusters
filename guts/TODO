@@ -6,11 +6,13 @@ Refactoring
 - zafixovat adresářovou strukturu tak, aby stačilo zadat začátky cest
     - společný začátek cesty: DIR_ORIGIN
     - alternativní začátky cest: RAW_DATA_DIR, DATA_DIR, OUTPUT_DIR a LOG_DIR
-    - pokračovat od create_osm_district_roads()
     - hotovo:
         - zrušeny staré konstanty
         - zavedeny nové funkce
     - nutno zkontrolovat
+    - pokračovat od create_accidents() -- nutno opravit cestu, kam se píšou data +
+        následující funkce čeká všechny nehody v paměti -- nově si je musí načíst
+        z disku
 
 - guts_config.R bude pevně v jádře
     - parametry, které zadají uživatelé se budou volat v bashi přes --profile
