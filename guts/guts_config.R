@@ -150,3 +150,9 @@ OUTPUT_DIR <- file.path(DIR_ORIGIN, "output")
 #
 # # logging
 LOG_DIR <- file.path(DIR_ORIGIN, "log")
+
+
+# accidents files masks --------------------------------------------------------
+
+ACCIDENTS_FILE_NAME_PATTERN <- "\\d{4}_databaze_nehody.csv"
+ACCIDENTS_GPS_FILE_NAME_PATTERN <- "\\d{4}_databaze_GPS.csv"

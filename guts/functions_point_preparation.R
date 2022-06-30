@@ -179,12 +179,12 @@ read_raw_accidents <- function(folder, skip = 6) {
     }
 
     accidents <- purrr::map(list.files(path = folder,
-                                       pattern = "\\d{4}_databáze_nehody.csv",
+                                       pattern = ACCIDENTS_FILE_NAME_PATTERN,
                                        full.names = TRUE),
                             read_accidents, skip = skip) |>
         dplyr::bind_rows()
     gps <- purrr::map(list.files(path = folder,
-                                 pattern = "\\d{4}_databáze_GPS.csv",
+                                 pattern = ACCIDENTS_GPS_FILE_NAME_PATTERN,
                                  full.names = TRUE),
                       read_gps, skip = skip) |>
         dplyr::bind_rows()

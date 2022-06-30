@@ -135,7 +135,16 @@ Předpokládá se, že silniční síť je v\ systému **XYZ** třeba akutalizov
 
 ### Data o nehodách
 
-`RAW_DATA_DIR`
+Data o\ nehodách je třeba umístit do adresáře `RAW_DATA_DIR/accidents` ve formátu CSV. Data pro každý rok se skládají ze souborů
+
+- `####_databaze_nehody.csv`,
+- `####_databaze_GPS.csv`,
+- `####_databaze_nasledky.csv`,
+- `####_databaze_vozidla.csv` a
+- `####_databaze_chodci.csv`,
+
+kde `####` představuje daný rok (např.\ 2021).
+
 
 
 
