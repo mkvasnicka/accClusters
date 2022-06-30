@@ -308,7 +308,7 @@ snap_points_to_lines <- function(points, lines, dist = 100,
 #
 # inputs:
 # - districts ... districts SF tibble
-# - accidents ... (SF tibble) all accidents including their attributes
+# - path_to_accidents ... (SF tibble) all accidents including their attributes
 # - max_distance ... (numeric scalar) maximum distance from the (selected)
 #   roads; it the distance is higher, the accident is removed from the dataset
 # - lixel_dir ... (character scalar) path to folder there lixellized roads are
@@ -320,7 +320,7 @@ snap_points_to_lines <- function(points, lines, dist = 100,
 #   - serious_injury ... (numeric scalar) cost of one serious injury in millions
 #       CZK
 #   - light_injury ... (numeric scalar) cost of one light injury in millions CZK
-# - accident_dir ... (character scaler) path to folder where the new accidents
+# - accident_dir ... (character scalar) path to folder where the new accidents
 #   files should be stored
 #
 # value:
@@ -334,8 +334,11 @@ snap_points_to_lines <- function(points, lines, dist = 100,
 # - if unit_cost is atomic vector, one cost column called "accident_cost" is
 #   added; if it is list of several atomic vectors, their names are used as
 #   names of corresponding column names
-create_districts_accidents <- function(districts, accidents, max_distance,
-                                       lixel_dir, accident_dir,
+create_districts_accidents <- function(districts,
+                                       path_to_accidents,
+                                       max_distance,
+                                       lixel_dir,
+                                       accident_dir,
                                        unit_costs,
                                        workers = NULL,
                                        other_dependencies = NULL) {
@@ -357,6 +360,8 @@ create_districts_accidents <- function(districts, accidents, max_distance,
         write_dir_rds(snapped_points, output_file)
     }
 
+    accidents <- readr::read_rds(path_to_accidents)
+
     workers <- get_number_of_workers(workers,
                                      ram_needed = RAM_PER_CORE_ACCIDENTS)
     districts <- districts_behind(districts,
@@ -364,7 +369,8 @@ create_districts_accidents <- function(districts, accidents, max_distance,
                                   source_fun = lixel_file_name,
                                   target_folder = accident_dir,
                                   source_folder = lixel_dir,
-                                  other_files = other_dependencies)
+                                  other_files = c(other_dependencies,
+                                                  path_to_accidents))
     tab <- tibble::tibble(
         input_file = lixel_file_name(districts, lixel_dir),
         output_file = accidents_file_name(districts, accident_dir))
