@@ -249,13 +249,13 @@ filter_all_osm_district_roads <- function(districts, input_path, folder,
 # inputs:
 # - districts ... (sf) table of districts; must include at least district_id and
 #   geometry (multi-polygon)
-# - input_path ... (character scalar) a path to OSM map
+# - path_to_osm_maps ... (character scalar) a path to OSM map
 # - road_types ... (character scalar or vector or NULL) if NULL, all roads are
 #   kept; if character scalar then it road types must be separated with commas;
 #   if vector, it is reformated automatically
 # - buffer_size ... (numeric scalar) the buffer size in meters for geojson
-# - folder ... (character scalar) a path where geojsons, the intermediate and
-#   resulting OSM maps are written
+# - path_to_geojsons ... (character scalar) a path where geojsons, the
+#   intermediate and resulting OSM maps are written
 # - districts_in_one_go ... (integer scalar) how many districts should be
 #   processed in one go; if too high, the process would failed due to lack of
 #   memory; 10 is ok if you have 32 GB of RAM
@@ -263,17 +263,22 @@ filter_all_osm_district_roads <- function(districts, input_path, folder,
 #
 # TODO: verbose nefunguje -- chybí progress bar
 # TODO: cleaning: odstranit roads.osm a různé .json a .geojson soubory
-create_osm_district_roads <- function(districts, input_path, road_types = NULL,
-                                      buffer_size, folder, districts_in_one_go = 10,
+create_osm_district_roads <- function(districts,
+                                      path_to_osm_maps,
+                                      path_to_geojsons,
+                                      road_types = NULL,
+                                      buffer_size,
+                                      districts_in_one_go = 10,
+                                      other_dependencies = NULL,
                                       verbose = FALSE) {
-    if (is_behind(osm_file_name(districts, folder),
-                  c(input_path, path_to_districts()))) {
-        if (!dir.exists(folder))
-        dir.create(folder)
-    road_map <- file.path(folder, "roads.osm")
-    filter_osm_roads(input_path, road_map, road_types, verbose = verbose)
-    write_districts_geojson(districts, buffer_size, folder, verbose)
-    filter_all_osm_district_roads(districts, road_map, folder,
+    if (is_behind(osm_file_name(districts, path_to_geojsons),
+                  c(path_to_osm_maps, other_dependencies))) {
+        if (!dir.exists(path_to_geojsons))
+        dir.create(path_to_geojsons)
+    road_map <- file.path(path_to_geojsons, "roads.osm")
+    filter_osm_roads(path_to_osm_maps, road_map, road_types, verbose = verbose)
+    write_districts_geojson(districts, buffer_size, path_to_geojsons, verbose)
+    filter_all_osm_district_roads(districts, road_map, path_to_geojsons,
                                   districts_in_one_go = districts_in_one_go,
                                   verbose = verbose)
     }
@@ -636,15 +641,15 @@ simplify_sfnetwork <- function(net, max_distance = 0.5, dTolerance = 5) {
 
 # read osm as sf ---------------------------------------------------------------
 
-# create_sf_district_roads(districts, input_folder, output_folder) creates SF
-# maps from OSM maps and saves them to disk
+# create_sf_district_roads(districts, path_to_osm_maps, path_to_sf_maps) creates
+# SF maps from OSM maps and saves them to disk
 #
 # inputs:
 # - districts ... (SF tibble) districts
-# - input_folder ... (character scalar) folder where district-filtered OSM files
-#   live
-# - output_folder ... (character scalar) folder where district-filtered SF files
-#   should be stored
+# - path_to_osm_maps ... (character scalar) folder where district-filtered OSM
+#   files live
+# - path_to_sf_maps ... (character scalar) folder where district-filtered SF
+#   files should be stored
 # - crs ... (numeric scalar) planary projection
 # - max_distance ... (numeric scalar) maximal distance of connected points
 #   which should be replace a new point (see step 2)
@@ -658,7 +663,9 @@ simplify_sfnetwork <- function(net, max_distance = 0.5, dTolerance = 5) {
 # notes:
 # - this function cannot use sf::st_read(); for the reason, see help on
 #   read_osm_to_sfnetwork()
-create_sf_district_roads <- function(districts, input_folder, output_folder,
+create_sf_district_roads <- function(districts,
+                                     path_to_osm_maps,
+                                     path_to_sf_maps,
                                      crs,
                                      max_distance = 0.5, dTolerance = 5,
                                      workers = 1,
@@ -674,12 +681,12 @@ create_sf_district_roads <- function(districts, input_folder, output_folder,
     districts <- districts_behind(districts,
                                   target_fun = sf_file_name,
                                   source_fun = osm_file_name,
-                                  target_folder = output_folder,
-                                  source_folder = input_folder,
+                                  target_folder = path_to_sf_maps,
+                                  source_folder = path_to_osm_maps,
                                   other_files = other_dependencies)
     tab <- tibble::tibble(
-        input_file = osm_file_name(districts, input_folder),
-        output_file = sf_file_name(districts, output_folder)
+        input_file = osm_file_name(districts, path_to_osm_maps),
+        output_file = sf_file_name(districts, path_to_sf_maps)
     )
     PWALK(tab, one_file, workers = workers)
 }

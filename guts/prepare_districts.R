@@ -26,4 +26,5 @@ process_command_line_arguments(RSCRIPTDIR)
 
 
 # create major districts table
-create_districts()
+create_districts(path_to_districts = path_to_districts(),
+                 path_to_raw_districts = path_to_raw_districts())
