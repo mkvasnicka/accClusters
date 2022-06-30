@@ -33,12 +33,11 @@ districts <- readr::read_rds(PATH_TO_DISTRICTS)
 
 # compute hotspots, i.e., NKDE
 compute_densities(districts,
-                  maps_dir = SF_MAPS_DIR,
-                  lixel_dir = LIXEL_MAPS_DIR,
-                  sample_dir = LIXEL_MAPS_DIR,
-                  accidents_dir = ACCIDENTS_DIR,
-                  density_dir = DENSITIES_DIR,
-                  # path_to_time_window_file = TIME_WINDOW,
+                  maps_dir = path_to_map_dir(),  # SF_MAPS_DIR,
+                  lixel_dir = path_to_lixels_maps_dir(),  # LIXEL_MAPS_DIR,
+                  sample_dir = path_to_lixels_maps_dir(),  # LIXEL_MAPS_DIR,
+                  accidents_dir = path_to_accidents_dir(),  # ACCIDENTS_DIR,
+                  density_dir = path_to_densities_dir(),  # DENSITIES_DIR,
                   time_window = TIME_WINDOW,
                   weights = NKDE_WEIGHTS,
                   bw = NKDE_BW,
@@ -47,4 +46,4 @@ compute_densities(districts,
                   method = NKDE_METHOD,
                   agg = NKDE_AGG,
                   workers = NO_OF_WORKERS,
-                  other_files = PATH_TO_DISTRICTS)
+                  other_files = path_to_districts())

@@ -43,11 +43,12 @@ if (is_behind(PATH_TO_RAW_ACCIDENTS,
 
 
 # crop the accidents to buffered districts and snap them to selected roads
-create_districts_accidents(districts, accidents,
+create_districts_accidents(districts,
+                           accidents,
                            max_distance = ACCIDENT_TO_ROAD_MAX_DISTANCE,
-                           lixel_dir = LIXEL_MAPS_DIR,
-                           accident_dir = ACCIDENTS_DIR,
+                           lixel_dir = path_to_lixels_maps_dir(),  # LIXEL_MAPS_DIR,
+                           accident_dir = path_to_accidents_dir(),  # ACCIDENTS_DIR,
                            unit_costs = UNIT_COSTS,
                            workers = NO_OF_WORKERS_ACCIDENTS,
-                           other_dependencies = c(PATH_TO_DISTRICTS,
+                           other_dependencies = c(path_to_districts(),
                                                   PATH_TO_RAW_ACCIDENTS))
