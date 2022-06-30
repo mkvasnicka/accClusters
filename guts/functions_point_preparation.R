@@ -66,16 +66,13 @@ accident_damage_cost <- function(dead, serious_injury, light_injury,
 #   sf tibble of all accidents
 #
 # assumptions:
-# - all data are stored in sub-folders of one folder
-# - each year is stored in one sub-folder
-# - within this sub-folder, the data are stored in CSV (the first skip rows can
-#   be skipped---the same number in each file)
-# - within each sub-folder, the following files are present:
-#   - *databáze_GPS*.csv
-#   - *databáze_chodci*.csv
-#   - *databáze_nasledky*.csv
-#   - *databáze_nehody*.csv
-#   - databáze_vozidla*.csv
+# - data on individual years are stored separately in CSVs in form
+#   - ###_databaze_GPS*.csv
+#   - ###_databaze_chodci*.csv
+#   - ###_databaze_nasledky*.csv
+#   - ###_databaze_nehody*.csv
+#   - ###_databaze_vozidla*.csv
+#   where #### is year (e.g., 2021)
 # - column p1 is own key (there are duplicities; it's a bug sometimes)
 # - coding is in  kody1.xls
 # - geolocation are columns D and E in *databaze_GPS*.xls---CRS is Křovák
@@ -196,13 +193,26 @@ read_raw_accidents <- function(folder, skip = 6) {
 }
 
 
+# create_accidents(path_to_all_accidents, raw_accidents_dir) reads in all
+# accidents
 #
-create_accidents <- function(path_to_raw_accidents, raw_accidents_dir) {
-    if (is_behind(path_to_raw_accidents,
+# inputs:
+# - path_to_all_accidents ... (character scalar) path to file where data on all
+#   accidents will be stored
+# - raw_accidents_dir ... (character scalar) path to folder where input CSVs on
+#   accidents are stored
+#
+# value:
+#   none, it writes data to disk
+#
+# notes:
+# - for assumptions on input files, see help for read_raw_accidents()
+create_accidents <- function(path_to_all_accidents, raw_accidents_dir) {
+    if (is_behind(path_to_all_accidents,
                   list.files(raw_accidents_dir, pattern = "csv",
                              full.names = TRUE))) {
         accidents <- read_raw_accidents(raw_accidents_dir)
-        write_dir_rds(accidents, path_to_raw_accidents)
+        write_dir_rds(accidents, path_to_all_accidents)
     }
 }
 

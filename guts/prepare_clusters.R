@@ -28,7 +28,7 @@ process_command_line_arguments(RSCRIPTDIR)
 
 
 # read in districts
-districts <- readr::read_rds(PATH_TO_DISTRICTS)
+districts <- readr::read_rds(path_to_districts())
 
 
 # compute and save clusters for all periods

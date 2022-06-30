@@ -92,10 +92,11 @@ path_to_raw_roads_osm <- function() {
 
 
 # path to original accidents file
-# RAW_ACCIDENTS_DIR <- file.path(RAW_DATA_DIR, "accidents")
 path_to_raw_accidents_dir <- function() {
     file.path(raw_data_dir(), "accidents")
 }
+
+# path to file with all processed accidents
 path_to_raw_accidents <- function() {
     file.path(path_to_accidents_dir(), "all_accidents.rds")
 }

@@ -104,51 +104,13 @@ DIR_ORIGIN <- "guts"
 # path to raw data
 RAW_DATA_DIR <- file.path(DIR_ORIGIN, "rawdata")
 
-# path to original maps
-# RAW_MAPS_DIR <- file.path(RAW_DATA_DIR, "maps")
-# PATH_TO_RAW_DISTRICTS <- file.path(RAW_MAPS_DIR,
-#                                    "arccr", "AdministrativniCleneni_v13.gdb/")
-# PATH_TO_RAW_DISTRICTS <- file.path(RAW_DATA_DIR,
-#                                    # "arccr", "arccr_4_1.gdb")
-#                                    "cuzk")
-# # PATH_TO_RAW_ROADS_OSM <- file.path(RAW_MAPS_DIR, "czech-republic-latest.osm.pbf")
-#
-# # path to original accidents file
-# RAW_ACCIDENTS_DIR <- file.path(RAW_DATA_DIR, "accidents")
-# # PATH_TO_RAW_ACCIDENTS <- file.path(RAW_ACCIDENTS_DIR, "pcrdata.RData")
-# PATH_TO_RAW_ACCIDENTS <- file.path(RAW_ACCIDENTS_DIR, "raw_accidents.rds")
-#
-#
-# # paths to created data
+# paths to created data
 DATA_DIR <- file.path(DIR_ORIGIN, "data")
-#
-# # paths to districts
-# DISTRICTS_DIR <- file.path(DATA_DIR, "districts")
-# PATH_TO_DISTRICTS <- file.path(DISTRICTS_DIR, "districts.rds")
-#
-# # paths to filtered/converted maps
-# OSM_MAPS_DIR <- file.path(DATA_DIR, "maps")
-# SF_MAPS_DIR <- file.path(DATA_DIR, "maps")
-# LIXEL_MAPS_DIR <- file.path(DATA_DIR, "lixels")
-#
-# # paths to accidents data by districts
-# ACCIDENTS_DIR <- file.path(DATA_DIR, "accidents")
-#
-# # path to NKDEs by districts
-# DENSITIES_DIR <- file.path(DATA_DIR, "densities")
-#
-#
-# # outputs
+
+# outputs
 OUTPUT_DIR <- file.path(DIR_ORIGIN, "output")
-#
-# # path to folder where the final product used in shiny in stored
-# SHINY_DIR <- file.path(OUTPUT_DIR, "shiny")
-#
-# # path to folder where finald product for GIS (shape file) is stored
-# GIS_DIR <- file.path(OUTPUT_DIR, "gis")
-#
-#
-# # logging
+
+# logging
 LOG_DIR <- file.path(DIR_ORIGIN, "log")
 
 
