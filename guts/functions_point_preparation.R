@@ -178,27 +178,21 @@ read_raw_accidents <- function(folder, skip = 6) {
                    coord_y = coord_y / 1e3)
     }
 
-    read_one_year <- function(folder, skip = 6) {
-        message(folder)
-        accidents <- read_accidents(
-            list.files(folder, pattern = "databáze_nehody.*csv$",
-                       full.names = TRUE),
-            skip = skip)
-        gps <- read_gps(
-            list.files(folder, pattern = "databáze_GPS.*csv$",
-                       full.names = TRUE),
-            skip = skip)
-        dplyr::left_join(accidents, gps, by = "p1") |>
-            dplyr::filter(!is.na(coord_x), !is.na(coord_y)) |>
-            dplyr::distinct() |>
-            sf::st_as_sf(coords = c("coord_x", "coord_y"),
-                         crs = PLANARY_PROJECTION)
-
-    }
-
-    folders <- list.dirs(folder)[-1]
-    purrr::map(folders, read_one_year, skip = skip) |>
+    accidents <- purrr::map(list.files(path = folder,
+                                       pattern = "\\d{4}_databáze_nehody.csv",
+                                       full.names = TRUE),
+                            read_accidents, skip = skip) |>
         dplyr::bind_rows()
+    gps <- purrr::map(list.files(path = folder,
+                                 pattern = "\\d{4}_databáze_GPS.csv",
+                                 full.names = TRUE),
+                      read_gps, skip = skip) |>
+        dplyr::bind_rows()
+    dplyr::left_join(accidents, gps, by = "p1") |>
+        dplyr::filter(!is.na(coord_x), !is.na(coord_y)) |>
+        dplyr::distinct() |>
+        sf::st_as_sf(coords = c("coord_x", "coord_y"),
+                     crs = PLANARY_PROJECTION)
 }
 
 
