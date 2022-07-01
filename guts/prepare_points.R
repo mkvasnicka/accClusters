@@ -32,7 +32,7 @@ districts <- readr::read_rds(path_to_districts())
 
 
 # read in all accidents data
-create_accidents(path_to_raw_accidents = path_to_raw_accidents(),  # PATH_TO_RAW_ACCIDENTS,
+create_accidents(path_to_all_accidents = path_to_raw_accidents(),  # PATH_TO_RAW_ACCIDENTS,
                  raw_accidents_dir = path_to_raw_accidents_dir())
 
 
