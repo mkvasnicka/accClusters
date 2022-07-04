@@ -28,19 +28,18 @@ process_command_line_arguments(RSCRIPTDIR)
 
 
 # read in districts
-districts <- readr::read_rds(PATH_TO_DISTRICTS)
+districts <- readr::read_rds(path_to_districts())
 
 
 # compute and save clusters for all periods
 compute_clusters(districts,
-                 densities_dir = DENSITIES_DIR,
-                 lixel_maps_dir = LIXEL_MAPS_DIR,
-                 accidents_dir = ACCIDENTS_DIR,
-                 cluster_dir = SHINY_DIR,
-                 # path_to_time_window_file = TIME_WINDOW,
+                 densities_dir = path_to_densities_dir(),  # DENSITIES_DIR,
+                 lixel_maps_dir = path_to_lixels_maps_dir(),  # LIXEL_MAPS_DIR,
+                 accidents_dir = path_to_accidents_dir(),  # ACCIDENTS_DIR,
+                 cluster_dir = shiny_dir(),  # SHINY_DIR,
                  time_window = TIME_WINDOW,
                  cluster_min_quantile = CLUSTER_MIN_QUANTILE,
                  cluster_steps = CLUSTER_ADDITIONAL_STEPS,
                  visual_min_quantile = VISUAL_MIN_QUANTILE,
                  workers = NO_OF_WORKERS,
-                 other_files = PATH_TO_DISTRICTS)
+                 other_files = path_to_districts())

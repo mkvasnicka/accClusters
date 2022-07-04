@@ -91,7 +91,8 @@ write_gis_files <- function(districts, time_window, gis_dir, shiny_dir) {
                                                        profile_name = profile_name,
                                                        from_date = from_date,
                                                        to_date = to_date)) |>
-        dplyr::select(-c(KOD_LAU1, KOD_KRAJ, KOD_CZNUTS3, NAZ_CZNUTS3))
+        dplyr::select(district_id, district_name, from_date, to_date,
+                      shiny_filename)
 
     f <- function(row) {
         cls <- readr::read_rds(row$shiny_filename)
@@ -104,21 +105,26 @@ write_gis_files <- function(districts, time_window, gis_dir, shiny_dir) {
         clusters <- dplyr::bind_cols(row, cls$cluster_statistics)
         list(lixels = lixels, accidents = accidents, clusters = clusters)
     }
-    oo <- purrr::map(seq_len(nrow(tab)), ~f(tab[., ]))
-    lixels <- oo |> purrr::map("lixels") |>
-        dplyr::bind_rows() |>
-        dplyr::rename(lixel = lixel_id)
-    accidents <- oo |> purrr::map("accidents") |>
-        dplyr::bind_rows() |>
-        dplyr::rename(cost = accident_cost)
-    clusters <- oo |> purrr::map("clusters") |>
-        dplyr::bind_rows() |>
-        dplyr::rename(lenght = total_length,
-                      density = total_density,
-                      cpm = cost_per_meter)
 
-    write_to_shapefile(lixels, gis_dir, "high_densities")
-    write_to_shapefile(accidents, gis_dir, "clustered_accidents")
-    write_to_shapefile(clusters, gis_dir, "clusters")
+    if (is_behind(target = c(file.path(gis_dir, "clustered_accidents.dbf"),
+                             file.path(gis_dir, "clusters.dbf"),
+                             file.path(gis_dir, "high_densities.dbf")),
+                  source = tab$shiny_filename)) {
+        oo <- purrr::map(seq_len(nrow(tab)), ~f(tab[., ]))
+        lixels <- oo |> purrr::map("lixels") |>
+            dplyr::bind_rows() |>
+            dplyr::rename(lixel = lixel_id)
+        accidents <- oo |> purrr::map("accidents") |>
+            dplyr::bind_rows() |>
+            dplyr::rename(cost = accident_cost)
+        clusters <- oo |> purrr::map("clusters") |>
+            dplyr::bind_rows() |>
+            dplyr::rename(lenght = total_length,
+                          density = total_density,
+                          cpm = cost_per_meter)
 
+        write_to_shapefile(lixels, gis_dir, "high_densities")
+        write_to_shapefile(accidents, gis_dir, "clustered_accidents")
+        write_to_shapefile(clusters, gis_dir, "clusters")
+    }
 }

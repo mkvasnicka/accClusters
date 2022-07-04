@@ -19,22 +19,6 @@ require(sf)
 
 # read districts ---------------------------------------------------------------
 
-# read districts from ARC ČR and convert it to class "district" to prohibit
-# RStudio to freeze when it tries to print it
-
-
-# adds a class name to object -- at the first place
-add_class <- function(object, cls) {
-    class(object) <- unique(c(cls, class(object)))
-    object
-}
-
-remove_first_class <- function(object) {
-    class(object) <- class(object)[-1]
-    object
-}
-
-
 # function read_arccr_districts() reads districts from a path
 #
 # inputs:
@@ -43,6 +27,8 @@ remove_first_class <- function(object) {
 #
 # output:
 # - sf table
+#
+# for previous version of data
 read_arccr_districts <- function(path_to_districts, layer = "OkresyPolygony") {
     sf::st_read(path_to_districts, layer = layer, stringsAsFactors = FALSE) |>
         dplyr::select(KOD_OKRES:NAZ_CZNUTS3) |>
@@ -50,48 +36,32 @@ read_arccr_districts <- function(path_to_districts, layer = "OkresyPolygony") {
                       district_id = KOD_OKRES) |>
         dplyr::select(-NAZ_LAU1, -KOD_OKRES) |>
         dplyr::select(district_id, district_name, everything()) |>
-        # dplyr::mutate(osm_file_name = glue("district_{district_id}.osm"),
-        #               sf_file_name = glue("district_{district_id}.rds"),
-        #               lixel_file_name = glue("lixel_{district_id}.rds"),
-        #               lixel_sample_file_name =
-        #                   glue("lixel_sample_{district_id}.rds"),
-        #               lixel_nb_file_name = glue("lixel_nb_{district_id}.rds"),
-        #               accidents_file_name =
-        #                   glue("accidents_{district_id}.rds"),
-        #               densities_file_name =
-        #                   glue("densities_{district_id}.rds")) |>
-        sf::st_transform(crs = PLANARY_PROJECTION) |>
-        add_class("districts")
+        sf::st_transform(crs = PLANARY_PROJECTION)
 }
-
-
-# # prohibits RStudio to freeze when it tries to view districts with added slots
-# print.districts <- function(d, ...) {
-#     cat("Districts\n  no. of districts:", nrow(d),
-#         "\n  columns:", paste(names(d), collapse = ", "))
-# }
-# #str.districts <- print.districts
-# filter.districts <- function(d, ...) {
-#     remove_first_class(d) |>
-#         dplyr::filter(...) |>
-#         add_class("districts")
-# }
-# mutate.districts <- function(d, ...) {
-#     remove_first_class(d) |>
-#         dplyr::mutate(...) |>
-#         add_class("districts")
-# }
-# select.districts <- function(d, ...) {
-#     remove_first_class(d) |>
-#         dplyr::select(...) |>
-#         add_class("districts")
-# }
+# arc cr 4.1
+read_arccr_districts <- function(path_to_districts, layer = "Okres_SLDB") {
+    sf::st_read(path_to_districts, layer = layer, stringsAsFactors = FALSE) |>
+        dplyr::select(
+            district_id = nutslau,
+            district_name = nazev
+        ) |>
+        sf::st_transform(crs = PLANARY_PROJECTION)
+}
+# cuzk
+read_arccr_districts <- function(path_to_districts, layer = "SPH_OKRES") {
+    sf::st_read(path_to_districts, layer = layer, stringsAsFactors = FALSE) |>
+        dplyr::select(
+            district_id = KOD_LAU1,
+            district_name = NAZEV_LAU1
+        ) |>
+        sf::st_set_crs(PLANARY_PROJECTION)
+}
 
 
 # create_districts() creates/updates districts table
 #
 # inputs:
-# - path_do_districts ... (character scalar) path where districts table should
+# - path_to_districts ... (character scalar) path where districts table should
 #   be written
 # - path_to_raw_districts ... (character scalar) path to folder where ARCČR data
 #   (AdministrativniCleneni_v13.gdb) are stored

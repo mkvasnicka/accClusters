@@ -3,12 +3,17 @@ TODO
 
 Refactoring
 -----------
+- zafixovat adresářovou strukturu tak, aby stačilo zadat začátky cest
+    - společný začátek cesty: DIR_ORIGIN
+    - alternativní začátky cest: RAW_DATA_DIR, DATA_DIR, OUTPUT_DIR a LOG_DIR
+    - hotovo:
+        - zrušeny staré konstanty
+        - zavedeny nové funkce
+    - nutno zkontrolovat
+
 - guts_config.R bude pevně v jádře
     - parametry, které zadají uživatelé se budou volat v bashi přes --profile
     - přejmenovat --profile na --config
-- zafixovat adresářovou strukturu tak, aby stačilo zadat začátky cest
-    - k rawdata
-    - k data
 
 
 Pokračovat
@@ -21,6 +26,7 @@ Pokračovat
     - při paralelním nutno přidat do každého jádra
         - see: https://github.com/HenrikBengtsson/future/issues/306
 - zkontrolovat úpravy ve funkcích pro hotspot a cluster preparation
+- do načítání nehod přidat kontroly a ukončit, když chyba
 
 
 Vizuální pohled na klastry

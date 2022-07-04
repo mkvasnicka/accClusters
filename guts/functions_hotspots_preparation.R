@@ -223,6 +223,22 @@ compute_densities <- function(districts,
                              density_path,
                              from_date, to_date,
                              weights, bw, adaptive, trim_bw, method, agg) {
+        # grid_shape() is a heuristics that guesses how to split districts for
+        # the density computation; districts with a hole (such as okres Brno
+        # venkov might not work optimally); this may be useful for performance
+        # reasons but it is necessary because the NKDE computation fails for
+        # some districts otherwise
+        grid_shape <- function(map) {
+            box <- sf::st_bbox(map)
+            x <- as.numeric(box$xmax - box$xmin) / 1e3
+            y <- as.numeric(box$ymax - box$ymin) / 1e3
+            s <- x * y
+            n <- nrow(map) / 5e5 * 10
+            xn <- max(c(1, round(x / y * n)))
+            yn <- max(c(1, round(y / x * n)))
+            c(x = xn, y = yn)
+        }
+
         map <- readr::read_rds(map_path) |>
             sfnetworks::activate("edges") |>
             sf::st_as_sf()
@@ -239,6 +255,7 @@ compute_densities <- function(districts,
             weights <- rep(1,nrow(accidents))
         if (is.character(weights))
             weights <- accidents[[weights]]
+        grid_shape <- grid_shape(lixels)
         densities <- spNetwork::nkde(map,
                                      events = accidents,
                                      w = weights,
@@ -247,8 +264,10 @@ compute_densities <- function(districts,
                                      bw = bw, div = "bw",
                                      adaptive = adaptive,
                                      trim_bw = trim_bw,
-                                     method = method, digits = 1, tol = 1,
-                                     grid_shape = c(10,10), max_depth = 10,
+                                     method = method, digits = 1,
+                                     tol = 1,
+                                     grid_shape = grid_shape,  # c(10,10),
+                                     max_depth = 10,
                                      agg = agg,
                                      sparse = TRUE,
                                      verbose = TRUE)

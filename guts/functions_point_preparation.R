@@ -66,16 +66,13 @@ accident_damage_cost <- function(dead, serious_injury, light_injury,
 #   sf tibble of all accidents
 #
 # assumptions:
-# - all data are stored in sub-folders of one folder
-# - each year is stored in one sub-folder
-# - within this sub-folder, the data are stored in CSV (the first skip rows can
-#   be skipped---the same number in each file)
-# - within each sub-folder, the following files are present:
-#   - *databáze_GPS*.csv
-#   - *databáze_chodci*.csv
-#   - *databáze_nasledky*.csv
-#   - *databáze_nehody*.csv
-#   - databáze_vozidla*.csv
+# - data on individual years are stored separately in CSVs in form
+#   - ###_databaze_GPS*.csv
+#   - ###_databaze_chodci*.csv
+#   - ###_databaze_nasledky*.csv
+#   - ###_databaze_nehody*.csv
+#   - ###_databaze_vozidla*.csv
+#   where #### is year (e.g., 2021)
 # - column p1 is own key (there are duplicities; it's a bug sometimes)
 # - coding is in  kody1.xls
 # - geolocation are columns D and E in *databaze_GPS*.xls---CRS is Křovák
@@ -178,27 +175,45 @@ read_raw_accidents <- function(folder, skip = 6) {
                    coord_y = coord_y / 1e3)
     }
 
-    read_one_year <- function(folder, skip = 6) {
-        message(folder)
-        accidents <- read_accidents(
-            list.files(folder, pattern = "databáze_nehody.*csv$",
-                       full.names = TRUE),
-            skip = skip)
-        gps <- read_gps(
-            list.files(folder, pattern = "databáze_GPS.*csv$",
-                       full.names = TRUE),
-            skip = skip)
-        dplyr::left_join(accidents, gps, by = "p1") |>
-            dplyr::filter(!is.na(coord_x), !is.na(coord_y)) |>
-            dplyr::distinct() |>
-            sf::st_as_sf(coords = c("coord_x", "coord_y"),
-                         crs = PLANARY_PROJECTION)
-
-    }
-
-    folders <- list.dirs(folder)[-1]
-    purrr::map(folders, read_one_year, skip = skip) |>
+    accidents <- purrr::map(list.files(path = folder,
+                                       pattern = ACCIDENTS_FILE_NAME_PATTERN,
+                                       full.names = TRUE),
+                            read_accidents, skip = skip) |>
         dplyr::bind_rows()
+    gps <- purrr::map(list.files(path = folder,
+                                 pattern = ACCIDENTS_GPS_FILE_NAME_PATTERN,
+                                 full.names = TRUE),
+                      read_gps, skip = skip) |>
+        dplyr::bind_rows()
+    dplyr::left_join(accidents, gps, by = "p1") |>
+        dplyr::filter(!is.na(coord_x), !is.na(coord_y)) |>
+        dplyr::distinct() |>
+        sf::st_as_sf(coords = c("coord_x", "coord_y"),
+                     crs = PLANARY_PROJECTION)
+}
+
+
+# create_accidents(path_to_all_accidents, raw_accidents_dir) reads in all
+# accidents
+#
+# inputs:
+# - path_to_all_accidents ... (character scalar) path to file where data on all
+#   accidents will be stored
+# - raw_accidents_dir ... (character scalar) path to folder where input CSVs on
+#   accidents are stored
+#
+# value:
+#   none, it writes data to disk
+#
+# notes:
+# - for assumptions on input files, see help for read_raw_accidents()
+create_accidents <- function(path_to_all_accidents, raw_accidents_dir) {
+    if (is_behind(path_to_all_accidents,
+                  list.files(raw_accidents_dir, pattern = "csv",
+                             full.names = TRUE))) {
+        accidents <- read_raw_accidents(raw_accidents_dir)
+        write_dir_rds(accidents, path_to_all_accidents)
+    }
 }
 
 
@@ -303,7 +318,7 @@ snap_points_to_lines <- function(points, lines, dist = 100,
 #
 # inputs:
 # - districts ... districts SF tibble
-# - accidents ... (SF tibble) all accidents including their attributes
+# - path_to_accidents ... (SF tibble) all accidents including their attributes
 # - max_distance ... (numeric scalar) maximum distance from the (selected)
 #   roads; it the distance is higher, the accident is removed from the dataset
 # - lixel_dir ... (character scalar) path to folder there lixellized roads are
@@ -315,7 +330,7 @@ snap_points_to_lines <- function(points, lines, dist = 100,
 #   - serious_injury ... (numeric scalar) cost of one serious injury in millions
 #       CZK
 #   - light_injury ... (numeric scalar) cost of one light injury in millions CZK
-# - accident_dir ... (character scaler) path to folder where the new accidents
+# - accident_dir ... (character scalar) path to folder where the new accidents
 #   files should be stored
 #
 # value:
@@ -329,8 +344,11 @@ snap_points_to_lines <- function(points, lines, dist = 100,
 # - if unit_cost is atomic vector, one cost column called "accident_cost" is
 #   added; if it is list of several atomic vectors, their names are used as
 #   names of corresponding column names
-create_districts_accidents <- function(districts, accidents, max_distance,
-                                       lixel_dir, accident_dir,
+create_districts_accidents <- function(districts,
+                                       path_to_accidents,
+                                       max_distance,
+                                       lixel_dir,
+                                       accident_dir,
                                        unit_costs,
                                        workers = NULL,
                                        other_dependencies = NULL) {
@@ -352,6 +370,8 @@ create_districts_accidents <- function(districts, accidents, max_distance,
         write_dir_rds(snapped_points, output_file)
     }
 
+    accidents <- readr::read_rds(path_to_accidents)
+
     workers <- get_number_of_workers(workers,
                                      ram_needed = RAM_PER_CORE_ACCIDENTS)
     districts <- districts_behind(districts,
@@ -359,7 +379,8 @@ create_districts_accidents <- function(districts, accidents, max_distance,
                                   source_fun = lixel_file_name,
                                   target_folder = accident_dir,
                                   source_folder = lixel_dir,
-                                  other_files = other_dependencies)
+                                  other_files = c(other_dependencies,
+                                                  path_to_accidents))
     tab <- tibble::tibble(
         input_file = lixel_file_name(districts, lixel_dir),
         output_file = accidents_file_name(districts, accident_dir))

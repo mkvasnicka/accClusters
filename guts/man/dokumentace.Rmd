@@ -62,39 +62,20 @@ library(knitr)
 
 # Úvod
 
-Tento text popisuje instalaci a použití softwaru **MergerSim** pro podporu rozhodování při posuzování fúzí na trzích s\ homogenním produktem a prostorovou diferenciací.
-Tvorba tohoto softwaru byla podpořena grantem TAČR TL02000122 *Systém pro podporu rozhodování při posuzování fúzí na trzích s\ homogenním produktem a prostorovou diferenciací*.
-Předpokládaným uživatelem softwaru je zejména Úřad pro ochranu hospodářské soutěže (ÚOHS), který na vzniku tohoto softwaru spolupracoval.
+Tento text popisuje instalaci a použití softwaru
 
-Software **MergerSim** je implementován ve statistickém výpočetním systému\ R. Skládá se z\ jednotlivých skriptů, které implementují obecně použitelné funkce, zavádějí potřebné korekce dat a ukazují použití systému.
-Toto otevřené řešení bylo zvoleno z\ několika důvodů: 1)\ použitý statistický software je zdarma k\ dispozici pro všechny hlavní operační systémy, 2)\ implementuje metody metody  pro statistickou a ekonometrickou analýzu prostorových dat, a\ 3)\ jednotlivé implementované funkce jsou uživateli přímo k\ dispozici, takže může prostudovat jejich kód a případně si je upravit podle svých potřeb.
+sw má dvě části:
 
-Všechny funkce, u\ kterých se předpokládá využití koncovým uživatelem, jsou detailně dokumentované v\ jednotlivých skriptech. Před definicí funkce je vždy uvedeno, co funkce dělá, jaké očekává vstupy a jaký vrací výstup. Dále jsou zde popsány podstatné detaily fungování dané funkce. Dokumentace také ukazuje praktické využití jednotlivých funkcí.
-Tento text se proto nezaměřuje na jednotlivé funkce, nýbrž na celkový pohled a přístup k\ použití tohoto software. Ukazuje
-
-- jak software nainstalovat,
-- jak připravit data pro ekonometrickou analýzu,
-- jak odhadnout ekonometrický model konkurence na daném trhu,
-- jak simulovat dopady fúze velkých značek na tomto trhu a
-- jak vizualizovat původní data i výsledky simulací.
-
-[^pumpdroid]: Pumpdroid je aplikace, která sbírá data o\ cenách pohonných hmot od svých uživatelů. K\ dispozici je jak pro Android, tak (pod jménem iPumpuj) pro iPhone. Detaily viz http://www.pumpdroid.com/. Za poskytnutí těchto dat děkujeme panu Marcelu Matulovi z\ Pumpdroidu.
-
-Práce se softwarem **MergerSim** je v\ tomto dokumentu ilustrovaná na příkladu analýzy vlivu několika velkých fúzí na trhu benzínem Natural\ 95 (E5) v\ České republice, kdy firma Mol koupila v\ roce 2014 všechny čerpací stanice Lukoil a v\ roce 2015 všechny čerpací stanice Agip a kdy Benzina koupila v\ roce 2016 vybrané čerpací stanice OMV včetně některých čerpacích stanic fungujících pod značkou Avanti.
-Zdrojem dat o\ cenách pohonných hmot, které jsou zde použity, je Pumpdroid.[^pumpdroid]
-<!-- Alternativně by bylo možné použít data od CCS, Waze apod. -->
-
-V\ tomto dokumentu budeme jednotlivé provozovny, která prodávají vybraný produkt na určité adrese (v\ příkladech čerpací stanice), nazývat "stanice". Předpokládáme, že každá stanice patří jedné značce. Jedna firma může vlastnit více značek, které si pak nekonkurují, protože firma řídí cenotvorbu na jednotlivých stanicích centrálně.
-
-Poznámka: Protože je software **MergerSim** implementován ve výpočetním systému\ R, předpokládá tento dokument od uživatele pracovní znalost jazyka\ R včetně balíků ze skupiny **tidyverse**. Zároveň předpokládá odpovídající znalosti statistiky a ekonometrie.
+- přípravu dat
+- interaktivní shiny aplikaci
 
 
 
 
 
-# Systémové nároky a instalace softwaru
+# Příprava dat
 
-Tato kapitola popisuje, jaké hardwarové a softwarové vybavení je pro analýzu potřeba, jak software **MergerSim** nainstalovat a jakou adresářovou strukturu software předpokládá.
+Tato kapitola popisuje, jaké hardwarové a softwarové vybavení je potřeba, jak software **XYZ** nainstalovat a jakou adresářovou strukturu software předpokládá.
 
 
 
@@ -102,26 +83,83 @@ Tato kapitola popisuje, jaké hardwarové a softwarové vybavení je pro analýz
 
 Výpočty jsou poměrně hardwarově náročné. Proto se předpokládá následující konfigurace hardwaru a softwaru:
 
-- procesor třídy i5 nebo vyšší (větší počet jader je výhodou),
-- minimálně 32\ GB operační paměti,
-- operační systém Linux nebo Windows 10 (software pravděpodobně funguje i\ na nových verzích macOS, nebyl však na tomto systému testován),
-- R verze 4.0.3 nebo novější s\ aktualizovanými balíky a
-- Sun Java verze 14.0.2 nebo novější.
+- procesor třídy i5 nebo vyšší, minimálně 8\ jader (větší počet jader je výhodou),
+- minimálně 32\ GB operační paměti (více jader vyžaduje více operační paměti),
+- operační systém **TODO**,
+- **TODO**
 
 
 
-# Instalace softwaru
+## Instalace softwaru
 
 
-
-
-# Očekávaná struktura vstupních dat {#kap:input-data}
-
-Tato kapitole popisuje, v\ jaké struktuře musí být nachystána vstupní data než se začnou připravovat pro ekonometrickou analýzu. (Jak připravit data pro ekonometrickou analýzu popisuje kapitola\ \ref{kap:data-prep-general}. Kapitola\ \ref{kap:pumpdroiddata} ukazuje, jak do standardní vstupní struktury převést data poskytnutá Pumpdroidem.)
-V\ systému\ R musejí mít vstupní data podobu několika tabulek třídy *tibble*. Tři tabulky jsou nezbytné: tabulka cen, tabulka lokací a tabulka vlastnictví. Další tabulky (tabulky vlastností a společného vlastnictví) jsou volitelné.
+konfigurace
 
 
 
 
+## Struktura vstupních dat {#kap:input-data}
 
-# Příprava dat {#kap:data-prep-general}
+Software **XYZ** vyžaduje tři datové vstupy:
+
+- mapový podklad o administrativním členění ČR,
+- mapový podklad silniční sítě\ -- používá se OpenStreetMap (`czech-republic-latest.osm.pbf`) a
+- popis jednotlivých dopravních nehod ve formátu CSV.
+
+Všechna tato vstupní data je třeba umístit do následujících adresářů:
+
+- administrativní členění: `RAW_DATA_DIR/acrcr/arccr_4_1.gdb/`,
+- silniční síť OSM: `RAW_DATA_DIR/osm/czech-republic-latest.osm.pbf` a
+- nehody: `RAW_DATA_DIR/accidents/`,
+
+kde cestu k\ těmto adresářům můžete nastavit v\ konfiguračním souboru pomocí proměnné `RAW_DATA_DIR`. Pokud ji nenastavíte, použije se implicitní cesta `DIR_ORIGIN/rawdata`, kde `DIR_ORIGIN` je společná počáteční cesta ke všem datům systému **XYZ**.
+
+
+### ARC ČR: Administrativní členění ČR
+
+Mapový podklad pro administrativní členění připravuje firma ARCDATA Praha (https://www.arcdata.cz/). Systém **XYZ** využívá verzi ARC\ ČR\ 4.1, která je k\ dispozici ke stažení zdarma na adrese https://www.arcdata.cz/produkty/geograficka-data/arccr-4-0.
+
+Stáhněte soubor `ArcČR_4_1.ppkx`, rozzipujte jej (v\ závislosti na operačním systému může vyžadovat změnu koncovky jména souboru na `.zip`), přesuňte podadresář `arccr_4_1/p20/arcčr_4_1.gdb` do adresáře `RAW_DATA_DIR/acrcr` a přejmenujte adresář na `arccr_4_1.gdb` (tj.\ odstraňte háček nad "č").
+
+Tento soubor je vhodné změnit vždy, když se změní hranice okresů ČR. Po aktualizace mapy okresů je třeba aktualizovat všechna data, viz oddíl\  \ref{sec:aktutalizace-dat}.
+
+
+### OpenStreetMap
+
+Silniční síť OpenStreetMaps musí být zabalena do jednoho souboru typu `.osm.pbf`. Předpokládá se využití mapového podkladu sbaleného firmou GEOFABRIC (https://www.geofabrik.de/), který obsahuje nejnovější podobu silniční sítě v\ ČR.
+
+Soubor najdete ke stažení na adrese https://download.geofabrik.de/europe/czech-republic.html; stahujte první odkaz (https://download.geofabrik.de/europe/czech-republic-latest.osm.pbf, "suitable for Osmium, Osmosis, imposm, osm2pgsql, mkgmap, and others".) Soubor vložte do adresáře `RAW_DATA_DIR/osm`.
+
+Předpokládá se, že silniční síť je v\ systému **XYZ** třeba akutalizovat pouze jednou za několik let. Po aktualizace mapy silniční sítě je třeba aktualizovat všechna data, viz oddíl\  \ref{sec:aktutalizace-dat}.
+
+
+### Data o nehodách
+
+Data o\ nehodách je třeba umístit do adresáře `RAW_DATA_DIR/accidents` ve formátu CSV. Data pro každý rok se skládají ze souborů
+
+- `####_databaze_nehody.csv`,
+- `####_databaze_GPS.csv`,
+- `####_databaze_nasledky.csv`,
+- `####_databaze_vozidla.csv` a
+- `####_databaze_chodci.csv`,
+
+kde `####` představuje daný rok (např.\ 2021).
+
+
+
+
+## Průběžně vytvářená data
+
+
+
+## Výstupy systému
+
+
+
+## Spuštění systému {#sec:aktutalizace-dat}
+
+
+
+
+
+# Shiny applikace

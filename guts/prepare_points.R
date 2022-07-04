@@ -28,26 +28,20 @@ process_command_line_arguments(RSCRIPTDIR)
 
 
 # read in districts
-districts <- readr::read_rds(PATH_TO_DISTRICTS)
+districts <- readr::read_rds(path_to_districts())
 
 
 # read in all accidents data
-if (is_behind(PATH_TO_RAW_ACCIDENTS,
-              list.files(RAW_ACCIDENTS_DIR, pattern = "csv",
-                         recursive = TRUE, full.names = TRUE))) {
-    accidents <- read_raw_accidents(RAW_ACCIDENTS_DIR)
-    write_dir_rds(accidents, PATH_TO_RAW_ACCIDENTS)
-} else {
-    accidents <- read_rds(PATH_TO_RAW_ACCIDENTS)
-}
+create_accidents(path_to_all_accidents = path_to_raw_accidents(),  # PATH_TO_RAW_ACCIDENTS,
+                 raw_accidents_dir = path_to_raw_accidents_dir())
 
 
 # crop the accidents to buffered districts and snap them to selected roads
-create_districts_accidents(districts, accidents,
+create_districts_accidents(districts,
+                           path_to_accidents = path_to_raw_accidents(),
                            max_distance = ACCIDENT_TO_ROAD_MAX_DISTANCE,
-                           lixel_dir = LIXEL_MAPS_DIR,
-                           accident_dir = ACCIDENTS_DIR,
+                           lixel_dir = path_to_lixels_maps_dir(),  # LIXEL_MAPS_DIR,
+                           accident_dir = path_to_accidents_dir(),  # ACCIDENTS_DIR,
                            unit_costs = UNIT_COSTS,
                            workers = NO_OF_WORKERS_ACCIDENTS,
-                           other_dependencies = c(PATH_TO_DISTRICTS,
-                                                  PATH_TO_RAW_ACCIDENTS))
+                           other_dependencies = path_to_districts())
