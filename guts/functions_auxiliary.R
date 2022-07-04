@@ -460,6 +460,25 @@ districts_behind <- function(districts, target_fun, source_fun,
 
 # parallel processing ----------------------------------------------------------
 
+# get_number_of_workers() returns the number of workers/cores that should be
+# used in parallel
+#
+# inputs:
+# - workers ... (integer scalar or "auto")
+# - ram_needed ... (numeric scalar) RAM in GB needed per one core
+#
+# value:
+#   integer scalar
+#
+# notes:
+# - if workers == "auto", optimal number of workers is estimated from available
+#   cores, RAM needed per core, and amount of memory available when
+#   get_number_of_workers() is run
+# - it is supposed that this system is the only software running at the machine
+#
+# WARNINGS:
+# - if any other process allocates memory after get_number_of_workers() done its
+#   magic, memory may be insufficient for this system
 get_number_of_workers <- function(workers, ram_needed = RAM_PER_CORE_GENERAL) {
     if (is.null(workers))
         workers <- ifelse(exists("NO_OF_WORKERS"), NO_OF_WORKERS, 1)
@@ -471,17 +490,66 @@ get_number_of_workers <- function(workers, ram_needed = RAM_PER_CORE_GENERAL) {
 }
 
 
+# silently(.f) wrappes function .f in such a way that runs and returns TRUE when
+# it succeeds and FALSE when it fails; it should be used with functions that
+# return no value but are run for their side effects; it is used in PWALK()
+#
+# inputs:
+# - .f ... (clusure) a function that returns nothing and is run for its side
+#   effects
+#
+# value:
+#   logical: FALSE when .f fails and TRUE otherwise
+silently <- function(.f) {
+    .f <- purrr::as_mapper(.f)
+    function(...) {
+        val <- TRUE
+        tryCatch(.f(...), error = function(e) {
+            val <<- FALSE
+        }, interrupt = function(e) {
+            stop("Terminated by user", call. = FALSE)
+        })
+        val
+    }
+}
+
+
+# PWALK() is the same as purrr::walk() with these differences:
+# - if workers > 1, furrr::future_walk() is run
+# - function .f is protected, i.e., it never fails
+# - .l must be a tibble, i.e., it cannot be a list
+#
+# PWALK <- function(.l, .f, workers = 1, ...) {
+#     workers <- get_number_of_workers(workers)
+#     .f <- purrr::possibly(.f, otherwise = NULL)
+#     if (workers == 1) {
+#         purrr::pwalk(.l, .f, ...)
+#     } else {
+#         oplan <- future::plan()
+#         future::plan("multisession", workers = workers)
+#         furrr::future_pwalk(.l, .f, ...,
+#                             .options = furrr::furrr_options(seed = TRUE))
+#         future::plan(oplan)
+#     }
+# }
 PWALK <- function(.l, .f, workers = 1, ...) {
-    workers <- get_number_of_workers(workers)
-    .f <- purrr::possibly(.f, otherwise = NULL)
-    if (workers == 1) {
-        purrr::pwalk(.l, .f, ...)
-    } else {
-        oplan <- future::plan()
-        future::plan("multisession", workers = workers)
-        furrr::future_pwalk(.l, .f, ...,
-                            .options = furrr::furrr_options(seed = TRUE))
-        future::plan(oplan)
+    if (nrow(.l) > 0) {
+        workers <- get_number_of_workers(workers)
+        .f <- silently(.f)
+        if (workers == 1) {
+            success <- purrr::pmap_lgl(.l, .f, ...)
+        } else {
+            oplan <- future::plan()
+            future::plan("multisession", workers = workers)
+            success <- furrr::future_pmap_lgl(.l, .f, ...,
+                                              .options = furrr::furrr_options(seed = TRUE))
+            future::plan(oplan)
+        }
+        tab <- .l[!success, ]
+        if (nrow(tab) > 0) {
+            logging::logerror("production failed in the following output files: %s",
+                              str_c(tab$output_file, collapse = ", "))
+        }
     }
 }
 

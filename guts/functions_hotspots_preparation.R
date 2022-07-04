@@ -220,7 +220,7 @@ compute_densities <- function(districts,
                               workers = NULL,
                               other_files = NULL) {
     one_district <- function(map_path, lixel_path, sample_path, accidents_path,
-                             density_path,
+                             output_file,
                              from_date, to_date,
                              weights, bw, adaptive, trim_bw, method, agg) {
         # grid_shape() is a heuristics that guesses how to split districts for
@@ -272,7 +272,7 @@ compute_densities <- function(districts,
                                      sparse = TRUE,
                                      verbose = TRUE)
         lixels$density <- densities
-        write_dir_rds(lixels, density_path)
+        write_dir_rds(lixels, output_file)
     }
 
     profile_name <- NULL
@@ -304,10 +304,10 @@ compute_densities <- function(districts,
         lixel_path = lixel_file_name(districts, lixel_dir),
         sample_path = lixel_sample_file_name(districts, sample_dir),
         accidents_path = accidents_file_name(districts, accidents_dir),
-        density_path = densities_file_name(districts, density_dir,
-                                           from_date = districts$from_date,
-                                           to_date = districts$to_date,
-                                           profile_name = profile_name),
+        output_file = densities_file_name(districts, density_dir,
+                                          from_date = districts$from_date,
+                                          to_date = districts$to_date,
+                                          profile_name = profile_name),
         from_date = districts$from_date,
         to_date = districts$to_date
     )

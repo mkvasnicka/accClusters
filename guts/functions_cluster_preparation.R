@@ -614,7 +614,7 @@ compute_clusters <- function(districts,
                              workers = NULL,
                              other_files) {
     one_district <- function(densities_file, lixel_nb_file, accident_file,
-                             shiny_file,
+                             output_file,
                              cluster_min_quantile, cluster_steps,
                              visual_min_quantile) {
         lixels <- readr::read_rds(densities_file)
@@ -653,7 +653,7 @@ compute_clusters <- function(districts,
         write_dir_rds(
             list(lixels = lixels, accidents = accidents,
                  cluster_statistics = cluster_statistics),
-            file = shiny_file)
+            file = output_file)
     }
 
     profile_name <- NULL
@@ -686,10 +686,10 @@ compute_clusters <- function(districts,
                                              profile_name = profile_name),
         lixel_nb_file = lixel_nb_file_name(districts, lixel_maps_dir),
         accident_file = accidents_file_name(districts, accidents_dir),
-        shiny_file = shiny_file_name(districts, cluster_dir,
-                                     from_date = districts$from_date,
-                                     to_date = districts$to_date,
-                                     profile_name = profile_name)
+        output_file = shiny_file_name(districts, cluster_dir,
+                                      from_date = districts$from_date,
+                                      to_date = districts$to_date,
+                                      profile_name = profile_name)
     )
     PWALK(tab, one_district, workers = workers,
           cluster_min_quantile = cluster_min_quantile,

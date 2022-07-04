@@ -745,17 +745,17 @@ create_lixelized_roads <- function(districts, input_folder, output_folder,
                                    lx_length, mindist = NULL,
                                    workers = NULL,
                                    other_dependencies = NULL) {
-    one_file <- function(input_path, output_path, lx_length, mindist) {
-        logging::loginfo("lixel prep: creating %s", input_path)
-        network <- readr::read_rds(input_path) |>
+    one_file <- function(input_file, output_file, lx_length, mindist) {
+        logging::loginfo("lixel prep: creating %s", input_file)
+        network <- readr::read_rds(input_file) |>
             sfnetworks::activate("edges") |>
             st_as_sf()
         lixels <- spNetwork::lixelize_lines(network, lx_length = lx_length,
                                             mindist = mindist)
         lixels$len <- sf::st_length(lixels)
         lixels$lixel_id <- seq_len(nrow(lixels))
-        write_dir_rds(lixels, output_path)
-        logging::loginfo("lixel prep: %s has been created", input_path)
+        write_dir_rds(lixels, output_file)
+        logging::loginfo("lixel prep: %s has been created", input_file)
     }
 
     logging::loginfo("lixel prep: checking for updates")
@@ -771,8 +771,8 @@ create_lixelized_roads <- function(districts, input_folder, output_folder,
                      nrow(districts), txt)
     tryCatch({
         tab <- tibble(
-            input_path = sf_file_name(districts, input_folder),
-            output_path = lixel_file_name(districts, output_folder)
+            input_file = sf_file_name(districts, input_folder),
+            output_file = lixel_file_name(districts, output_folder)
         )
         PWALK(tab, one_file, workers = workers,
               lx_length = lx_length, mindist = mindist)
@@ -799,12 +799,12 @@ create_lixel_samples_for_roads <- function(districts,
                                            input_folder, output_folder,
                                            workers = NULL,
                                            other_dependencies = NULL) {
-    one_file <- function(input_path, output_path) {
-        logging::loginfo("lixel samples prep: creating %s", input_path)
-        network <- readr::read_rds(input_path)
+    one_file <- function(input_file, output_file) {
+        logging::loginfo("lixel samples prep: creating %s", input_file)
+        network <- readr::read_rds(input_file)
         samples <- spNetwork::lines_center(network)
-        write_dir_rds(samples, output_path)
-        logging::loginfo("lixel samples prep: %s has been created", input_path)
+        write_dir_rds(samples, output_file)
+        logging::loginfo("lixel samples prep: %s has been created", input_file)
     }
 
     logging::loginfo("lixel samples prep: checking for updates")
@@ -820,8 +820,8 @@ create_lixel_samples_for_roads <- function(districts,
                      nrow(districts), txt)
     tryCatch({
         tab <- tibble(
-            input_path = lixel_file_name(districts, input_folder),
-            output_path = lixel_sample_file_name(districts, output_folder)
+            input_file = lixel_file_name(districts, input_folder),
+            output_file = lixel_sample_file_name(districts, output_folder)
         )
         PWALK(tab, one_file, workers = workers)
         if (nrow(districts) > 0)
