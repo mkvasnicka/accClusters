@@ -75,13 +75,13 @@ create_districts <- function(path_to_districts, path_to_raw_districts) {
             "districts prep: districts table is behind and will be updated")
         tryCatch({
             districts <- read_arccr_districts(path_to_raw_districts)
-            write_dir_rds(districts, file = path_to_districts)},
+            write_dir_rds(districts, file = path_to_districts)
+            logging::loginfo("districts prep: districts table has been updated")
+        },
         error = function(e) {
             logging::logerror("districts prep failed: %s", e)
             stop("districts prep failed---stopping evaluation")})
-        logging::loginfo(
-            "districts prep: districts table has been updated")
     } else {
-        loginfo("districts are uptodate---skipping")
+        loginfo("districts are up-to-date---skipping")
     }
 }

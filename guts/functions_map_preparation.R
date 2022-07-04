@@ -271,16 +271,29 @@ create_osm_district_roads <- function(districts,
                                       districts_in_one_go = 10,
                                       other_dependencies = NULL,
                                       verbose = FALSE) {
+    logging::loginfo("osm maps prep: checking for updates")
     if (is_behind(osm_file_name(districts, path_to_geojsons),
                   c(path_to_osm_maps, other_dependencies))) {
-        if (!dir.exists(path_to_geojsons))
-        dir.create(path_to_geojsons)
-    road_map <- file.path(path_to_geojsons, "roads.osm")
-    filter_osm_roads(path_to_osm_maps, road_map, road_types, verbose = verbose)
-    write_districts_geojson(districts, buffer_size, path_to_geojsons, verbose)
-    filter_all_osm_district_roads(districts, road_map, path_to_geojsons,
-                                  districts_in_one_go = districts_in_one_go,
-                                  verbose = verbose)
+        logging::loginfo(
+            "osm maps prep: osm maps are behind and will be updated")
+        tryCatch({
+            if (!dir.exists(path_to_geojsons))
+                dir.create(path_to_geojsons)
+            road_map <- file.path(path_to_geojsons, "roads.osm")
+            filter_osm_roads(path_to_osm_maps, road_map, road_types,
+                             verbose = verbose)
+            write_districts_geojson(districts, buffer_size, path_to_geojsons,
+                                    verbose = verbose)
+            filter_all_osm_district_roads(districts, road_map, path_to_geojsons,
+                                          districts_in_one_go = districts_in_one_go,
+                                          verbose = verbose)
+        },
+        error = function(e) {
+            logging::logerror("osm maps prep failed: %s", e)
+            stop("osm maps prep failed---stopping evaluation")})
+        logging::loginfo("osm maps have been updated")
+    } else {
+        logging::loginfo("osm maps are up-to-date---skipping")
     }
 }
 
@@ -671,24 +684,38 @@ create_sf_district_roads <- function(districts,
                                      workers = 1,
                                      other_dependencies = NULL) {
     one_file <- function(input_file, output_file) {
+        logging::loginfo("road sfnetwork prep: creating %s", output_file)
         map <- read_osm_to_sfnetwork(input_file, crs = crs) |>
             remove_sfnetwork_minor_components() |>
             simplify_sfnetwork(max_distance = max_distance,
                                dTolerance = dTolerance)
         write_dir_rds(map, output_file)
+        logging::loginfo("road sfnetwork prep: %s has been created",
+                         output_file)
     }
 
+    logging::loginfo("road sfnetwork prep: checking for updates")
     districts <- districts_behind(districts,
                                   target_fun = sf_file_name,
                                   source_fun = osm_file_name,
                                   target_folder = path_to_sf_maps,
                                   source_folder = path_to_osm_maps,
                                   other_files = other_dependencies)
-    tab <- tibble::tibble(
-        input_file = osm_file_name(districts, path_to_osm_maps),
-        output_file = sf_file_name(districts, path_to_sf_maps)
-    )
-    PWALK(tab, one_file, workers = workers)
+    txt <- dplyr::if_else(nrow(districts) == 0, "---skipping", "")
+    logging::loginfo("road sfnetwork prep: %d districts will be updated%s",
+                     nrow(districts), txt)
+    tryCatch({
+        tab <- tibble::tibble(
+            input_file = osm_file_name(districts, path_to_osm_maps),
+            output_file = sf_file_name(districts, path_to_sf_maps)
+        )
+        PWALK(tab, one_file, workers = workers)
+        if (nrow(tab) > 0)
+            logging::loginfo("road sfnetwork: road sfnetworks have been updated")
+    },
+    error = function(e) {
+        logging::logerror("road sfnetwork prep failed: %s", e)
+        stop("road sfnetwork prep failed---stopping evaluation")})
 }
 
 
@@ -719,6 +746,7 @@ create_lixelized_roads <- function(districts, input_folder, output_folder,
                                    workers = NULL,
                                    other_dependencies = NULL) {
     one_file <- function(input_path, output_path, lx_length, mindist) {
+        logging::loginfo("lixel prep: creating %s", input_path)
         network <- readr::read_rds(input_path) |>
             sfnetworks::activate("edges") |>
             st_as_sf()
@@ -727,8 +755,10 @@ create_lixelized_roads <- function(districts, input_folder, output_folder,
         lixels$len <- sf::st_length(lixels)
         lixels$lixel_id <- seq_len(nrow(lixels))
         write_dir_rds(lixels, output_path)
+        logging::loginfo("lixel prep: %s has been created", input_path)
     }
 
+    logging::loginfo("lixel prep: checking for updates")
     workers <- get_number_of_workers(workers)
     districts <- districts_behind(districts,
                                   target_fun = lixel_file_name,
@@ -736,12 +766,22 @@ create_lixelized_roads <- function(districts, input_folder, output_folder,
                                   target_folder = output_folder,
                                   source_folder = input_folder,
                                   other_files = other_dependencies)
-    tab <- tibble(
-        input_path = sf_file_name(districts, input_folder),
-        output_path = lixel_file_name(districts, output_folder)
-    )
-    PWALK(tab, one_file, workers = workers,
-          lx_length = lx_length, mindist = mindist)
+    txt <- dplyr::if_else(nrow(districts) == 0, "--skipping", "")
+    logging::loginfo("lixel prep: %d districts will be updated%s",
+                     nrow(districts), txt)
+    tryCatch({
+        tab <- tibble(
+            input_path = sf_file_name(districts, input_folder),
+            output_path = lixel_file_name(districts, output_folder)
+        )
+        PWALK(tab, one_file, workers = workers,
+              lx_length = lx_length, mindist = mindist)
+        if (nrow(tab) > 0)
+            logging::loginfo("lixel prep: lixels have been updated")
+    },
+    error = function(e) {
+        logging::logerror("lixel prep failed: %s", e)
+        stop("lixel prep failed---stopping evaluation")})
 }
 
 
@@ -760,11 +800,14 @@ create_lixel_samples_for_roads <- function(districts,
                                            workers = NULL,
                                            other_dependencies = NULL) {
     one_file <- function(input_path, output_path) {
+        logging::loginfo("lixel samples prep: creating %s", input_path)
         network <- readr::read_rds(input_path)
         samples <- spNetwork::lines_center(network)
         write_dir_rds(samples, output_path)
+        logging::loginfo("lixel samples prep: %s has been created", input_path)
     }
 
+    logging::loginfo("lixel samples prep: checking for updates")
     workers <- get_number_of_workers(workers)
     districts <- districts_behind(districts,
                                   target_fun = lixel_sample_file_name,
@@ -772,11 +815,22 @@ create_lixel_samples_for_roads <- function(districts,
                                   target_folder = output_folder,
                                   source_folder = input_folder,
                                   other_files = other_dependencies)
-    tab <- tibble(
-        input_path = lixel_file_name(districts, input_folder),
-        output_path = lixel_sample_file_name(districts, output_folder)
-    )
-    PWALK(tab, one_file, workers = workers)
+    txt <- dplyr::if_else(nrow(districts) == 0, "---skipping", "")
+    logging::loginfo("lixel samples prep: %d districts will be uppdated%s",
+                     nrow(districts), txt)
+    tryCatch({
+        tab <- tibble(
+            input_path = lixel_file_name(districts, input_folder),
+            output_path = lixel_sample_file_name(districts, output_folder)
+        )
+        PWALK(tab, one_file, workers = workers)
+        if (nrow(districts) > 0)
+            logging::loginfo(
+                "lixel samples prep: lixel samples have been updated")
+    },
+    error = function(e) {
+        logging::logerror("lixel samples prep failed: %s", e)
+        stop("lixel samples prep failed---stopping evaluation")})
 }
 
 
@@ -833,11 +887,14 @@ create_lixel_nbs <- function(districts, input_folder, output_folder,
                              workers = NULL,
                              other_dependencies = NULL) {
     one_district <- function(input_file, output_file) {
+        logging::loginfo("lixel nbs prep: creating %s", input_file)
         lixels <- readr::read_rds(input_file)
         nb <- create_sf_nb(lixels)
         write_dir_rds(nb, output_file)
+        logging::loginfo("lixel nbs prep: %s has been created", input_file)
     }
 
+    logging::loginfo("lixel nbs prep: checking for updates")
     workers <- get_number_of_workers(workers)
     districts <- districts_behind(districts,
                                   target_fun = lixel_nb_file_name,
@@ -845,11 +902,21 @@ create_lixel_nbs <- function(districts, input_folder, output_folder,
                                   target_folder = output_folder,
                                   source_folder = input_folder,
                                   other_files = other_dependencies)
-    tab <- tibble::tibble(
-        input_file = lixel_file_name(districts, input_folder),
-        output_file = lixel_nb_file_name(districts, output_folder)
-    )
-    PWALK(tab, one_district, workers = workers)
+    txt <- if_else(nrow(districts) == 0, "---skipping", "")
+    logging::loginfo("lixel nbs prep: %d will be updated%s",
+                     nrow(districts), txt)
+    tryCatch({
+        tab <- tibble::tibble(
+            input_file = lixel_file_name(districts, input_folder),
+            output_file = lixel_nb_file_name(districts, output_folder)
+        )
+        PWALK(tab, one_district, workers = workers)
+        if (nrow(districts) > 0)
+            logging::loginfo("lixel nbs  have been updated")
+    },
+    error = function(e) {
+        logging::logerror("lixel nbs prep failed: %s", e)
+        stop("lixel nbs prep failed---stopping evaluation")})
 }
 
 
