@@ -426,7 +426,7 @@ districts_behind <- function(districts, target_fun, source_fun,
     if (is.list(source_fun)) {
         if (!is.list(source_folder) ||
             length(source_fun) != length(source_folder))
-            stop("If source_fun is a list, source_folder must ",
+            stop("When source_fun is a list, source_folder must ",
                  "be a list of the same length.")
         msource <- -Inf
         for (k in seq_along(source_fun)) {
