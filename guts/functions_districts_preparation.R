@@ -68,14 +68,14 @@ read_arccr_districts <- function(path_to_districts, layer = "SPH_OKRES") {
 #
 # value:
 #   none; data are written to disk
-create_districts <- function(path_do_districts, path_to_raw_districts) {
+create_districts <- function(path_to_districts, path_to_raw_districts) {
     logging::loginfo("districts prep: checking for updates")
-    if (is_behind(path_do_districts, path_to_raw_districts)) {
+    if (is_behind(path_to_districts, path_to_raw_districts)) {
         logging::loginfo(
             "districts prep: districts table is behind and will be updated")
         tryCatch({
             districts <- read_arccr_districts(path_to_raw_districts)
-            write_dir_rds(districts, file = path_do_districts)},
+            write_dir_rds(districts, file = path_to_districts)},
         error = function(e) {
             logging::logerror("districts prep failed: %s", e)
             stop("districts prep failed---stopping evaluation")})
