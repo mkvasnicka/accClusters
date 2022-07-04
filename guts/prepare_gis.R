@@ -28,11 +28,11 @@ process_command_line_arguments(RSCRIPTDIR)
 
 
 # read in districts
-districts <- readr::read_rds(PATH_TO_DISTRICTS)
+districts <- readr::read_rds(path_to_districts())
 
 
 # write GIS shape file; this doesn't update but it rewrites existing files
 write_gis_files(districts,
                 time_window = TIME_WINDOW,
-                gis_dir = GIS_DIR,
-                shiny_dir = SHINY_DIR)
+                gis_dir = gis_dir(),
+                shiny_dir = shiny_dir())

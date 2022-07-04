@@ -91,7 +91,8 @@ write_gis_files <- function(districts, time_window, gis_dir, shiny_dir) {
                                                        profile_name = profile_name,
                                                        from_date = from_date,
                                                        to_date = to_date)) |>
-        dplyr::select(-c(KOD_LAU1, KOD_KRAJ, KOD_CZNUTS3, NAZ_CZNUTS3))
+        dplyr::select(district_id, district_name, from_date, to_date,
+                      shiny_filename)
 
     f <- function(row) {
         cls <- readr::read_rds(row$shiny_filename)
