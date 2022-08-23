@@ -23,4 +23,4 @@ process_command_line_arguments(RSCRIPTDIR)
 
 
 # create a log file
-create_log_file(LOG_DIR)
+create_log_file(log_dir())

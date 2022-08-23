@@ -26,7 +26,7 @@ process_command_line_arguments(RSCRIPTDIR)
 
 
 # start logging
-start_logging(log_folder = LOG_DIR)
+start_logging(log_dir())
 
 
 # create major districts table

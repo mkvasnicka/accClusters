@@ -653,6 +653,7 @@ create_sf_district_roads <- function(districts,
                                      workers = 1,
                                      other_dependencies = NULL) {
     one_file <- function(input_file, output_file) {
+        start_logging(log_dir())
         logging::loginfo("road sfnetwork prep: creating %s", output_file)
         map <- read_osm_to_sfnetwork(input_file, crs = crs) |>
             remove_sfnetwork_minor_components() |>
@@ -670,7 +671,7 @@ create_sf_district_roads <- function(districts,
                                   target_folder = path_to_sf_maps,
                                   source_folder = path_to_osm_maps,
                                   other_files = other_dependencies)
-    txt <- dplyr::if_else(nrow(districts) == 0, "---skipping", "")
+    txt <- dplyr::if_else(nrow(districts) == 0, "---skipping", " in parallel")
     logging::loginfo("road sfnetwork prep: %d districts will be updated%s",
                      nrow(districts), txt)
     tryCatch({
@@ -715,6 +716,7 @@ create_lixelized_roads <- function(districts, input_folder, output_folder,
                                    workers = NULL,
                                    other_dependencies = NULL) {
     one_file <- function(input_file, output_file, lx_length, mindist) {
+        start_logging(log_dir())
         logging::loginfo("lixel prep: creating %s", input_file)
         network <- readr::read_rds(input_file) |>
             sfnetworks::activate("edges") |>
@@ -735,7 +737,7 @@ create_lixelized_roads <- function(districts, input_folder, output_folder,
                                   target_folder = output_folder,
                                   source_folder = input_folder,
                                   other_files = other_dependencies)
-    txt <- dplyr::if_else(nrow(districts) == 0, "--skipping", "")
+    txt <- dplyr::if_else(nrow(districts) == 0, "--skipping", " in parallel")
     logging::loginfo("lixel prep: %d districts will be updated%s",
                      nrow(districts), txt)
     tryCatch({
@@ -769,6 +771,7 @@ create_lixel_samples_for_roads <- function(districts,
                                            workers = NULL,
                                            other_dependencies = NULL) {
     one_file <- function(input_file, output_file) {
+        start_logging(log_dir())
         logging::loginfo("lixel samples prep: creating %s", input_file)
         network <- readr::read_rds(input_file)
         samples <- spNetwork::lines_center(network)
@@ -856,6 +859,7 @@ create_lixel_nbs <- function(districts, input_folder, output_folder,
                              workers = NULL,
                              other_dependencies = NULL) {
     one_district <- function(input_file, output_file) {
+        start_logging(log_dir())
         logging::loginfo("lixel nbs prep: creating %s", input_file)
         lixels <- readr::read_rds(input_file)
         nb <- create_sf_nb(lixels)
