@@ -9,6 +9,7 @@ Okresy
 - Geoportal ČUZK Soubor správních hranic a hranic katastrálních území ČR: https://geoportal.cuzk.cz/(S(uufahw3bishqszcklzne0nex))/Default.aspx?mode=TextMeta&side=dSady_hranice10&metadataID=CZ-CUZK-SH-V&mapid=5&head_tab=sekce-02-gp&menu=2521
     - přímý odkaz: https://geoportal.cuzk.cz/zakazky/SPH/SPH_SHP_JTSK.zip
     - ale chybí deklarace projekce!
+    - teď se používá ČÚZK
 
 Kraje
 -----

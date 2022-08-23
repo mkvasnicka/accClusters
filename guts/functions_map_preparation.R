@@ -1,7 +1,7 @@
 # -------------------------------------
 # Script:   map_preparation_functions.R
 # Author:   Michal Kvasnička
-# Purpose:
+# Purpose:  This script defines functions to read in road from OpenStreetMaps.
 # Inputs:   none
 # Outputs:  functions
 # Notes:

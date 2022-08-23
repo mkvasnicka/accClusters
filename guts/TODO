@@ -15,6 +15,9 @@ Refactoring
     - parametry, které zadají uživatelé se budou volat v bashi přes --profile
     - přejmenovat --profile na --config
 
+- process_command_line_arguments() předpokládá, že profily jsou podadresář guts --
+  změnit
+
 
 Pokračovat
 ----------

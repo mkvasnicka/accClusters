@@ -20,8 +20,7 @@ require(logging)
 
 # parsing command-line parameters ----------------------------------------------
 
-# process_command_line_arguments() processes optional command-line parameters;
-# only --profile=filename.R is handled now
+# process_command_line_arguments() processes optional command-line parameters
 #
 # presently, the function handles:
 # - --profile=filename.R parameters---it sources them---in their order in the
@@ -32,7 +31,7 @@ require(logging)
 #   none
 #
 # value:
-#   none
+#   none; the function reads global (config) variables into the R working space
 #
 # WARNINGS:
 # - there must be no space in names, etc., as any white space is supposed to
@@ -44,8 +43,6 @@ process_command_line_arguments <- function(rdir) {
     }
 
     cl_pars <- commandArgs() |>
-        # stringr::str_split("\\s+", simplify = TRUE) |>
-        # as.vector()
         stringr::str_split("\\s+", simplify = TRUE) |>
         t() |>
         as.vector() |>
