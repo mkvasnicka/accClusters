@@ -30,8 +30,9 @@ require(spatstat)
 # create district geojson -------------------------------------------------
 
 # suppress messages when writing geojson
-silent_geojson_write <- function(input, file)
+silent_geojson_write <- function(input, file) {
     suppressMessages(geojsonio::geojson_write(input, file = file))
+}
 
 
 # functions to create geojson for map filtering
@@ -43,13 +44,11 @@ silent_geojson_write <- function(input, file)
 #   polygons enlarged
 # - folder ... (character scalar) a path to folder where geojson(s) shoud be
 #   written (it is created if it does not exist)
-# - verbose ... (logical, default FALSE) whether progress bar is created
-# - pb ... don't use; just for internal purposes
 #
 # output:
 # - none ... the functions are run for their side effects---they write geojson(s)
 #   for individual districts enlarged by some buffer to disk
-write_one_district_geojson <- function(district, buffer_size, folder, pb) {
+write_one_district_geojson <- function(district, buffer_size, folder) {
     if (!dir.exists(folder))
         dir.create(folder)
     output_path <- file.path(folder,
@@ -59,21 +58,12 @@ write_one_district_geojson <- function(district, buffer_size, folder, pb) {
         sf::st_buffer(dist = buffer_size) |>
         sf::st_transform(crs = WGS84) |>
         silent_geojson_write(file = output_path)
-    if (!is.null(pb))
-        pb$tick(1)
 }
-write_districts_geojson <- function(districts, buffer_size, folder,
-                                    verbose = FALSE) {
-    if (verbose) {
-        message("Creating geojsons...")
-        pb <- progress_bar$new(format = "  creating geojson [:bar] :current/:total in :elapsed eta: :eta",
-                               total = nrow(districts), clear = FALSE, width = 60)
-        pb$tick(0)
-    } else {
-        pb <- NULL
-    }
+write_districts_geojson <- function(districts, buffer_size, folder) {
+    logging::loginfo("osm maps prep: creating geojsons...")
     purrr::walk(seq_len(nrow(districts)),
-                ~write_one_district_geojson(districts[., ], buffer_size, folder, pb))
+                ~write_one_district_geojson(districts[., ], buffer_size,
+                                            folder))
 }
 
 
@@ -95,10 +85,8 @@ write_districts_geojson <- function(districts, buffer_size, folder,
 #
 # output:
 # - none ... the function works for its side effect---it writes the map to disk
-filter_osm_roads <- function(input_path, output_path, road_types = NULL,
-                             verbose = FALSE) {
-    if (verbose)
-        message("Filtering roads...")
+filter_osm_roads <- function(input_path, output_path, road_types = NULL) {
+    logging::loginfo("osm maps prep: filtering roads...")
     if (is.null(road_types)) {
         system(
             glue("osmium tags-filter {input_path} nw/highway -o {output_path}",
@@ -114,55 +102,55 @@ filter_osm_roads <- function(input_path, output_path, road_types = NULL,
 }
 
 
-# function filter_district_roads() reads an osm map from input_path and create
-# one osm file for each district
-#
-# DEPRACATED: use filter_all_osm_district_roads() instead!
-#
-# inputs:
-# - district/districts ... (sf) must include at least district_id and geometry;
-#   if district, then it must include only one row
-# - input_path ... (character scalar) a path to an OSM map; it is expected that
-#   it includes only selected roads, i.e. is prefiltered with filter_osm_roads()
-# - folder ... a folder where geojsons are present and where the function should
-#   write the individual osm(s)
-# - verbose ... (logical, default FALSE) whether progress bar is created
-# - pb ... don't use; just for internal purposes
-#
-# output:
-# - none ... the functions only write the individual osm(s)
-#
-# notes:
-# - osmium uses strategy "complete_ways" which secures that all necessary nodes
-#   are included in the map, i.e. it is reference-complete, see
-#   https://osmcode.org/osmium-tool/manual.html#creating-geographic-extracts;
-#   the price for this is that the source file is read twice for each resulting
-#   map; the time can be saved by switching the strategy to "simple"; in such a
-#   case, however, the osmar_to_linnet() function would have to be augmented;
-#   moreover, it may work only when the buffer is large enough
-# - maybe the time could be saved if all extractions are done in one geojson
-#   file---perhaps osmium could process all districts at once---check it!
-filter_osm_one_district_roads <- function(district, input_path, folder, pb = NULL) {
-    geojson <- file.path(folder, glue("district_{district$district_id}.geojson"))
-    outfile <- file.path(folder, glue("district_{district$district_id}.osm"))
-    system(glue("osmium extract -p {geojson} {input_path} -o {outfile} ",
-                "--overwrite"))
-    if (!is.null(pb))
-        pb$tick(1)
-}
-filter_osm_district_roads <- function(districts, input_path, folder,
-                                      verbose = FALSE) {
-    if (verbose) {
-        message("Extracting districts...")
-        pb <- progress_bar$new(format = "  creating osm [:bar] :current/:total in :elapsed eta: :eta",
-                               total = nrow(districts), clear = FALSE, width = 60)
-        pb$tick(0)
-    } else {
-        pb <- NULL
-    }
-    purrr::walk(seq_len(nrow(districts)),
-                ~filter_osm_one_district_roads(districts[., ], input_path, folder, pb))
-}
+# # function filter_district_roads() reads an osm map from input_path and create
+# # one osm file for each district
+# #
+# # DEPRACATED: use filter_all_osm_district_roads() instead!
+# #
+# # inputs:
+# # - district/districts ... (sf) must include at least district_id and geometry;
+# #   if district, then it must include only one row
+# # - input_path ... (character scalar) a path to an OSM map; it is expected that
+# #   it includes only selected roads, i.e. is prefiltered with filter_osm_roads()
+# # - folder ... a folder where geojsons are present and where the function should
+# #   write the individual osm(s)
+# # - verbose ... (logical, default FALSE) whether progress bar is created
+# # - pb ... don't use; just for internal purposes
+# #
+# # output:
+# # - none ... the functions only write the individual osm(s)
+# #
+# # notes:
+# # - osmium uses strategy "complete_ways" which secures that all necessary nodes
+# #   are included in the map, i.e. it is reference-complete, see
+# #   https://osmcode.org/osmium-tool/manual.html#creating-geographic-extracts;
+# #   the price for this is that the source file is read twice for each resulting
+# #   map; the time can be saved by switching the strategy to "simple"; in such a
+# #   case, however, the osmar_to_linnet() function would have to be augmented;
+# #   moreover, it may work only when the buffer is large enough
+# # - maybe the time could be saved if all extractions are done in one geojson
+# #   file---perhaps osmium could process all districts at once---check it!
+# filter_osm_one_district_roads <- function(district, input_path, folder, pb = NULL) {
+#     geojson <- file.path(folder, glue("district_{district$district_id}.geojson"))
+#     outfile <- file.path(folder, glue("district_{district$district_id}.osm"))
+#     system(glue("osmium extract -p {geojson} {input_path} -o {outfile} ",
+#                 "--overwrite"))
+#     if (!is.null(pb))
+#         pb$tick(1)
+# }
+# filter_osm_district_roads <- function(districts, input_path, folder,
+#                                       verbose = FALSE) {
+#     if (verbose) {
+#         message("Extracting districts...")
+#         pb <- progress_bar$new(format = "  creating osm [:bar] :current/:total in :elapsed eta: :eta",
+#                                total = nrow(districts), clear = FALSE, width = 60)
+#         pb$tick(0)
+#     } else {
+#         pb <- NULL
+#     }
+#     purrr::walk(seq_len(nrow(districts)),
+#                 ~filter_osm_one_district_roads(districts[., ], input_path, folder, pb))
+# }
 
 
 # function create_json_do_file() creates a json config file for osmium so that
@@ -172,13 +160,10 @@ filter_osm_district_roads <- function(districts, input_path, folder,
 # - districts ... (sf) must include at least district_id and geometry
 # - folder ... (character scalar) a path to a folder where individual geojsons
 #   are stored and where the created config file is written
-# - verbose ... (logical, default FALSE) whether verbose
 #
 # output:
 # - none ... it writes the config file
-create_json_do_file <- function(districts, folder, verbose) {
-    if (verbose)
-        message("Creating do all json...")
+create_json_do_file <- function(districts, folder) {
     extracts <- tibble::tibble(
         output = glue::glue("district_{districts$district_id}.osm"),
         file_name = glue::glue("district_{districts$district_id}.geojson"),
@@ -187,8 +172,8 @@ create_json_do_file <- function(districts, folder, verbose) {
         dplyr::mutate(across(everything(), as.character)) |>
         nest_by(output, .key = "polygon") |>
         mutate(polygon = jsonlite::unbox(polygon))
-    jsonlite::toJSON(list(directory = jsonlite::unbox(folder), extracts = extracts),
-                     pretty = TRUE) |>
+    jsonlite::toJSON(list(directory = jsonlite::unbox(folder),
+                          extracts = extracts), pretty = TRUE) |>
         silent_geojson_write(file = file.path(folder, "districts.json"))
 }
 
@@ -205,7 +190,6 @@ create_json_do_file <- function(districts, folder, verbose) {
 # - districts_in_one_go ... (integer scalar) how many districts should be
 #   processed in one go; if too high, the process would failed due to lack of
 #   memory; 10 is ok if you have 32 GB of RAM
-# - verbose ... (logical, default FALSE) whether verbose
 #
 # output:
 # - none ... it writes extracts from OSM maps (non-compressed)
@@ -219,25 +203,16 @@ create_json_do_file <- function(districts, folder, verbose) {
 #   case, however, the osmar_to_linnet() function would have to be augmented;
 #   moreover, it may work only when the buffer is large enough
 filter_all_osm_district_roads <- function(districts, input_path, folder,
-                                          districts_in_one_go,
-                                          verbose = FALSE) {
-    if (verbose)
-        message("Extracting districts...")
-    if (verbose && nrow(districts) > districts_in_one_go) {
-        pb <- progress_bar$new(format = "  creating osm [:bar] :current/:total in :elapsed eta: :eta",
-                               total = nrow(districts), clear = FALSE, width = 60)
-        pb$tick(0)
-    } else {
-        pb <- NULL
-    }
+                                          districts_in_one_go) {
+    logging::loginfo("osm maps prep: extracting districts...")
     do_all_file <- file.path(folder, "districts.json")
     for (k in seq(from = 1, to = nrow(districts), by = districts_in_one_go)) {
         idx <- k:(k + districts_in_one_go - 1)
         idx <- idx[idx <= nrow(districts)]
-        create_json_do_file(districts[idx, ], folder, verbose = FALSE)
+        logging::loginfo("osm maps prep: extracting districts %i to %i",
+                         range(idx)[1], range(idx)[2])
+        create_json_do_file(districts[idx, ], folder)
         system(glue("osmium extract -c {do_all_file} {input_path} --overwrite"))
-        if (!is.null(pb))
-            pb$tick(districts_in_one_go)
     }
 }
 
@@ -259,9 +234,7 @@ filter_all_osm_district_roads <- function(districts, input_path, folder,
 # - districts_in_one_go ... (integer scalar) how many districts should be
 #   processed in one go; if too high, the process would failed due to lack of
 #   memory; 10 is ok if you have 32 GB of RAM
-# - verbose ... (logical, default is FALSE) verbose or not
 #
-# TODO: verbose nefunguje -- chybí progress bar
 # TODO: cleaning: odstranit roads.osm a různé .json a .geojson soubory
 create_osm_district_roads <- function(districts,
                                       path_to_osm_maps,
@@ -269,8 +242,7 @@ create_osm_district_roads <- function(districts,
                                       road_types = NULL,
                                       buffer_size,
                                       districts_in_one_go = 10,
-                                      other_dependencies = NULL,
-                                      verbose = FALSE) {
+                                      other_dependencies = NULL) {
     logging::loginfo("osm maps prep: checking for updates")
     if (is_behind(osm_file_name(districts, path_to_geojsons),
                   c(path_to_osm_maps, other_dependencies))) {
@@ -280,13 +252,10 @@ create_osm_district_roads <- function(districts,
             if (!dir.exists(path_to_geojsons))
                 dir.create(path_to_geojsons)
             road_map <- file.path(path_to_geojsons, "roads.osm")
-            filter_osm_roads(path_to_osm_maps, road_map, road_types,
-                             verbose = verbose)
-            write_districts_geojson(districts, buffer_size, path_to_geojsons,
-                                    verbose = verbose)
+            filter_osm_roads(path_to_osm_maps, road_map, road_types)
+            write_districts_geojson(districts, buffer_size, path_to_geojsons)
             filter_all_osm_district_roads(districts, road_map, path_to_geojsons,
-                                          districts_in_one_go = districts_in_one_go,
-                                          verbose = verbose)
+                                          districts_in_one_go = districts_in_one_go)
         },
         error = function(e) {
             logging::logerror("osm maps prep failed: %s", e)

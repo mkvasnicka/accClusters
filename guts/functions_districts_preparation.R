@@ -86,7 +86,7 @@ create_districts <- function(path_to_districts, path_to_raw_districts,
         logging::loginfo(
             "districts prep: districts table is behind and will be updated")
         tryCatch({
-            districts <- reader(path_to_raw_districts)
+            districts <- suppressMessages(reader(path_to_raw_districts))
             write_dir_rds(districts, file = path_to_districts)
             logging::loginfo("districts prep: districts table has been updated")
         },
