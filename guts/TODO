@@ -18,6 +18,14 @@ Refactoring
 - process_command_line_arguments() předpokládá, že profily jsou podadresář guts --
   změnit
 
+- PWALK by mělo throw exception, když selže
+    - je potřeba najít všechna místa, kde se používá, a podívat se, jestli jsou v tryCatch()
+
+- rozmyslet, jaké sloupce by měly obsahovat tabulky nehod + ty, které používáme, standardizovat
+    - pro případ, že policie sloupce přejmenuje -- není kulturní, abychom používali jejich interní značky
+    - nutné domluvit se Štěpánem, co z toho použije
+        - data by to mělo chystat i pro něj -- aby se vzala data z guts a šoupla do shiny app
+
 
 Pokračovat
 ----------
