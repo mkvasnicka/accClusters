@@ -787,7 +787,7 @@ create_lixel_samples_for_roads <- function(districts,
                                   target_folder = output_folder,
                                   source_folder = input_folder,
                                   other_files = other_dependencies)
-    txt <- dplyr::if_else(nrow(districts) == 0, "---skipping", "")
+    txt <- dplyr::if_else(nrow(districts) == 0, "---skipping", " in parallel")
     logging::loginfo("lixel samples prep: %d districts will be uppdated%s",
                      nrow(districts), txt)
     tryCatch({
@@ -875,7 +875,7 @@ create_lixel_nbs <- function(districts, input_folder, output_folder,
                                   target_folder = output_folder,
                                   source_folder = input_folder,
                                   other_files = other_dependencies)
-    txt <- if_else(nrow(districts) == 0, "---skipping", "")
+    txt <- if_else(nrow(districts) == 0, "---skipping", " in parallel")
     logging::loginfo("lixel nbs prep: %d will be updated%s",
                      nrow(districts), txt)
     tryCatch({
