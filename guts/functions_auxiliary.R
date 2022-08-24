@@ -529,6 +529,8 @@ silently <- function(.f) {
 #         future::plan(oplan)
 #     }
 # }
+#
+# TODO: když to spadne, mělo by to throw error via stop()
 PWALK <- function(.l, .f, workers = 1, ...) {
     if (nrow(.l) > 0) {
         workers <- get_number_of_workers(workers)

@@ -87,6 +87,8 @@ accident_damage_cost <- function(dead, serious_injury, light_injury,
 #
 # notes:
 # - the CSVs can be extracted from XLS by prepare_raw_accidents.sh script
+#
+# TODO: standardizovat názvy polí nehodách
 read_raw_accidents <- function(folder, skip = 6) {
     read_accidents <- function(path, skip = 6) {
         accidents <- readr::read_csv(path,
@@ -216,7 +218,8 @@ create_accidents <- function(path_to_all_accidents, raw_accidents_dir) {
         tryCatch({
             accidents <- read_raw_accidents(raw_accidents_dir)
             write_dir_rds(accidents, path_to_all_accidents)
-            logging::loginfo("accidents prep: done")
+            logging::loginfo(
+                "accidents prep: data on all accidents have been updated")
         },
         error = function(e) {
             logging::logerror("accidents prep failed: %s", e)
@@ -363,6 +366,8 @@ create_districts_accidents <- function(districts,
                                        workers = NULL,
                                        other_dependencies = NULL) {
     one_file <- function(input_file, output_file, accidents) {
+        start_logging(log_dir())
+        logging::loginfo("district accidents prep: creating %s", output_file)
         lines <- readr::read_rds(input_file)
         if (is.atomic(unit_costs))
             unit_costs <- list(accident_cost = unit_costs)
@@ -378,21 +383,33 @@ create_districts_accidents <- function(districts,
             purrr::set_names(names(unit_costs))
         snapped_points <- dplyr::bind_cols(snapped_points, acc_costs)
         write_dir_rds(snapped_points, output_file)
+        logging::loginfo("district accidents prep: %s has been created",
+                         output_file)
     }
 
-    accidents <- readr::read_rds(path_to_accidents)
-
-    workers <- get_number_of_workers(workers,
-                                     ram_needed = RAM_PER_CORE_ACCIDENTS)
-    districts <- districts_behind(districts,
-                                  target_fun = accidents_file_name,
-                                  source_fun = lixel_file_name,
-                                  target_folder = accident_dir,
-                                  source_folder = lixel_dir,
-                                  other_files = c(other_dependencies,
-                                                  path_to_accidents))
-    tab <- tibble::tibble(
-        input_file = lixel_file_name(districts, lixel_dir),
-        output_file = accidents_file_name(districts, accident_dir))
-    PWALK(tab, one_file, accidents = accidents, workers = workers)
+    tryCatch({
+        accidents <- readr::read_rds(path_to_accidents)
+        workers <- get_number_of_workers(workers,
+                                         ram_needed = RAM_PER_CORE_ACCIDENTS)
+        districts <- districts_behind(districts,
+                                      target_fun = accidents_file_name,
+                                      source_fun = lixel_file_name,
+                                      target_folder = accident_dir,
+                                      source_folder = lixel_dir,
+                                      other_files = c(other_dependencies,
+                                                      path_to_accidents))
+        txt <- dplyr::if_else(nrow(districts) == 0, "---skipping", " in parallel")
+        logging::loginfo(
+            "district accidents prep: %d districts will be uppdated%s",
+            nrow(districts), txt)
+        tab <- tibble::tibble(
+            input_file = lixel_file_name(districts, lixel_dir),
+            output_file = accidents_file_name(districts, accident_dir))
+        PWALK(tab, one_file, accidents = accidents, workers = workers)
+        logging::loginfo(
+            "district accidents prep: district accidents have been updated")
+    },
+    error = function(e) {
+        logging::logerror("district accidents prep failed: %s", e)
+        stop("district accidents prep failed---stopping evaluation")})
 }
