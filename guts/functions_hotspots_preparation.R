@@ -223,6 +223,8 @@ compute_densities <- function(districts,
                              output_file,
                              from_date, to_date,
                              weights, bw, adaptive, trim_bw, method, agg) {
+        start_logging(log_dir())
+
         # grid_shape() is a heuristics that guesses how to split districts for
         # the density computation; districts with a hole (such as okres Brno
         # venkov might not work optimally); this may be useful for performance
@@ -239,6 +241,7 @@ compute_densities <- function(districts,
             c(x = xn, y = yn)
         }
 
+        logging::loginfo("hotspots prep: creating %s", output_file)
         map <- readr::read_rds(map_path) |>
             sfnetworks::activate("edges") |>
             sf::st_as_sf()
@@ -273,8 +276,12 @@ compute_densities <- function(districts,
                                      verbose = TRUE)
         lixels$density <- densities
         write_dir_rds(lixels, output_file)
+        logging::loginfo("hotspots prep: %s has been created", output_file)
     }
 
+    logging::loginfo("hotspots prep: checking for updates")
+
+    tryCatch({
     profile_name <- NULL
     if (exists("PROFILE_NAME"))
         profile_name <- PROFILE_NAME
@@ -311,7 +318,19 @@ compute_densities <- function(districts,
         from_date = districts$from_date,
         to_date = districts$to_date
     )
+
+    txt <- dplyr::if_else(nrow(districts) == 0, "---skipping", " in parallel")
+    logging::loginfo(
+        "hotspots prep: %d districts x times will be uppdated%s",
+        nrow(districts), txt)
+
     PWALK(tab, one_district, workers = workers,
           weights = weights, bw = bw, adaptive = adaptive, trim_bw = trim_bw,
           method = method, agg = agg)
+    logging::loginfo(
+        "hotspots prep: hotspots have been updated")
+    },
+    error = function(e) {
+        logging::logerror("hotspots prep failed: %s", e)
+        stop("hotspots prep failed---stopping evaluation")})
 }

@@ -387,6 +387,8 @@ create_districts_accidents <- function(districts,
                          output_file)
     }
 
+    logging::loginfo("district accidents prep: checking for uppdates")
+
     tryCatch({
         accidents <- readr::read_rds(path_to_accidents)
         workers <- get_number_of_workers(workers,

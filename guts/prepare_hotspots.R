@@ -27,6 +27,10 @@ source(file.path(RSCRIPTDIR, "functions_hotspots_preparation.R"))
 process_command_line_arguments(RSCRIPTDIR)
 
 
+# start logging
+start_logging(log_dir())
+
+
 # read in districts
 districts <- readr::read_rds(path_to_districts())
 
