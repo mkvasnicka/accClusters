@@ -208,11 +208,21 @@ read_raw_accidents <- function(folder, skip = 6) {
 # notes:
 # - for assumptions on input files, see help for read_raw_accidents()
 create_accidents <- function(path_to_all_accidents, raw_accidents_dir) {
+    logging::loginfo("accidents prep: checking for updates")
     if (is_behind(path_to_all_accidents,
                   list.files(raw_accidents_dir, pattern = "csv",
                              full.names = TRUE))) {
-        accidents <- read_raw_accidents(raw_accidents_dir)
-        write_dir_rds(accidents, path_to_all_accidents)
+        logging::loginfo("accidents prep: accidents data are behind---updating")
+        tryCatch({
+            accidents <- read_raw_accidents(raw_accidents_dir)
+            write_dir_rds(accidents, path_to_all_accidents)
+            logging::loginfo("accidents prep: done")
+        },
+        error = function(e) {
+            logging::logerror("accidents prep failed: %s", e)
+            stop("accidents prep failed---stopping evaluation")})
+    } else {
+        logging::loginfo("accidents prep: accidents are uptodate---skipping")
     }
 }
 
