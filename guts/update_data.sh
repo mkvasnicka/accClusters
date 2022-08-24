@@ -27,7 +27,7 @@ runRscript "start_logging"
 runRscript "prepare_districts"
 runRscript "prepare_maps"
 runRscript "prepare_accidents"
-runRscript "prepare_hotspots"
+runRscript "prepare_densities"
 runRscript "prepare_clusters"
 runRscript "prepare_gis"
 

@@ -1,5 +1,5 @@
 # -------------------------------------
-# Script:   prepare_hotspots.R
+# Script:   prepare_densities.R
 # Author:   Michal Kvasnička
 # Purpose:
 # Inputs:
