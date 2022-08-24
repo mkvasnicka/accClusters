@@ -26,7 +26,7 @@ runRscript () {
 runRscript "start_logging"
 runRscript "prepare_districts"
 runRscript "prepare_maps"
-runRscript "prepare_points"
+runRscript "prepare_accidents"
 runRscript "prepare_hotspots"
 runRscript "prepare_clusters"
 runRscript "prepare_gis"

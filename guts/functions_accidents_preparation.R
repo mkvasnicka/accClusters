@@ -1,5 +1,5 @@
 # -------------------------------------
-# Script:   functions_point_preparation.R
+# Script:   functions_accidents_preparation.R
 # Author:
 # Purpose:
 # Inputs:
