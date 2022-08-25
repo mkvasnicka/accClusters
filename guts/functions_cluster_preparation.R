@@ -162,15 +162,34 @@ make_one_cluster <- function(lixels, nb, start, threshold, steps) {
 #   be run afterwards
 #
 # WARNING: users are not supposed to run this function directly
+# make_clusters <- function(lixels, nb, threshold, steps) {
+#     clusters <- list()
+#     repeat {
+#         non_idx <- unique(unlist(clusters))
+#         tab <- tibble::tibble(
+#             id = seq_len(nrow(lixels)),
+#             dens = lixels$density
+#         ) |>
+#             dplyr::filter(dens >= threshold, !(id %in% non_idx))
+#         if (nrow(tab) == 0)
+#             break
+#         start <- tab$id[which(tab$dens == max(tab$dens))][1]
+#         clusters[[length(clusters) + 1]] <-
+#             make_one_cluster(lixels, nb, start, threshold, steps)
+#     }
+#     clusters
+# }
 make_clusters <- function(lixels, nb, threshold, steps) {
     clusters <- list()
+    all_tab <- tibble::tibble(
+        id = seq_len(nrow(lixels)),
+        dens = lixels$density
+    ) |>
+        dplyr::filter(dens >= threshold)
     repeat {
         non_idx <- unique(unlist(clusters))
-        tab <- tibble::tibble(
-            id = seq_len(nrow(lixels)),
-            dens = lixels$density
-        ) |>
-            dplyr::filter(dens >= threshold, !(id %in% non_idx))
+        tab <- all_tab |>
+            dplyr::filter(!(id %in% non_idx))
         if (nrow(tab) == 0)
             break
         start <- tab$id[which(tab$dens == max(tab$dens))][1]
