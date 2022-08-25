@@ -717,7 +717,7 @@ create_lixelized_roads <- function(districts, input_folder, output_folder,
                                    other_dependencies = NULL) {
     one_file <- function(input_file, output_file, lx_length, mindist) {
         start_logging(log_dir())
-        logging::loginfo("lixel prep: creating %s", input_file)
+        logging::loginfo("lixel prep: creating %s", output_file)
         network <- readr::read_rds(input_file) |>
             sfnetworks::activate("edges") |>
             st_as_sf()
@@ -726,7 +726,7 @@ create_lixelized_roads <- function(districts, input_folder, output_folder,
         lixels$len <- sf::st_length(lixels)
         lixels$lixel_id <- seq_len(nrow(lixels))
         write_dir_rds(lixels, output_file)
-        logging::loginfo("lixel prep: %s has been created", input_file)
+        logging::loginfo("lixel prep: %s has been created", output_file)
     }
 
     logging::loginfo("lixel prep: checking for updates")
@@ -772,11 +772,11 @@ create_lixel_samples_for_roads <- function(districts,
                                            other_dependencies = NULL) {
     one_file <- function(input_file, output_file) {
         start_logging(log_dir())
-        logging::loginfo("lixel samples prep: creating %s", input_file)
+        logging::loginfo("lixel samples prep: creating %s", output_file)
         network <- readr::read_rds(input_file)
         samples <- spNetwork::lines_center(network)
         write_dir_rds(samples, output_file)
-        logging::loginfo("lixel samples prep: %s has been created", input_file)
+        logging::loginfo("lixel samples prep: %s has been created", output_file)
     }
 
     logging::loginfo("lixel samples prep: checking for updates")
@@ -860,11 +860,11 @@ create_lixel_nbs <- function(districts, input_folder, output_folder,
                              other_dependencies = NULL) {
     one_district <- function(input_file, output_file) {
         start_logging(log_dir())
-        logging::loginfo("lixel nbs prep: creating %s", input_file)
+        logging::loginfo("lixel nbs prep: creating %s", output_file)
         lixels <- readr::read_rds(input_file)
         nb <- create_sf_nb(lixels)
         write_dir_rds(nb, output_file)
-        logging::loginfo("lixel nbs prep: %s has been created", input_file)
+        logging::loginfo("lixel nbs prep: %s has been created", output_file)
     }
 
     logging::loginfo("lixel nbs prep: checking for updates")
