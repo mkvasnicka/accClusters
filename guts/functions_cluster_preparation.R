@@ -592,7 +592,7 @@ optimize_cluster_parameters <- function(lixels, nb, accidents,
 # - visual_min_quantile ... (numeric scalar in (0, 1)) threshold for lixel
 #   density for lixels that will be stored in lixel table
 # - workers ... (NULL or integer scalar) number of cores used in parallel
-# - other_files ... (character vector) pathes to other files that can determine
+# - other_files ... (character vector) paths to other files that can determine
 #   whether existing files are up-to-date
 #
 # value:
@@ -617,6 +617,8 @@ compute_clusters <- function(districts,
                              output_file,
                              cluster_min_quantile, cluster_steps,
                              visual_min_quantile) {
+        start_logging(log_dir())
+        logging::loginfo("clusters prep: creating %s", output_file)
         lixels <- readr::read_rds(densities_file)
         nb <- readr::read_rds(lixel_nb_file)
         accidents <- readr::read_rds(accident_file)
@@ -647,52 +649,62 @@ compute_clusters <- function(districts,
             dplyr::group_by(cluster) |>
             dplyr::summarise(geometry = f(geometry), .groups = "drop") |>
             dplyr::left_join(clss, by = "cluster")
-
-
-
         write_dir_rds(
             list(lixels = lixels, accidents = accidents,
                  cluster_statistics = cluster_statistics),
             file = output_file)
+        logging::loginfo("clusters prep: %s has been created", output_file)
     }
 
-    profile_name <- NULL
-    if (exists("PROFILE_NAME"))
-        profile_name <- PROFILE_NAME
+    logging::loginfo("clusters prep: checking for updates")
+    tryCatch({
+        profile_name <- NULL
+        if (exists("PROFILE_NAME"))
+            profile_name <- PROFILE_NAME
 
-    workers <- get_number_of_workers(workers)
+        workers <- get_number_of_workers(workers)
 
-    time_window <- handle_time_window(time_window)
+        time_window <- handle_time_window(time_window)
 
-    districts <- purrr::map2(
-        time_window$from_date, time_window$to_date,
-        ~districts_behind(districts |>
-                              mutate(from_date = .x, to_date = .y),
-                          target_fun = shiny_file_name,
-                          source_fun = list(lixel_nb_file_name,
-                                            accidents_file_name),
-                          target_folder = cluster_dir,
-                          source_folder = list(lixel_maps_dir,
-                                               accidents_dir),
-                          other_files = other_files,
-                          from_date = .x, to_date = .y,
-                          profile_name = profile_name)
-    ) |>
-        dplyr::bind_rows()
-    tab <- tibble::tibble(
-        densities_file = densities_file_name(districts, densities_dir,
-                                             from_date = districts$from_date,
-                                             to_date = districts$to_date,
-                                             profile_name = profile_name),
-        lixel_nb_file = lixel_nb_file_name(districts, lixel_maps_dir),
-        accident_file = accidents_file_name(districts, accidents_dir),
-        output_file = shiny_file_name(districts, cluster_dir,
-                                      from_date = districts$from_date,
-                                      to_date = districts$to_date,
-                                      profile_name = profile_name)
-    )
-    PWALK(tab, one_district, workers = workers,
-          cluster_min_quantile = cluster_min_quantile,
-          cluster_steps = cluster_steps,
-          visual_min_quantile = visual_min_quantile)
+        districts <- purrr::map2(
+            time_window$from_date, time_window$to_date,
+            ~districts_behind(districts |>
+                                  mutate(from_date = .x, to_date = .y),
+                              target_fun = shiny_file_name,
+                              source_fun = list(lixel_nb_file_name,
+                                                accidents_file_name),
+                              target_folder = cluster_dir,
+                              source_folder = list(lixel_maps_dir,
+                                                   accidents_dir),
+                              other_files = other_files,
+                              from_date = .x, to_date = .y,
+                              profile_name = profile_name)
+        ) |>
+            dplyr::bind_rows()
+        txt <- dplyr::if_else(nrow(districts) == 0,
+                              "---skipping", " in parallel")
+        logging::loginfo(
+            "clusters prep: %d districts x times will be uppdated%s",
+            nrow(districts), txt)
+        tab <- tibble::tibble(
+            densities_file = densities_file_name(districts, densities_dir,
+                                                 from_date = districts$from_date,
+                                                 to_date = districts$to_date,
+                                                 profile_name = profile_name),
+            lixel_nb_file = lixel_nb_file_name(districts, lixel_maps_dir),
+            accident_file = accidents_file_name(districts, accidents_dir),
+            output_file = shiny_file_name(districts, cluster_dir,
+                                          from_date = districts$from_date,
+                                          to_date = districts$to_date,
+                                          profile_name = profile_name)
+        )
+        PWALK(tab, one_district, workers = workers,
+              cluster_min_quantile = cluster_min_quantile,
+              cluster_steps = cluster_steps,
+              visual_min_quantile = visual_min_quantile)
+        logging::loginfo("clusters prep: clusters have been updated")
+    },
+    error = function(e) {
+        logging::logerror("clusters prep failed: %s", e)
+        stop("clusters prep failed---stopping evaluation")})
 }
