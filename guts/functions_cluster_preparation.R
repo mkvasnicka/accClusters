@@ -212,10 +212,30 @@ make_clusters <- function(lixels, nb, threshold, steps) {
 #   joined now
 #
 # WARNING: users are not supposed to run this function directly
+# join_clusters <- function(clusters) {
+#     i <- 1L
+#     joined <- FALSE
+#     while (i <= length(clusters)) {
+#         j <- i + 1L
+#         while (j <= length(clusters)) {
+#             if (length(base::intersect(clusters[[i]], clusters[[j]])) > 0) {
+#                 clusters[[i]] <- unique(c(clusters[[i]], clusters[[j]]))
+#                 clusters[[j]] <- NULL
+#                 joined <- TRUE
+#             } else {
+#                 j <- j + 1L
+#             }
+#         }
+#         if (!joined)
+#             i <- i + 1L
+#         joined <- FALSE
+#     }
+#     clusters
+# }
 join_clusters <- function(clusters) {
     i <- 1L
-    joined <- FALSE
     while (i <= length(clusters)) {
+        joined <- FALSE
         j <- i + 1L
         while (j <= length(clusters)) {
             if (length(base::intersect(clusters[[i]], clusters[[j]])) > 0) {
@@ -228,7 +248,6 @@ join_clusters <- function(clusters) {
         }
         if (!joined)
             i <- i + 1L
-        joined <- FALSE
     }
     clusters
 }
@@ -256,15 +275,29 @@ join_clusters <- function(clusters) {
 # - for each cluster, this function 1) finds all consecutive lixels starting
 #   from start lixel which have density >= threshold, and then 2) recursively
 #   adds all neighboring lixels in steps steps
+# compute_cluster_tibble <- function(lixels, nb, threshold, steps) {
+#     lst <- make_clusters(lixels, nb, threshold, steps) |>
+#         join_clusters()
+#     if (length(lst) == 0)
+#         return(tibble::tibble(cluster = integer(0), lixel_id = integer(0)))
+#     lst |>
+#         purrr::map(~tibble(lixel_id = unlist(.))) |>
+#         dplyr::bind_rows(.id = "cluster") |>
+#         dplyr::mutate(cluster = as.integer(cluster))
+# }
 compute_cluster_tibble <- function(lixels, nb, threshold, steps) {
     lst <- make_clusters(lixels, nb, threshold, steps) |>
         join_clusters()
     if (length(lst) == 0)
         return(tibble::tibble(cluster = integer(0), lixel_id = integer(0)))
+    lid <- lixels |> st_drop_geometry() |> pull(lixel_id)
     lst |>
         purrr::map(~tibble(lixel_id = unlist(.))) |>
         dplyr::bind_rows(.id = "cluster") |>
-        dplyr::mutate(cluster = as.integer(cluster))
+        # the last step translates lixel_id from its order in vector to the true
+        # lixel_id; however, they shoud be the same
+        dplyr::mutate(cluster = as.integer(cluster),
+                      lixel_id = lid[lixel_id])
 }
 
 
@@ -314,7 +347,7 @@ add_clusters_to_accidents <- function(accidents, clusters) {
 #
 # value:
 cluster_cost <- function(accidents, accident_cost = "accident_cost") {
-    accidents$.acccost <- accidents[["accident_cost"]]
+    accidents$.acccost <- accidents[[accident_cost]]
     accidents |>
         dplyr::filter(!is.na(cluster)) |>
         dplyr::group_by(cluster) |>
