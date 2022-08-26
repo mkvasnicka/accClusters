@@ -1,6 +1,13 @@
 TODO
 ====
 
+Tvorba klastrů
+--------------
+
+- najít nějaké kritérium, jak stanovil kvantil a počet kroků rozšíření
+    - PAI nefunguje ani na accident_cost, ani na densities
+
+
 Refactoring
 -----------
 - zafixovat adresářovou strukturu tak, aby stačilo zadat začátky cest
@@ -35,6 +42,39 @@ Refactoring
         - přímo přes hodnotu klastru, která se bere z nehod -- současný kód neumožňuje zadat
     - otázka, jak to funguje s profily -- nemění pojmenované profily jména souborů?
         - a pokud ano, funguje to konzistentně?
+
+- při exportu do shiny ořezat lixely a klastry na okres
+    - lixely nechat jen ty, které jsou uvnitř skutečného okresu
+    - klastry nechat celé, které aspoň částí zasahují do okresu
+
+- policajti můžou chtít několik různých vah nehod -- nebo koneckonců jiného nastavení
+    - návrh nového řešení -- profily, které se všechny vytvoří
+    - nově začíná řešit skript guts/functions_profiles.R
+    - moje představa je taková, že uživatel bude mít někde nějaký konfigurační soubor a profily
+    - prvně se načte guts_config, pak uživatelská konfigurace a pak profil
+        - profil tak může přepsat automatická nastavení
+        - profilů může být víc
+        - pokud žádný není, vytvoří se profil default
+        - nastavení profilů se musí exportovat do shiny souboru
+        - asi se musí vyexportovat i zvlášť, aby shiny vědělo, co má tak zhruba k dispozici
+    - všechny skripty se musí upravit tak, že se nejdřív vyexportuje seznam profilů, a pak
+        všechny skripty vytvoří nejen data pro okres nebo okres x čas, ale místo toho
+        okres x profil nebo okres x čas x profil
+        - musí se projevit je jménu výstupu
+    - co je hotové
+        - nástřel načítání a kontroly profilů
+        - zatím ale nenačítá ani guts_config, ani uživatelský konfig
+    - dodělat
+        - načítání guts_config a uživatelský config
+        - vlastní zpracování
+    - toto by mělo nahradit různé váhy nehod, které jsou v současnosti v kódu + profily
+    - PROBLÉM: různé profily se mohou lišit v různých stádiích výpočtu: v tvorbě map
+        (délka lixelů etc.), výpočtu hustot (nastavení NKDE), určení klastrů
+        - co s tím???
+
+- výpočty klastrů jsou tak rychlé, že by se možná mohly přesunout do shiny a fungovat interaktivně
+    - implicitní mohou být předpočítané
+    - jiné se pak mohou nastavit až do výše lixelů, které jsou součástí vizualizace´
 
 
 Pokračovat
