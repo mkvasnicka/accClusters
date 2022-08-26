@@ -668,16 +668,19 @@ compute_clusters <- function(districts,
     one_district <- function(densities_file, lixel_nb_file, accident_file,
                              output_file,
                              cluster_min_quantile, cluster_steps,
-                             visual_min_quantile) {
+                             visual_min_quantile,
+                             from_date, to_date) {
         start_logging(log_dir())
         logging::loginfo("clusters prep: creating %s", output_file)
         lixels <- readr::read_rds(densities_file)
         nb <- readr::read_rds(lixel_nb_file)
-        accidents <- readr::read_rds(accident_file)
+        accidents <- readr::read_rds(accident_file) |>
+            filter(p2a >= from_date, p2a <= to_date)
         threshold <- quantile(lixels$density, cluster_min_quantile)
+        visual_threshold <- quantile(lixels$density, visual_min_quantile)
+
         cls <- compute_cluster_tibble(lixels, nb, threshold, cluster_steps)
         clss <- cluster_statistics(lixels, accidents, cls)
-        visual_threshold <- quantile(lixels$density, visual_min_quantile)
 
         lixels <- lixels |>
             add_clusters_to_lixels(cls) |>
@@ -748,7 +751,9 @@ compute_clusters <- function(districts,
             output_file = shiny_file_name(districts, cluster_dir,
                                           from_date = districts$from_date,
                                           to_date = districts$to_date,
-                                          profile_name = profile_name)
+                                          profile_name = profile_name),
+            from_date = districts$from_date,
+            to_date = districts$to_date
         )
         PWALK(tab, one_district, workers = workers,
               cluster_min_quantile = cluster_min_quantile,
