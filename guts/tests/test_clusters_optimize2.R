@@ -60,59 +60,43 @@ accidents <- readr::read_rds(accident_file) |>
 threshold <- quantile(lixels$density, cluster_min_quantile)
 visual_threshold <- quantile(lixels$density, visual_min_quantile)
 
-cls <- compute_cluster_tibble(lixels, nb, threshold, cluster_steps)
-clss <- cluster_statistics(lixels, accidents, cls)
+
 
 
 
 cluster_pai <- function(cluster, accidents, lixels) {
-    cluster_cost <- sum(cluster$cost, na.rm = TRUE)
-    cluster_length <- as.numeric(sum(cluster$total_length), na.rm = TRUE)
-    total_cost <- sum(accidents$accident_cost)
+    cluster_cost <- sum(cluster$total_density)
+    cluster_length <- as.numeric(sum(cluster$total_length))
+    total_cost <- sum(lixels$density)
     total_length <- as.numeric(sum(lixels$len))
     (cluster_cost / total_cost) / (cluster_length / total_length)
 
 }
 
-cluster_pai(clss, accidents, lixels)
 
 
+system.time(
+    grid <- optimize_cluster_parameters(lixels, nb, accidents,
+                                        threshold_range = seq(from = 0.9985,
+                                                              to = 0.9999,
+                                                              by = 0.0001),
+                                        step_range = 1:10
+    )
+)
 
-lixels <- lixels |>
-    add_clusters_to_lixels(cls) |>
-    dplyr::filter(density >= visual_threshold | !is.na(cluster)) |>
-    dplyr::select(lixel_id, density, cluster)
-accidents <- accidents |>
-    add_clusters_to_accidents(cls) |>
-    sf::st_drop_geometry() |>
-    dplyr::filter(!is.na(cluster)) |>
-    dplyr::select(p1, cluster, accident_cost)
-join_network <- function(geo) {
-    geo |>
-        sfnetworks::as_sfnetwork(directed = FALSE) |>
-        tidygraph::convert(sfnetworks::to_spatial_smooth) |>
-        sfnetworks::activate("edges") |>
-        sf::st_as_sf() |>
-        sf::st_union()
-}
-cluster_statistics <- lixels |>
-    dplyr::filter(!is.na(cluster)) |>
-    dplyr::group_by(cluster) |>
-    dplyr::summarise(geometry = join_network(geometry),
-                     .groups = "drop") |>
-    dplyr::left_join(clss, by = "cluster")
+grid[1,]
 
-cs <- cluster_statistics |>
-    arrange(desc(cost)) |>
-    mutate(n = row_number(),
-           tier = 5 - floor((n - 1) / 5)) |>
-    filter(tier > 0)
+library(ggplot2)
+ggplot(grid, aes(no_of_steps, threshold_quantile, z= pai)) +
+    geom_contour_filled() +
+    scale_fill_grey(start = 1, end = 0) +
+    theme_linedraw()
 
 
-library(tmap)
-tmap_mode("view")
-
-tm_shape(lixels) +
-    tm_lines(col = "density") +
-    tm_shape(cs) +
-    tm_lines(col = "tier", lwd = 3, breaks = seq(from = 0.5, to = 5.5, by = 1))
+# library(tmap)
+# tmap_mode("view")
+#
+# tm_shape(lixels) +
+#     tm_lines(col = "density") +
+#     tm_shape(cs) +
+#     tm_lines(col = "tier", lwd = 3, breaks = seq(from = 0.5, to = 5.5, by = 1))
