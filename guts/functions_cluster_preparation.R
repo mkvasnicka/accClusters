@@ -413,7 +413,11 @@ graphic_clusters <- function(lixels, clusters, cluster_statistics) {
 # value:
 #   PAI (numeric scalar)---the higher, the better
 cluster_pai <- function(cluster, accidents, lixels) {
-    cluster_cost <- sum(cluster$cost)
+    # in cluster_cost, NA means there are clusters that include no accident,
+    # i.e, that the number of steps it too low for the particular threshold;
+    # the question is whether it should be ignored (na.rm = TRUE), or strictly
+    # forbidden (na.rm = FALSE)
+    cluster_cost <- sum(cluster$cost, na.rm = TRUE)
     cluster_length <- as.numeric(sum(cluster$total_length))
     total_cost <- sum(accidents$accident_cost)
     total_length <- as.numeric(sum(lixels$len))
@@ -691,7 +695,7 @@ compute_clusters <- function(districts,
             sf::st_drop_geometry() |>
             dplyr::filter(!is.na(cluster)) |>
             dplyr::select(p1, cluster, accident_cost)
-        f <- function(geo) {
+        join_network <- function(geo) {
             geo |>
                 sfnetworks::as_sfnetwork(directed = FALSE) |>
                 tidygraph::convert(sfnetworks::to_spatial_smooth) |>
@@ -702,7 +706,8 @@ compute_clusters <- function(districts,
         cluster_statistics <- lixels |>
             dplyr::filter(!is.na(cluster)) |>
             dplyr::group_by(cluster) |>
-            dplyr::summarise(geometry = f(geometry), .groups = "drop") |>
+            dplyr::summarise(geometry = join_network(geometry),
+                             .groups = "drop") |>
             dplyr::left_join(clss, by = "cluster")
         write_dir_rds(
             list(lixels = lixels, accidents = accidents,
