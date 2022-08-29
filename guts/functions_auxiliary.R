@@ -160,6 +160,12 @@ log_dir <- function() {
 }
 
 
+# path to file where profiles are stored
+path_to_configs <- function() {
+    file.path(data_dir(), "profiles", "profiles.rds")
+}
+
+
 
 # paths to files ---------------------------------------------------------------
 

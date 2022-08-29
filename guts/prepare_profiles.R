@@ -14,6 +14,10 @@
 if (!exists("RSCRIPTDIR")) RSCRIPTDIR <- "guts"
 
 
+# supply path to folder where user stores her config and profile
+if (!exists("CONFIGDIR")) CONFIGDIR <- "guts/config"
+
+
 # source necessary scripts
 source(file.path(RSCRIPTDIR, "functions_auxiliary.R"))
 source(file.path(RSCRIPTDIR, "functions_profiles_preparation.R"))
@@ -23,10 +27,8 @@ source(file.path(RSCRIPTDIR, "functions_profiles_preparation.R"))
 process_command_line_arguments(RSCRIPTDIR)
 
 
-# start logging
-start_logging(log_dir())
-
-
 # create profiles
-create_profiles(path_to_districts = path_to_districts(),
-                path_to_raw_districts = path_to_raw_districts())
+# TODO: nefunguje, protože logování používá LOG_DIR, ale ten se vytváří až v
+# configu; shit, jak na to?
+create_profiles(path_to_configs = path_to_configs(),
+                path_to_source_configs = CONFIGDIR)

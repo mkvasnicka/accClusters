@@ -11,6 +11,7 @@
 
 library(purrr)
 library(stringr)
+library(readr)
 library(rlang)
 
 
@@ -208,4 +209,44 @@ read_all_profiles <- function(folder) {
         profiles <- list(default = config)
     }
     profiles
+}
+
+
+# create_profiles() reads config and all profiles from path_to_source_configs
+# folder and writes it to path_to_configs RDS file
+#
+# inputs:
+# - path_to_configs ... (character scalar) path to a file where the profiles
+#   will be written
+# - path_to_source_configs ... (character scalar) path to a folder where the
+#   config and profiles (if any) are stored
+#
+# value:
+#   none; it writes the profiles to disk
+#
+# notes:
+# - there must be just one config.R file; it must include all necessary
+#   variables, and they must of a given type
+# - there may be one or more profiles; they must include PROFILE_NAME variable
+#   and any number of other variables supported in profiles
+# - any variables missing in a profile are taken from config.R
+# - if there is no profile, default profile is created from config
+# - all variables that may not be present in profiles have the same values in
+#   all profiles
+create_profiles <- function(path_to_configs = path_to_configs(),
+                            path_to_source_configs = path_to_source_configs()) {
+    # start logging
+    start_logging(log_dir())
+    logging::loginfo("config prep: creating configs")
+    tryCatch({
+        profiles <- read_all_profiles(path_to_source_configs) |>
+            purrr::map(as.list)
+        readr::write_rds(profiles, path_to_configs)
+        logging::loginfo("config prep: done")
+    },
+    error = function(e) {
+        logging::logerror("config prep: %s", e)
+        stop("config prep failed---stopping evaluation", call. = NA)})
+
+
 }
