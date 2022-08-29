@@ -19,36 +19,6 @@ require(readr)
 require(lubridate)
 require(sf)
 
-# damage costs -----------------------------------------------------------------
-
-# accident_damage_cost() computes each accident's damage cost
-#
-# inputs:
-# - dead ... (integer vector) number of casualties in accidents (P13A)
-# - serious_injury ... (integer vector) number of seriously injured in accidents
-#   (P13B)
-# - light_injury ... (integer vector) number of light injured in accidents
-#   (P13C)
-# - material_cost ... (numeric vector) total material cost in 100 CZK (P14)
-# - unit_costs ... list three named slots:
-#   - dead ... (numeric scalar) casualty cost in millions CZK, i.e., value of
-#       statistical life
-#   - serious_injury ... (numeric scalar) cost of one serious injury in millions
-#       CZK
-#   - light_injury ... (numeric scalar) cost of one light injury in millions CZK
-#
-# value:
-#   numeric vector of damage costs in millions of CZK; each number is the total
-#   damage of the corresponding accident
-accident_damage_cost <- function(dead, serious_injury, light_injury,
-                                 material_cost, unit_costs) {
-    dead * unit_costs["dead"] +
-        serious_injury * unit_costs["serious_injury"] +
-        light_injury * unit_costs["light_injury"] +
-        material_cost * 1e2 / 1e6
-}
-
-
 
 # prepare raw police data ------------------------------------------------------
 
@@ -198,7 +168,8 @@ read_raw_accidents <- function(folder, skip = 6) {
             accident_serious_injury = p13b,
             accident_light_injury = p13c,
             accident_material_cost = p14 / 100 * 1e6  # in mil. CZK
-        )
+        ) |>
+        dplyr::select(accident_id:accident_material_cost, everything())
 }
 
 
@@ -343,13 +314,6 @@ snap_points_to_lines <- function(points, lines, dist = 100,
 #   roads; it the distance is higher, the accident is removed from the dataset
 # - lixel_dir ... (character scalar) path to folder there lixellized roads are
 #   stored
-# - unit_costs ... either atomic vector of three slots or named list of such
-#   vectors; the slots are following:
-#   - dead ... (numeric scalar) casualty cost in millions CZK, i.e., value of
-#       statistical life
-#   - serious_injury ... (numeric scalar) cost of one serious injury in millions
-#       CZK
-#   - light_injury ... (numeric scalar) cost of one light injury in millions CZK
 # - accident_dir ... (character scalar) path to folder where the new accidents
 #   files should be stored
 #
@@ -361,34 +325,19 @@ snap_points_to_lines <- function(points, lines, dist = 100,
 # - remaining accident are snapped to roads, i.e., their position is changed
 #   such that they lie on a road---they are moved to their closest points on
 #   their closest line
-# - if unit_cost is atomic vector, one cost column called "accident_cost" is
-#   added; if it is list of several atomic vectors, their names are used as
-#   names of corresponding column names
 create_districts_accidents <- function(districts,
                                        path_to_accidents,
                                        max_distance,
                                        lixel_dir,
                                        accident_dir,
-                                       unit_costs,
                                        workers = NULL,
                                        other_dependencies = NULL) {
     one_file <- function(input_file, output_file, accidents) {
         start_logging(log_dir())
         logging::loginfo("district accidents prep: creating %s", output_file)
         lines <- readr::read_rds(input_file)
-        if (is.atomic(unit_costs))
-            unit_costs <- list(accident_cost = unit_costs)
         snapped_points <- snap_points_to_lines(accidents, lines,
                                                dist = max_distance)
-        # acc_costs <- purrr::map_dfc(
-        #     seq_along(unit_costs),
-        #     ~accident_damage_cost(dead = snapped_points$p13a,
-        #                           serious_injury = snapped_points$p13b,
-        #                           light_injury = snapped_points$p13c,
-        #                           material_cost = snapped_points$p14,
-        #                           unit_costs = unit_costs[[.]])) |>
-        #     purrr::set_names(names(unit_costs))
-        # snapped_points <- dplyr::bind_cols(snapped_points, acc_costs)
         write_dir_rds(snapped_points, output_file)
         logging::loginfo("district accidents prep: %s has been created",
                          output_file)

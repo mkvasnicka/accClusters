@@ -46,6 +46,5 @@ create_districts_accidents(districts,
                            max_distance = ACCIDENT_TO_ROAD_MAX_DISTANCE,
                            lixel_dir = path_to_lixels_maps_dir(),  # LIXEL_MAPS_DIR,
                            accident_dir = path_to_accidents_dir(),  # ACCIDENTS_DIR,
-                           unit_costs = UNIT_COSTS,
                            workers = NO_OF_WORKERS_ACCIDENTS,
                            other_dependencies = path_to_districts())
