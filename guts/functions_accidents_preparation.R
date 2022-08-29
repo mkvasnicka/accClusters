@@ -141,8 +141,7 @@ read_raw_accidents <- function(folder, skip = 6) {
                                          # dzt = col_double(),
                                          # dzl = col_double(),
                                          # dzb = col_double()
-                                     )) |>
-            mutate(p2a = lubridate::dmy(p2a))
+                                     ))
     }
 
     read_gps <- function(path, skip = 6) {
@@ -191,7 +190,15 @@ read_raw_accidents <- function(folder, skip = 6) {
         dplyr::filter(!is.na(coord_x), !is.na(coord_y)) |>
         dplyr::distinct() |>
         sf::st_as_sf(coords = c("coord_x", "coord_y"),
-                     crs = PLANARY_PROJECTION)
+                     crs = PLANARY_PROJECTION) |>
+        dplyr::mutate(
+            accident_id = p1,
+            accident_date = lubridate::dmy(p2a),
+            accident_dead = p13a,
+            accident_serious_injury = p13b,
+            accident_light_injury = p13c,
+            accident_material_cost = p14 / 100 * 1e6  # in mil. CZK
+        )
 }
 
 
@@ -373,15 +380,15 @@ create_districts_accidents <- function(districts,
             unit_costs <- list(accident_cost = unit_costs)
         snapped_points <- snap_points_to_lines(accidents, lines,
                                                dist = max_distance)
-        acc_costs <- purrr::map_dfc(
-            seq_along(unit_costs),
-            ~accident_damage_cost(dead = snapped_points$p13a,
-                                  serious_injury = snapped_points$p13b,
-                                  light_injury = snapped_points$p13c,
-                                  material_cost = snapped_points$p14,
-                                  unit_costs = unit_costs[[.]])) |>
-            purrr::set_names(names(unit_costs))
-        snapped_points <- dplyr::bind_cols(snapped_points, acc_costs)
+        # acc_costs <- purrr::map_dfc(
+        #     seq_along(unit_costs),
+        #     ~accident_damage_cost(dead = snapped_points$p13a,
+        #                           serious_injury = snapped_points$p13b,
+        #                           light_injury = snapped_points$p13c,
+        #                           material_cost = snapped_points$p14,
+        #                           unit_costs = unit_costs[[.]])) |>
+        #     purrr::set_names(names(unit_costs))
+        # snapped_points <- dplyr::bind_cols(snapped_points, acc_costs)
         write_dir_rds(snapped_points, output_file)
         logging::loginfo("district accidents prep: %s has been created",
                          output_file)

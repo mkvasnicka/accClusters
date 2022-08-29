@@ -12,6 +12,7 @@
 require(spNetwork)
 require(readr)
 require(tibble)
+source(file.path(RSCRIPTDIR, "functions_damage_cost.R"))
 
 
 
@@ -201,7 +202,9 @@ require(tibble)
 #   - if time_window is tibble, it must have two columns (from_date and to_date)
 #       which includes Dates or character vectors in YYYY-MM-DD format
 #       convertible to Dates
-# - weights, bw, adaptive, trim_bw, method, agg ... parameters sent to
+# - weights ... (either "cost" or "equal") if "cost", the NKDE weights are set
+#   to accident_cost; otherwise, they are equal to 1
+# - bw, adaptive, trim_bw, method, agg ... parameters sent to
 #   spNetwork::nkde()
 # - workers ... (NULL or integer scalar) number of cores used in parallel
 # - other_files ... (character vector) pathes to other files that can determine
@@ -248,16 +251,19 @@ compute_densities <- function(districts,
         lixels <- readr::read_rds(lixel_path)
         samples <- readr::read_rds(sample_path)
         accidents <- readr::read_rds(accidents_path) |>
-            dplyr::filter(p2a >= from_date, p2a <= to_date)
-        if (!(is.null(weights) ||
-              (is.character(weights) && length(weights) == 1 &&
-               weights %in% names(accidents) && is.numeric(accidents[[weights]]))))
-            stop("Weights must be eiter NULL or name of one numeric vector ",
-                 "in accidents.")
-        if (is.null(weights))
+            dplyr::filter(accident_date >= from_date,
+                          accident_date <= to_date) |>
+            add_damage_cost()
+
+        if (!(is.character(weights) && length(weights) == 1 &&
+               weights %in% c("cost", "equal")))
+            stop("Weights must be eiter 'cost' or 'equal'.")
+        if (weights == "equal") {
             weights <- rep(1,nrow(accidents))
-        if (is.character(weights))
-            weights <- accidents[[weights]]
+        } else {
+            weights <- accidents$accident_cost
+        }
+
         grid_shape <- grid_shape(lixels)
         densities <- spNetwork::nkde(map,
                                      events = accidents,

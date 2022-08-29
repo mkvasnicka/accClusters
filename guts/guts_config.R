@@ -61,12 +61,11 @@ SUPPORTED_ROAD_CLASSES <- c("motorway", "motorway_link",
 
 
 # cost of various damages in mil. CZK
-# UNIT_COSTS <- c(dead = 12, serious_injury = 3, light_injury = 0.5)
-UNIT_COSTS <- list(
-    accident_cost = c(dead = 12, serious_injury = 3, light_injury = 0.5),
-    accident_higher_cost = c(dead = 30, serious_injury = 30/4,
-                             light_injury = 30/24)
-)
+UNIT_COSTS_DEAD <- 12
+UNIT_COSTS_SERIOUS_INJURY <- UNIT_COSTS_DEAD / 4
+UNIT_COSTS_LIGHT_INJURY <- UNIT_COSTS_DEAD / 24
+UNIT_COSTS_MATERIAL <- 1
+UNIT_COST_CONST <- 0
 
 
 # NKDE parameters

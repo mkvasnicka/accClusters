@@ -13,6 +13,7 @@ require(sf)
 require(sfnetworks)
 require(spdep)
 require(dplyr)
+source(file.path(RSCRIPTDIR, "functions_damage_cost.R"))
 
 
 # one district cluster tibble --------------------------------------------------
@@ -337,21 +338,18 @@ add_clusters_to_accidents <- function(accidents, clusters) {
 
 # compute cluster costs --------------------------------------------------------
 
-# cluster_cost(accidents, accident_cost) computes cost of each cluster
+# cluster_cost(accidents) computes cost of each cluster
 #
 # inputs:
 # - accidents ... (sf tibble) table of accidents snapped to roads in particular
 #   district
-# - accident_cost ... (character scalar) name of column in accidents that
-#   includes the cost of individual accidents
 #
 # value:
-cluster_cost <- function(accidents, accident_cost = "accident_cost") {
-    accidents$.acccost <- accidents[[accident_cost]]
+cluster_cost <- function(accidents) {
     accidents |>
         dplyr::filter(!is.na(cluster)) |>
         dplyr::group_by(cluster) |>
-        dplyr::summarise(cost = sum(.acccost), .groups = "drop")
+        dplyr::summarise(cost = sum(accident_cost), .groups = "drop")
 }
 
 
@@ -361,7 +359,6 @@ cluster_cost <- function(accidents, accident_cost = "accident_cost") {
 # - lixels
 # - accidents
 # - clusters
-# - accident_cost
 #
 # value:
 #   tibble with four columns:
@@ -371,8 +368,7 @@ cluster_cost <- function(accidents, accident_cost = "accident_cost") {
 #   - cost ... (double) sum of cost of accidents lying on lixels within clusters
 #       in mil. CZK
 #   - cost_per_meter (double) cost / total_length
-cluster_statistics <- function(lixels, accidents, clusters,
-                               accident_cost = "accident_cost") {
+cluster_statistics <- function(lixels, accidents, clusters) {
     clstrs <- lixels |>
         sf::st_drop_geometry() |>
         add_clusters_to_lixels(clusters) |>
@@ -384,7 +380,7 @@ cluster_statistics <- function(lixels, accidents, clusters,
     accdnts <- accidents |>
         sf::st_drop_geometry() |>
         add_clusters_to_accidents(clusters) |>
-        cluster_cost(accident_cost)
+        cluster_cost()
     dplyr::left_join(clstrs, accdnts, by = "cluster") |>
         dplyr::mutate(cost_per_meter = cost / total_length)
 }
@@ -679,7 +675,8 @@ compute_clusters <- function(districts,
         lixels <- readr::read_rds(densities_file)
         nb <- readr::read_rds(lixel_nb_file)
         accidents <- readr::read_rds(accident_file) |>
-            filter(p2a >= from_date, p2a <= to_date)
+            filter(accident_date >= from_date, accident_date <= to_date) |>
+            add_damage_cost()
         threshold <- quantile(lixels$density, cluster_min_quantile)
         visual_threshold <- quantile(lixels$density, visual_min_quantile)
 
@@ -694,7 +691,7 @@ compute_clusters <- function(districts,
             add_clusters_to_accidents(cls) |>
             sf::st_drop_geometry() |>
             dplyr::filter(!is.na(cluster)) |>
-            dplyr::select(p1, cluster, accident_cost)
+            dplyr::select(accident_id, cluster, accident_cost)
         join_network <- function(geo) {
             geo |>
                 sfnetworks::as_sfnetwork(directed = FALSE) |>
