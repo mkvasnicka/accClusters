@@ -20,7 +20,7 @@ if (!exists("RSCRIPTDIR")) RSCRIPTDIR <- "guts"
 # source necessary scripts
 source(file.path(RSCRIPTDIR, "guts_config.R"))
 source(file.path(RSCRIPTDIR, "functions_auxiliary.R"))
-source(file.path(RSCRIPTDIR, "functions_hotspots_preparation.R"))
+source(file.path(RSCRIPTDIR, "functions_densities_preparation.R"))
 
 
 # process command-line parameters

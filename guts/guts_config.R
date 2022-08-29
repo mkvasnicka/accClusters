@@ -69,7 +69,7 @@ UNIT_COST_CONST <- 0
 
 
 # NKDE parameters
-NKDE_WEIGHTS <- "accident_cost" # weights
+NKDE_WEIGHTS <- "cost"          # weights
 NKDE_BW <- 300                  # bw
 NKDE_ADAPTIVE <- FALSE          # adaptive
 NKDE_TRIM_BW <- 600             # trim_bw
