@@ -9,6 +9,7 @@
 # Copyright(c) Michal Kvasnička
 # -------------------------------------
 
+# packages
 require(tibble)
 require(dplyr)
 require(purrr)
@@ -24,6 +25,10 @@ require(igraph)
 require(osmar)
 require(spatstat)
 
+
+# projections
+PLANARY_PROJECTION <- 5514  # Křovák
+WGS84 <- 4326  # WGS84
 
 
 

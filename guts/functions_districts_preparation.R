@@ -10,10 +10,15 @@
 # Copyright(c) Michal Kvasnička
 # -------------------------------------
 
-# needed packages
+# packages
 require(dplyr)
 require(glue)
 require(sf)
+
+
+# projections
+PLANARY_PROJECTION <- 5514  # Křovák
+WGS84 <- 4326  # WGS84
 
 
 

@@ -13,11 +13,18 @@
 # https://stackoverflow.com/questions/51292952/snap-a-point-to-the-closest-point-on-a-line-segment-using-sf
 # https://r-spatial.github.io/sf/reference/st_nearest_feature.html
 
+# packages
 require(dplyr)
 require(purrr)
 require(readr)
 require(lubridate)
 require(sf)
+
+
+# projections
+PLANARY_PROJECTION <- 5514  # Křovák
+WGS84 <- 4326  # WGS84
+
 
 
 # prepare raw police data ------------------------------------------------------

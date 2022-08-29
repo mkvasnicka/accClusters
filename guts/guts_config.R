@@ -24,9 +24,9 @@ RAM_PER_CORE_ACCIDENTS <- 10
 
 # constants --------------------------------------------------------------------
 
-# projections
-PLANARY_PROJECTION <- 5514  # Křovák
-WGS84 <- 4326  # WGS84
+# # projections
+# PLANARY_PROJECTION <- 5514  # Křovák
+# WGS84 <- 4326  # WGS84
 
 
 # district map creating
