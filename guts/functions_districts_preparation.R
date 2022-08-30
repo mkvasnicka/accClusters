@@ -11,9 +11,9 @@
 # -------------------------------------
 
 # packages
-require(dplyr)
-require(glue)
-require(sf)
+require(dplyr, quietly = TRUE, warn.conflicts = FALSE)
+require(glue, quietly = TRUE, warn.conflicts = FALSE)
+require(sf, quietly = TRUE, warn.conflicts = FALSE)
 
 
 # projections

@@ -475,9 +475,7 @@ districts_behind <- function(districts, target_fun, source_fun,
 # WARNINGS:
 # - if any other process allocates memory after get_number_of_workers() done its
 #   magic, memory may be insufficient for this system
-get_number_of_workers <- function(workers, ram_needed = RAM_PER_CORE_GENERAL) {
-    if (is.null(workers))
-        workers <- ifelse(exists("NO_OF_WORKERS"), NO_OF_WORKERS, 1)
+get_number_of_workers <- function(workers, ram_needed) {
     if (workers == "auto") {
         ram <- as.numeric(memuse::Sys.meminfo()$freeram) / 1024 ^ 3
         no_of_cores <- future::availableCores()
@@ -530,9 +528,9 @@ silently <- function(.f) {
 # }
 #
 # TODO: když to spadne, mělo by to throw error via stop()
-PWALK <- function(.l, .f, workers = 1, ...) {
+PWALK <- function(.l, .f, workers = 1, ram_needed = NULL, ...) {
     if (nrow(.l) > 0) {
-        workers <- get_number_of_workers(workers)
+        workers <- get_number_of_workers(workers, ram_needed)
         .f <- silently(.f)
         if (workers == 1) {
             success <- purrr::pmap_lgl(.l, .f, ...)

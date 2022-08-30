@@ -34,41 +34,32 @@ districts <- read_districts()
 create_osm_district_roads(districts,
                           path_to_osm_maps = path_to_raw_roads_osm(),
                           path_to_geojsons = path_to_map_dir(),
-                          road_types = SUPPORTED_ROAD_CLASSES,
-                          buffer_size = DISTRICT_BUFFER_SIZE,
-                          other_dependencies = path_to_districts())
+                          profiles = profiles)
 
 
 # for each district, create simplified sfnetwork .rds files with filtered roads
 create_sf_district_roads(districts,
                          path_to_osm_maps = path_to_map_dir(),
                          path_to_sf_maps = path_to_map_dir(),
-                         crs = PLANARY_PROJECTION,
-                         workers = NO_OF_WORKERS,
-                         other_dependencies = path_to_districts())
+                         profiles = profiles)
 
 
 # for each district, create lixelized network
 create_lixelized_roads(districts,
                        input_folder = path_to_map_dir(),
                        output_folder = path_to_lixels_maps_dir(),
-                       lx_length = LIXEL_SIZE,
-                       mindist = LIXEL_MIN_DIST,
-                       workers = NO_OF_WORKERS,
-                       other_dependencies = path_to_districts())
+                       profiles = profiles)
 
 
 # for each district, create lixel centers (samples)
 create_lixel_samples_for_roads(districts,
                                input_folder = path_to_lixels_maps_dir(),
                                output_folder = path_to_lixels_maps_dir(),
-                               workers = NO_OF_WORKERS,
-                               other_dependencies = path_to_districts())
+                               profiles = profiles)
 
 
 # for each districts, create neighbor list objects (nb)
 create_lixel_nbs(districts,
                  input_folder = path_to_lixels_maps_dir(),
                  output_folder = path_to_lixels_maps_dir(),
-                 workers = NO_OF_WORKERS,
-                 other_dependencies = path_to_districts())
+                 profiles)
