@@ -66,7 +66,7 @@ WGS84 <- 4326  # WGS84
 # - the CSVs can be extracted from XLS by prepare_raw_accidents.sh script
 #
 # TODO: standardizovat názvy polí nehodách
-read_raw_accidents <- function(folder, skip = 6) {
+read_raw_accidents <- function(folder, profiles, skip = 6) {
     read_accidents <- function(path, skip = 6) {
         accidents <- readr::read_csv(path,
                                      skip = skip,
@@ -154,12 +154,12 @@ read_raw_accidents <- function(folder, skip = 6) {
     }
 
     accidents <- purrr::map(list.files(path = folder,
-                                       pattern = ACCIDENTS_FILE_NAME_PATTERN,
+                                       pattern = profiles[[1]]$ACCIDENTS_FILE_NAME_PATTERN,
                                        full.names = TRUE),
                             read_accidents, skip = skip) |>
         dplyr::bind_rows()
     gps <- purrr::map(list.files(path = folder,
-                                 pattern = ACCIDENTS_GPS_FILE_NAME_PATTERN,
+                                 pattern = profiles[[1]]$ACCIDENTS_GPS_FILE_NAME_PATTERN,
                                  full.names = TRUE),
                       read_gps, skip = skip) |>
         dplyr::bind_rows()
@@ -194,14 +194,17 @@ read_raw_accidents <- function(folder, skip = 6) {
 #
 # notes:
 # - for assumptions on input files, see help for read_raw_accidents()
-create_accidents <- function(path_to_all_accidents, raw_accidents_dir) {
+create_accidents <- function(path_to_all_accidents, raw_accidents_dir,
+                             profiles) {
+    start_logging(log_dir())
     logging::loginfo("accidents prep: checking for updates")
     if (is_behind(path_to_all_accidents,
-                  list.files(raw_accidents_dir, pattern = "csv",
-                             full.names = TRUE))) {
+                  c(list.files(raw_accidents_dir, pattern = "csv",
+                             full.names = TRUE),
+                    path_to_configs()))) {
         logging::loginfo("accidents prep: accidents data are behind---updating")
         tryCatch({
-            accidents <- read_raw_accidents(raw_accidents_dir)
+            accidents <- read_raw_accidents(raw_accidents_dir, profiles)
             write_dir_rds(accidents, path_to_all_accidents)
             logging::loginfo(
                 "accidents prep: data on all accidents have been updated")
@@ -334,11 +337,10 @@ snap_points_to_lines <- function(points, lines, dist = 100,
 #   their closest line
 create_districts_accidents <- function(districts,
                                        path_to_accidents,
-                                       max_distance,
                                        lixel_dir,
                                        accident_dir,
-                                       workers = NULL,
-                                       other_dependencies = NULL) {
+                                       profiles,
+                                       max_distance = profiles[[1]]$ACCIDENT_TO_ROAD_MAX_DISTANCE) {
     one_file <- function(input_file, output_file, accidents) {
         start_logging(log_dir())
         logging::loginfo("district accidents prep: creating %s", output_file)
@@ -350,18 +352,17 @@ create_districts_accidents <- function(districts,
                          output_file)
     }
 
+    start_logging(log_dir())
     logging::loginfo("district accidents prep: checking for uppdates")
 
     tryCatch({
         accidents <- readr::read_rds(path_to_accidents)
-        workers <- get_number_of_workers(workers,
-                                         ram_needed = RAM_PER_CORE_ACCIDENTS)
         districts <- districts_behind(districts,
                                       target_fun = accidents_file_name,
                                       source_fun = lixel_file_name,
                                       target_folder = accident_dir,
                                       source_folder = lixel_dir,
-                                      other_files = c(other_dependencies,
+                                      other_files = c(path_to_districts(),
                                                       path_to_accidents))
         txt <- dplyr::if_else(nrow(districts) == 0, "---skipping", " in parallel")
         logging::loginfo(
@@ -370,7 +371,10 @@ create_districts_accidents <- function(districts,
         tab <- tibble::tibble(
             input_file = lixel_file_name(districts, lixel_dir),
             output_file = accidents_file_name(districts, accident_dir))
-        PWALK(tab, one_file, accidents = accidents, workers = workers)
+        PWALK(tab, one_file,
+              workers = profiles[[1]]$NO_OF_WORKERS,
+              ram_needed = profiles[[1]]$RAM_PER_CORE_ACCIDENTS,
+              accidents = accidents)
         logging::loginfo(
             "district accidents prep: district accidents have been updated")
     },
