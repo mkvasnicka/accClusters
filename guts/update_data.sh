@@ -33,7 +33,7 @@ runRscript () {
     echo "Running $1.R"
     echo "------------------------------------------------"
     Rscript --vanilla -e "RSCRIPTDIR=\"$RSCRIPTDIR\"" \
-        -e "DIR_ORIGIN=\"DIRORIGIN\"" \
+        -e "DIR_ORIGIN=\"$DIRORIGIN\"" \
         -e "source(\"$RSCRIPTDIR/$1.R\")"
 }
 
