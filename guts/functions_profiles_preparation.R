@@ -241,15 +241,27 @@ read_all_profiles <- function(folder) {
 # - if there is no profile, default profile is created from config
 # - all variables that may not be present in profiles have the same values in
 #   all profiles
+#
+# warnings:
+# - checking for updates is very rudimentary (it only checks modification dates
+#   of existing files); hence, when you change the configuration, you should
+#   remove the config/profiles.rds file
 create_profiles <- function(path_to_configs = path_to_configs(),
                             path_to_source_configs = path_to_source_configs()) {
     start_logging(log_dir())
-    logging::loginfo("config prep: reading configuration and profiles")
     tryCatch({
-        profiles <- read_all_profiles(path_to_source_configs) |>
-            purrr::map(as.list)
-        readr::write_rds(profiles, path_to_configs)
-        logging::loginfo("config prep: profiles created")
+        logging::loginfo("config prep: checking for changes in configuration")
+        source_files <- list.files(path_to_source_configs(),
+                                   pattern = ".R", full.names = TRUE)
+        if (is_behind(path_to_configs(), source_files)) {
+            logging::loginfo("config prep: configuration has changed---updating")
+            profiles <- read_all_profiles(path_to_source_configs) |>
+                purrr::map(as.list)
+            readr::write_rds(profiles, path_to_configs)
+            logging::loginfo("config prep: profiles created")
+        } else {
+            logging::loginfo("config prep: configuration is uptodate---skipping")
+        }
     },
     error = function(e) {
         logging::logerror("config prep failed: %s", e)

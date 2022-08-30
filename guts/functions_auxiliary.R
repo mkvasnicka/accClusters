@@ -605,3 +605,10 @@ start_logging <- function(log_folder) {
 }
 
 
+
+# profiles ---------------------------------------------------------------------
+
+# read_profiles() returns list of profiles
+read_profiles <- function() {
+    readr::read_rds(path_to_configs())
+}
