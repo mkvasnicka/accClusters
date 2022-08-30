@@ -69,10 +69,7 @@ process_command_line_arguments <- function(rdir) {
 
 # path to raw data
 raw_data_dir <- function() {
-    if (exists("RAW_DATA_DIR"))
-        RAW_DATA_DIR
-    else
-        file.path(DIR_ORIGIN, "rawdata")
+    file.path(DIR_ORIGIN, "rawdata")
 }
 
 # path to districts shape file folder
@@ -100,10 +97,7 @@ path_to_raw_accidents <- function() {
 
 # path to created data folder
 data_dir <- function() {
-    if (exists("DATA_DIR"))
-        DATA_DIR
-    else
-        file.path(DIR_ORIGIN, "data")
+    file.path(DIR_ORIGIN, "data")
 }
 
 # path to districts
@@ -134,10 +128,7 @@ path_to_densities_dir <- function() {
 
 # outputs
 output_dir <- function() {
-    if (exists("OUTPUT_DIR"))
-        OUTPUT_DIR
-    else
-        file.path(DIR_ORIGIN, "output")
+    file.path(DIR_ORIGIN, "output")
 }
 
 # path to folder where the final product used in shiny in stored
@@ -153,16 +144,18 @@ gis_dir <- function() {
 
 # logging
 log_dir <- function() {
-    if (exists("LOG_DIR"))
-        LOG_DIR
-    else
-        file.path(DIR_ORIGIN, "log")
+    file.path(DIR_ORIGIN, "log")
 }
 
 
+# path to source profiles and config
+path_to_source_configs <- function() {
+    file.path(DIR_ORIGIN, "config")
+}
+
 # path to file where profiles are stored
-path_to_configs <- function(configdir) {
-    file.path(configdir, "profiles.rds")
+path_to_configs <- function() {
+    file.path(path_to_source_configs(), "profiles.rds")
 }
 
 
@@ -579,13 +572,12 @@ PWALK <- function(.l, .f, workers = 1, ...) {
 create_log_file <- function(log_folder) {
     dir.create(log_folder, showWarnings = FALSE, recursive = TRUE)
     time <- as.character(Sys.time())
-    log_file <- stringr::str_c(
-        stringr::str_replace_all(time, "[\\s:]", "-"),
-        ".log")
-    readr::write_lines(
-        stringr::str_c(time, " CREATED log file"),
-        file.path(log_folder, log_file)
+    log_file <- file.path(
+        log_folder,
+        stringr::str_c(stringr::str_replace_all(time, "[\\s:]", "-"),".log")
     )
+    logging::addHandler(writeToFile, file = log_file)
+    logging::loginfo("log file created")
 }
 
 
@@ -600,7 +592,7 @@ create_log_file <- function(log_folder) {
 #
 # notes:
 # - for reason why it is done this way, see notes to create_log_file()
-start_logging <- function(log_folder, console = FALSE) {
+start_logging <- function(log_folder) {
     if (is.null(log_folder))
         return(invisible(NULL))
     logging::basicConfig()
@@ -610,8 +602,6 @@ start_logging <- function(log_folder, console = FALSE) {
         dplyr::slice(1) |>
         rownames()
     logging::addHandler(writeToFile, file = log_file)
-    if (console)
-        logging::removeHandler("basic.stdout")
 }
 
 

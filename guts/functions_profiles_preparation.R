@@ -243,7 +243,16 @@ read_all_profiles <- function(folder) {
 #   all profiles
 create_profiles <- function(path_to_configs = path_to_configs(),
                             path_to_source_configs = path_to_source_configs()) {
-    profiles <- read_all_profiles(path_to_source_configs) |>
-        purrr::map(as.list)
-    readr::write_rds(profiles, path_to_configs)
+    start_logging(log_dir())
+    logging::loginfo("config prep: reading configuration and profiles")
+    tryCatch({
+        profiles <- read_all_profiles(path_to_source_configs) |>
+            purrr::map(as.list)
+        readr::write_rds(profiles, path_to_configs)
+        logging::loginfo("config prep: profiles created")
+    },
+    error = function(e) {
+        logging::logerror("config prep failed: %s", e)
+        stop("config prep---stopping evaluation---see the log", call. = NA)}
+    )
 }
