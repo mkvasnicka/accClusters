@@ -10,12 +10,11 @@
 # -------------------------------------
 
 
+# TEMP: remove
 # supply path to RSCRIPTDIR if it was not supplied outside
 if (!exists("RSCRIPTDIR")) RSCRIPTDIR <- "guts"
-
-
 # supply path to folder where user stores her config and profile
-if (!exists("CONFIGDIR")) CONFIGDIR <- "guts/config"
+if (!exists("CONFIGDIR")) CONFIGDIR <- file.path(RSCRIPTDIR, "config")
 
 
 # source necessary scripts
@@ -30,5 +29,5 @@ process_command_line_arguments(RSCRIPTDIR)
 # create profiles
 # TODO: nefunguje, protože logování používá LOG_DIR, ale ten se vytváří až v
 # configu; shit, jak na to?
-create_profiles(path_to_configs = path_to_configs(),
+create_profiles(path_to_configs = path_to_configs(CONFIGDIR),
                 path_to_source_configs = CONFIGDIR)

@@ -9,10 +9,10 @@
 # Copyright(c) Michal Kvasnička
 # -------------------------------------
 
-library(purrr)
-library(stringr)
-library(readr)
-library(rlang)
+library(purrr, quietly = TRUE, warn.conflicts = FALSE)
+library(stringr, quietly = TRUE, warn.conflicts = FALSE)
+library(readr, quietly = TRUE, warn.conflicts = FALSE)
+library(rlang, quietly = TRUE, warn.conflicts = FALSE)
 
 
 # expected variables -----------------------------------------------------------
@@ -67,6 +67,14 @@ config_necessary_slots <- function() {
         TIME_WINDOW = tibble::tibble(
             from_date = as.Date(integer(0)),
             to_date = as.Date(integer(0)))
+    )
+}
+
+
+config_supported_slots <- function() {
+    list(
+        # districts
+        DISTRICTS = character(0)
     )
 }
 
@@ -171,7 +179,7 @@ read_config_or_profile <- function(profile, based_on = new.env()) {
 
 read_config <- function(config) {
     e <- read_config_or_profile(config)
-    check_profile(e, config, config_necessary_slots(), list())
+    check_profile(e, config, config_necessary_slots(), config_supported_slots())
     e
 }
 
@@ -235,18 +243,7 @@ read_all_profiles <- function(folder) {
 #   all profiles
 create_profiles <- function(path_to_configs = path_to_configs(),
                             path_to_source_configs = path_to_source_configs()) {
-    # start logging
-    start_logging(log_dir())
-    logging::loginfo("config prep: creating configs")
-    tryCatch({
-        profiles <- read_all_profiles(path_to_source_configs) |>
-            purrr::map(as.list)
-        readr::write_rds(profiles, path_to_configs)
-        logging::loginfo("config prep: done")
-    },
-    error = function(e) {
-        logging::logerror("config prep: %s", e)
-        stop("config prep failed---stopping evaluation", call. = NA)})
-
-
+    profiles <- read_all_profiles(path_to_source_configs) |>
+        purrr::map(as.list)
+    readr::write_rds(profiles, path_to_configs)
 }

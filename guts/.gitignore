@@ -6,3 +6,4 @@ data_tmp
 shiny
 output
 rawdata.old
+config/*rds

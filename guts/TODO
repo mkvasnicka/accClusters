@@ -10,6 +10,13 @@ Tvorba klastrů
 
 Refactoring
 -----------
+
+- implementovat DISTRICTS v profilech
+
+- co dělá process_command_line_arguments()?
+    - může být tam, co je?
+    - jak se budou předávat parametry? vlastně jen RSCRIPTDIR a CONFIGDIR
+
 - zafixovat adresářovou strukturu tak, aby stačilo zadat začátky cest
     - společný začátek cesty: DIR_ORIGIN
     - alternativní začátky cest: RAW_DATA_DIR, DATA_DIR, OUTPUT_DIR a LOG_DIR

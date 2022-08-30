@@ -10,11 +10,11 @@
 # -------------------------------------
 
 # necessary packages
-require(dplyr)
-require(readr)
-require(stringr)
-require(memuse)
-require(logging)
+require(dplyr, quietly = TRUE, warn.conflicts = FALSE)
+require(readr, quietly = TRUE, warn.conflicts = FALSE)
+require(stringr, quietly = TRUE, warn.conflicts = FALSE)
+require(memuse, quietly = TRUE, warn.conflicts = FALSE)
+require(logging, quietly = TRUE, warn.conflicts = FALSE)
 
 
 
@@ -161,8 +161,8 @@ log_dir <- function() {
 
 
 # path to file where profiles are stored
-path_to_configs <- function() {
-    file.path(data_dir(), "profiles", "profiles.rds")
+path_to_configs <- function(configdir) {
+    file.path(configdir, "profiles.rds")
 }
 
 
