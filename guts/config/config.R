@@ -149,3 +149,11 @@ TIME_WINDOW <- tibble::tribble(
     "2019-01-01",  "2021-12-31",
     "2018-01-01",  "2020-12-31"
 )
+
+
+
+# districts --------------------------------------------------------------------
+
+# if only some districts should be processed, set DISTRICTS to character vector
+# of their ids
+# DISTRICTS = c("CZ0642", "CZ0643")

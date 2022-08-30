@@ -22,12 +22,10 @@ source(file.path(RSCRIPTDIR, "functions_auxiliary.R"))
 source(file.path(RSCRIPTDIR, "functions_profiles_preparation.R"))
 
 
-# process command-line parameters
-process_command_line_arguments(RSCRIPTDIR)
+# # process command-line parameters
+# process_command_line_arguments(RSCRIPTDIR)
 
 
 # create profiles
-# TODO: nefunguje, protože logování používá LOG_DIR, ale ten se vytváří až v
-# configu; shit, jak na to?
 create_profiles(path_to_configs = path_to_configs(CONFIGDIR),
                 path_to_source_configs = CONFIGDIR)

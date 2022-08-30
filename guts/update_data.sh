@@ -10,18 +10,18 @@ set -e
 # folder where R scripts are stored---unless replaced with -r option
 RSCRIPTDIR_IMPLICIT=guts
 
-# folder where configs are stored---unless replaced with -c option
-CONFDIR_IMPLICIT=guts/config
+# folder where all data are stored---unless replaced with -b option
+DIRORIGIN_IMPLICIT=guts_data
 
 # help
 help()
 {
     echo "update_data.sh updates traffic accidents data for shiny."
     echo
-    echo "Syntax: update_data [-r|c|h]"
+    echo "Syntax: update_data [-r|b|h]"
     echo "options:"
     echo "r     Sets path to the folder where R scripts are stored."
-    echo "c     Sets path to the folder where config (and profiles) are stored."
+    echo "b     Sets path to the folder where data are stored."
     echo "h     Print this help."
     echo
 }
@@ -33,33 +33,33 @@ runRscript () {
     echo "Running $1.R"
     echo "------------------------------------------------"
     Rscript --vanilla -e "RSCRIPTDIR=\"$RSCRIPTDIR\"" \
-        -e "CONFIGDIR=\"$CONFIGDIR\"" \
+        -e "DIR_ORIGIN=\"DIRORIGIN\"" \
         -e "source(\"$RSCRIPTDIR/$1.R\")"
 }
 
 # process flag parameters; use the implicit values it they aren't set
-while getopts :hr:c: flag
+while getopts :hr:b: flag
 do
     case "${flag}" in
         h) help
            exit;;
         r) RSCRIPTDIR=${OPTARG};;
-        c) CONFIGDIR=${OPTARG};;
+        b) DIRORIGIN=${OPTARG};;
     esac
 done
 if [ -z $RSCRIPTDIR ]; then
     RSCRIPTDIR=$RSCRIPTDIR_IMPLICIT
 fi
-if [ -z $CONFIGDIR ]; then
-    CONFIGDIR=$CONFDIR_IMPLICIT
+if [ -z $DIRORIGIN ]; then
+    DIRORIGIN=$DIRORIGIN_IMPLICIT
 fi
 
 # show configuration
 echo "Updating data on traffic accidents for shiny app"
 echo "================================================"
-echo "Using RSCRIPTDIR=\"$RSCRIPTDIR\", CONFIGDIR=\"$CONFIGDIR\"."
+echo "Using RSCRIPTDIR=\"$RSCRIPTDIR\", DIR_ORIGIN=\"$DIRORIGIN\"."
 
-runRscript "prepare_profiles"
+# runRscript "prepare_profiles"
 # runRscript "start_logging"
 # runRscript "prepare_districts"
 # runRscript "prepare_maps"
