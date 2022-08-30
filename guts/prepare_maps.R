@@ -10,30 +10,24 @@
 # Copyright(c) Michal Kvasnička
 # -------------------------------------
 
-# load necessary packages
-require(readr)
-
-
+# TEMP: remove
 # supply path to RSCRIPTDIR if it was not supplied outside
 if (!exists("RSCRIPTDIR")) RSCRIPTDIR <- "guts"
+# supply path to folder where user stores her config and profile
+if (!exists("DIR_ORIGIN")) DIR_ORIGIN <- "guts_data"
 
 
 # source necessary scripts
-source(file.path(RSCRIPTDIR, "guts_config.R"))
 source(file.path(RSCRIPTDIR, "functions_auxiliary.R"))
 source(file.path(RSCRIPTDIR, "functions_map_preparation.R"))
 
 
-# process command-line parameters
-process_command_line_arguments(RSCRIPTDIR)
-
-
-# start logging
-start_logging(log_dir())
+# read user config/profiles
+profiles <- read_profiles()
 
 
 # read in districts
-districts <- readr::read_rds(path_to_districts())
+districts <- read_districts()
 
 
 # for each district, create .osm files with filered roads

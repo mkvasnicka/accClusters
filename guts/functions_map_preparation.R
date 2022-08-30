@@ -248,6 +248,7 @@ create_osm_district_roads <- function(districts,
                                       buffer_size,
                                       districts_in_one_go = 10,
                                       other_dependencies = NULL) {
+    start_logging(log_dir())
     logging::loginfo("osm maps prep: checking for updates")
     if (is_behind(osm_file_name(districts, path_to_geojsons),
                   c(path_to_osm_maps, other_dependencies))) {
@@ -669,6 +670,7 @@ create_sf_district_roads <- function(districts,
                          output_file)
     }
 
+    start_logging(log_dir())
     logging::loginfo("road sfnetwork prep: checking for updates")
     districts <- districts_behind(districts,
                                   target_fun = sf_file_name,

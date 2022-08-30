@@ -606,9 +606,15 @@ start_logging <- function(log_folder) {
 
 
 
-# profiles ---------------------------------------------------------------------
+# reading various files --------------------------------------------------------
 
 # read_profiles() returns list of profiles
 read_profiles <- function() {
     readr::read_rds(path_to_configs())
+}
+
+
+# read_districts returns districts table
+read_districts <- function() {
+    readr::read_rds(path_to_districts())
 }
