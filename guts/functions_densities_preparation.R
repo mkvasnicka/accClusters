@@ -9,9 +9,12 @@
 # Copyright(c) Michal Kvasnička
 # -------------------------------------
 
-require(spNetwork)
-require(readr)
-require(tibble)
+# necessary packages
+require(spNetwork, quietly = TRUE, warn.conflicts = FALSE)
+require(readr, quietly = TRUE, warn.conflicts = FALSE)
+require(tibble, quietly = TRUE, warn.conflicts = FALSE)
+
+# necessary functions
 source(file.path(RSCRIPTDIR, "functions_damage_cost.R"))
 
 
@@ -206,9 +209,6 @@ source(file.path(RSCRIPTDIR, "functions_damage_cost.R"))
 #   to accident_cost; otherwise, they are equal to 1
 # - bw, adaptive, trim_bw, method, agg ... parameters sent to
 #   spNetwork::nkde()
-# - workers ... (NULL or integer scalar) number of cores used in parallel
-# - other_files ... (character vector) pathes to other files that can determine
-#   whether existing files are up-to-date
 #
 # value:
 #   none; data are written to disk
@@ -216,16 +216,14 @@ compute_densities <- function(districts,
                               maps_dir, lixel_dir, sample_dir,
                               accidents_dir,
                               density_dir,
-                              time_window,
-                              weights = NULL, bw = 300,
-                              adaptive = FALSE, trim_bw = 600,
-                              method = "discontinuous", agg = 1,
-                              workers = NULL,
-                              other_files = NULL) {
+                              profiles) {
     one_district <- function(map_path, lixel_path, sample_path, accidents_path,
                              output_file,
                              from_date, to_date,
-                             weights, bw, adaptive, trim_bw, method, agg) {
+                             weights, bw, adaptive, trim_bw, method, agg,
+                             unit_cost_dead, unit_cost_serious_injury,
+                             unit_cost_light_injury, unit_cost_material,
+                             unit_cost_const) {
         start_logging(log_dir())
 
         # grid_shape() is a heuristics that guesses how to split districts for
@@ -244,7 +242,8 @@ compute_densities <- function(districts,
             c(x = xn, y = yn)
         }
 
-        logging::loginfo("hotspots prep: creating %s", output_file)
+        start_logging(log_dir())
+        logging::loginfo("densities prep: creating %s", output_file)
         map <- readr::read_rds(map_path) |>
             sfnetworks::activate("edges") |>
             sf::st_as_sf()
@@ -253,7 +252,9 @@ compute_densities <- function(districts,
         accidents <- readr::read_rds(accidents_path) |>
             dplyr::filter(accident_date >= from_date,
                           accident_date <= to_date) |>
-            add_damage_cost()
+            add_damage_cost(unit_cost_dead, unit_cost_serious_injury,
+                            unit_cost_light_injury, unit_cost_material,
+                            unit_cost_const)
 
         if (!(is.character(weights) && length(weights) == 1 &&
                weights %in% c("cost", "equal")))
@@ -282,36 +283,51 @@ compute_densities <- function(districts,
                                      verbose = TRUE)
         lixels$density <- densities
         write_dir_rds(lixels, output_file)
-        logging::loginfo("hotspots prep: %s has been created", output_file)
+        logging::loginfo("densities prep: %s has been created", output_file)
     }
 
-    logging::loginfo("hotspots prep: checking for updates")
+    logging::loginfo("densities prep: checking for updates")
 
     tryCatch({
-    profile_name <- NULL
-    if (exists("PROFILE_NAME"))
-        profile_name <- PROFILE_NAME
+    # time_window <- handle_time_window(time_window)
 
-    workers <- get_number_of_workers(workers)
+    districts <- districts |>
+        bind_cols(profiles |>
+                      dplyr::select(PROFILE_NAME, TIME_WINDOW,
+                                    starts_with("NKDE_"),
+                                    starts_with("UNIT_COST_")) |>
+                      tidyr::unnest(TIME_WINDOW) |>
+                      tidyr::nest(data = everything())) |>
+        tidyr::unnest(data)
+    districts <- districts |>
+        districts_behind(target_fun = densities_file_name,
+                         source_fun = list(sf_file_name, lixel_file_name,
+                                           lixel_sample_file_name,
+                                           accidents_file_name),
+                         target_folder = density_dir,
+                         source_folder = list(maps_dir, lixel_dir,
+                                              sample_dir, accidents_dir),
+                         other_files = path_to_districts(),
+                         from_date = districts$from_date,
+                         to_date = districts$to_date,
+                         profile_name = districts$PROFILE_NAME)
 
-    time_window <- handle_time_window(time_window)
-
-    districts <- purrr::map2(
-        time_window$from_date, time_window$to_date,
-        ~districts_behind(districts |>
-                              mutate(from_date = .x, to_date = .y),
-                          target_fun = densities_file_name,
-                          source_fun = list(sf_file_name, lixel_file_name,
-                                            lixel_sample_file_name,
-                                            accidents_file_name),
-                          target_folder = density_dir,
-                          source_folder = list(maps_dir, lixel_dir,
-                                               sample_dir, accidents_dir),
-                          other_files = other_files,
-                          from_date = .x, to_date = .y,
-                          profile_name = profile_name)
-    ) |>
-        dplyr::bind_rows()
+    # districts <- purrr::map2(
+    #     time_window$from_date, time_window$to_date,
+    #     ~districts_behind(districts |>
+    #                           mutate(from_date = .x, to_date = .y),
+    #                       target_fun = densities_file_name,
+    #                       source_fun = list(sf_file_name, lixel_file_name,
+    #                                         lixel_sample_file_name,
+    #                                         accidents_file_name),
+    #                       target_folder = density_dir,
+    #                       source_folder = list(maps_dir, lixel_dir,
+    #                                            sample_dir, accidents_dir),
+    #                       other_files = path_to_districts(),
+    #                       from_date = .x, to_date = .y,
+    #                       profile_name = profile_name)
+    # ) |>
+    #     dplyr::bind_rows()
     tab <- tibble::tibble(
         map_path = sf_file_name(districts, maps_dir),
         lixel_path = lixel_file_name(districts, lixel_dir),
@@ -320,21 +336,35 @@ compute_densities <- function(districts,
         output_file = densities_file_name(districts, density_dir,
                                           from_date = districts$from_date,
                                           to_date = districts$to_date,
-                                          profile_name = profile_name),
+                                          profile_name = districts$PROFILE_NAME),
         from_date = districts$from_date,
-        to_date = districts$to_date
+        to_date = districts$to_date,
+        weights = districts$NKDE_WEIGHTS,
+        bw = districts$NKDE_BW,
+        adaptive = districts$NKDE_ADAPTIVE,
+        trim_bw = districts$NKDE_TRIM_BW,
+        method = districts$NKDE_METHOD,
+        agg = districts$NKDE_AGG,
+        unit_cost_dead = districts$UNIT_COST_DEAD,
+        unit_cost_serious_injury = districts$UNIT_COST_SERIOUS_INJURY,
+        unit_cost_light_injury = districts$UNIT_COST_LIGHT_INJURY,
+        unit_cost_material = districts$UNIT_COST_MATERIAL,
+        unit_cost_const = districts$UNIT_COST_CONST
     )
 
     txt <- dplyr::if_else(nrow(districts) == 0, "---skipping", " in parallel")
     logging::loginfo(
-        "hotspots prep: %d districts x times will be uppdated%s",
+        "densities prep: %d districts x times will be uppdated%s",
         nrow(districts), txt)
 
-    PWALK(tab, one_district, workers = workers,
-          weights = weights, bw = bw, adaptive = adaptive, trim_bw = trim_bw,
-          method = method, agg = agg)
+    PWALK(tab, one_district,
+          workers = profiles$NO_OF_WORKERS[[1]],
+          ram_needed = profiles$RAM_PER_CORE_GENERAL[[1]]#,
+          # weights = weights, bw = bw, adaptive = adaptive, trim_bw = trim_bw,
+          # method = method, agg = agg
+          )
     logging::loginfo(
-        "hotspots prep: hotspots have been updated")
+        "densities prep: hotspots have been updated")
     },
     error = function(e) {
         logging::logerror("hotspots prep failed: %s", e)
