@@ -246,8 +246,8 @@ create_osm_district_roads <- function(districts,
                                       path_to_osm_maps,
                                       path_to_geojsons,
                                       profiles,
-                                      road_types = profiles[[1]]$SUPPORTED_ROAD_CLASSES,
-                                      buffer_size = profiles[[1]]$DISTRICT_BUFFER_SIZE,
+                                      road_types = profiles$SUPPORTED_ROAD_CLASSES[[1]],
+                                      buffer_size = profiles$DISTRICT_BUFFER_SIZE[[1]],
                                       districts_in_one_go = 10) {
     start_logging(log_dir())
     logging::loginfo("osm maps prep: checking for updates")
@@ -659,7 +659,7 @@ create_sf_district_roads <- function(districts,
                                      profiles,
                                      crs = PLANARY_PROJECTION,
                                      max_distance = 0.5, dTolerance = 5,
-                                     workers = profiles[[1]]$NO_OF_WORKERS) {
+                                     workers = profiles$NO_OF_WORKERS[[1]]) {
     one_file <- function(input_file, output_file) {
         start_logging(log_dir())
         logging::loginfo("road sfnetwork prep: creating %s", output_file)
@@ -690,8 +690,8 @@ create_sf_district_roads <- function(districts,
             output_file = sf_file_name(districts, path_to_sf_maps)
         )
         PWALK(tab, one_file,
-              workers = profiles[[1]]$NO_OF_WORKERS,
-              ram_needed = profiles[[1]]$RAM_PER_CORE_GENERAL)
+              workers = profiles$NO_OF_WORKERS[[1]],
+              ram_needed = profiles$RAM_PER_CORE_GENERAL[[1]])
         if (nrow(tab) > 0)
             logging::loginfo("road sfnetwork: road sfnetworks have been updated")
     },
@@ -724,9 +724,7 @@ create_sf_district_roads <- function(districts,
 # value:
 #   none; files are writen to disk
 create_lixelized_roads <- function(districts, input_folder, output_folder,
-                                   profiles,
-                                   lx_length = profiles[[1]]$LIXEL_SIZE,
-                                   mindist = profiles[[1]]$LIXEL_MIN_DIST) {
+                                   profiles) {
     one_file <- function(input_file, output_file, lx_length, mindist) {
         start_logging(log_dir())
         logging::loginfo("lixel prep: creating %s", output_file)
@@ -759,9 +757,10 @@ create_lixelized_roads <- function(districts, input_folder, output_folder,
             output_file = lixel_file_name(districts, output_folder)
         )
         PWALK(tab, one_file,
-              workers = profiles[[1]]$NO_OF_WORKERS,
-              ram_needed = profiles[[1]]$RAM_PER_CORE_GENERAL,
-              lx_length = lx_length, mindist = mindist)
+              workers = profiles$NO_OF_WORKERS[[1]],
+              ram_needed = profiles$RAM_PER_CORE_GENERAL[[1]],
+              lx_length = profiles$LIXEL_SIZE[[1]],
+              mindist = profiles$LIXEL_MIN_DIST[[1]])
         if (nrow(tab) > 0)
             logging::loginfo("lixel prep: lixels have been updated")
     },
@@ -811,8 +810,8 @@ create_lixel_samples_for_roads <- function(districts,
             output_file = lixel_sample_file_name(districts, output_folder)
         )
         PWALK(tab, one_file,
-              workers = profiles[[1]]$NO_OF_WORKERS,
-              ram_needed = profiles[[1]]$RAM_PER_CORE_GENERAL)
+              workers = profiles$NO_OF_WORKERS[[1]],
+              ram_needed = profiles$RAM_PER_CORE_GENERAL[[1]])
         if (nrow(districts) > 0)
             logging::loginfo(
                 "lixel samples prep: lixel samples have been updated")
@@ -901,8 +900,8 @@ create_lixel_nbs <- function(districts, input_folder, output_folder,
             output_file = lixel_nb_file_name(districts, output_folder)
         )
         PWALK(tab, one_district,
-              workers = profiles[[1]]$NO_OF_WORKERS,
-              ram_needed = profiles[[1]]$RAM_PER_CORE_GENERAL)
+              workers = profiles$NO_OF_WORKERS[[1]],
+              ram_needed = profiles$RAM_PER_CORE_GENERAL[[1]])
         if (nrow(districts) > 0)
             logging::loginfo("lixel nbs  have been updated")
     },

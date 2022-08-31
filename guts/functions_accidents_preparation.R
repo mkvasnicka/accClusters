@@ -14,11 +14,11 @@
 # https://r-spatial.github.io/sf/reference/st_nearest_feature.html
 
 # packages
-require(dplyr)
-require(purrr)
-require(readr)
-require(lubridate)
-require(sf)
+require(dplyr, quietly = TRUE, warn.conflicts = FALSE)
+require(purrr, quietly = TRUE, warn.conflicts = FALSE)
+require(readr, quietly = TRUE, warn.conflicts = FALSE)
+require(lubridate, quietly = TRUE, warn.conflicts = FALSE)
+require(sf, quietly = TRUE, warn.conflicts = FALSE)
 
 
 # projections
@@ -154,12 +154,12 @@ read_raw_accidents <- function(folder, profiles, skip = 6) {
     }
 
     accidents <- purrr::map(list.files(path = folder,
-                                       pattern = profiles[[1]]$ACCIDENTS_FILE_NAME_PATTERN,
+                                       pattern = profiles$ACCIDENTS_FILE_NAME_PATTERN[[1]],
                                        full.names = TRUE),
                             read_accidents, skip = skip) |>
         dplyr::bind_rows()
     gps <- purrr::map(list.files(path = folder,
-                                 pattern = profiles[[1]]$ACCIDENTS_GPS_FILE_NAME_PATTERN,
+                                 pattern = profiles$ACCIDENTS_GPS_FILE_NAME_PATTERN[[1]],
                                  full.names = TRUE),
                       read_gps, skip = skip) |>
         dplyr::bind_rows()
@@ -340,7 +340,7 @@ create_districts_accidents <- function(districts,
                                        lixel_dir,
                                        accident_dir,
                                        profiles,
-                                       max_distance = profiles[[1]]$ACCIDENT_TO_ROAD_MAX_DISTANCE) {
+                                       max_distance = profiles$ACCIDENT_TO_ROAD_MAX_DISTANCE[[1]]) {
     one_file <- function(input_file, output_file, accidents) {
         start_logging(log_dir())
         logging::loginfo("district accidents prep: creating %s", output_file)
@@ -372,8 +372,8 @@ create_districts_accidents <- function(districts,
             input_file = lixel_file_name(districts, lixel_dir),
             output_file = accidents_file_name(districts, accident_dir))
         PWALK(tab, one_file,
-              workers = profiles[[1]]$NO_OF_WORKERS,
-              ram_needed = profiles[[1]]$RAM_PER_CORE_ACCIDENTS,
+              workers = profiles$NO_OF_WORKERS_ACCIDENTS[[1]],
+              ram_needed = profiles$RAM_PER_CORE_ACCIDENTS[[1]],
               accidents = accidents)
         logging::loginfo(
             "district accidents prep: district accidents have been updated")

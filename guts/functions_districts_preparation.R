@@ -95,11 +95,11 @@ create_districts <- function(path_to_districts, path_to_raw_districts,
             "districts prep: districts table is behind and will be updated")
         tryCatch({
             districts <- suppressMessages(reader(path_to_raw_districts))
-            if ("DISTRICTS" %in% names(profiles[[1]])) {
+            if ("DISTRICTS" %in% names(profiles)) {
                 districts <- districts |>
-                    dplyr::filter(district_id %in% profiles[[1]]$DISTRICTS)
+                    dplyr::filter(district_id %in% profiles$DISTRICTS[[1]])
                 logging::loginfo("districts prep: removing all districts but %s",
-                                 str_flatten(profiles[[1]]$DISTRICTS,
+                                 str_flatten(profiles$DISTRICTS[[1]],
                                              collapse = ", "))
             }
             write_dir_rds(districts, file = path_to_districts)
