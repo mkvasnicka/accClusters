@@ -9,10 +9,108 @@
 # Copyright(c) Michal Kvasnička
 # -------------------------------------
 
+library(tibble, quietly = TRUE, warn.conflicts = FALSE)
 library(purrr, quietly = TRUE, warn.conflicts = FALSE)
 library(stringr, quietly = TRUE, warn.conflicts = FALSE)
 library(readr, quietly = TRUE, warn.conflicts = FALSE)
 library(rlang, quietly = TRUE, warn.conflicts = FALSE)
+
+
+# variable checks --------------------------------------------------------------
+
+is_known <- function(x) {
+    !all(is.na(x))
+}
+
+
+check_slot_word <- function(x) {
+    is.character(x) && length(x) == 1 && is_known(x)
+}
+
+
+check_slot_number <- function(x) {
+    is.numeric(x) && length(x) == 1 && is_known(x)
+}
+
+
+# TODO: kontrola, že je platná cesta
+check_slot_path <- function(x) {
+    check_slot_word(x)
+}
+
+
+check_slot_character_vector <- function(x) {
+    is.character(x) && length(x) > 0 && is_known(x)
+}
+
+
+check_slot_positive_integer <- function(x) {
+    check_slot_number(x) && x > 0 && round(x) == x
+}
+
+
+check_slot_worker <- function(x) {
+    (check_slot_word(x) && x == "auto") || check_slot_positive_integer(x)
+}
+
+
+check_slot_positive_number <- function(x) {
+    check_slot_number(x) == 1 && x > 0
+}
+
+
+check_slot_nonnegative_number <- function(x) {
+    check_slot_number(x) && x >= 0
+}
+
+
+check_slot_quantile <- function(x) {
+    check_slot_number(x) && x >= 0 && x <= 1
+}
+
+
+check_slot_true_false <- function(x) {
+    is.logical(x) && length(x) == 1 && is_known(x)
+}
+
+
+check_slot_method <- function(x) {
+    check_slot_word(x) && x %in% c("continuous", "discontinuous")
+}
+
+
+check_slot_weight <- function(x) {
+    check_slot_word(x) && x %in% c("cost", "equal")
+}
+
+
+check_slot_profile_name <- function(x) {
+    check_slot_word(x) &&
+        stringr::str_length(x) > 0 &&
+        stringr::str_length(str_remove_all(x, "[A-Za-z0-9]")) == 0
+}
+
+
+check_slot_time_window <- function(x) {
+    # test formal structure
+    p1 <- tibble::is_tibble(x) &&
+        ncol(x) == 2 && nrow(x) >= 1 &&
+        all(c("from_date", "to_date") %in% names(x)) &&
+        is.character(x$from_date) && is.character(x$to_date)
+    if (!p1)
+        return(FALSE)
+    # test that contents are real dates
+    p2 <- try(purrr::map_int(x, ~any(is.na(as.Date(.)))) |> sum(),
+              silent = TRUE)
+    if (!identical(p2, 0L))
+        return(FALSE)
+    # test that from_date <= to_date
+    if (!all(x$from_date <= x$to_date))
+        return(FALSE)
+    # test for duplicities
+    nrow(x) == nrow(distinct(x))
+}
+
 
 
 # expected variables -----------------------------------------------------------
@@ -28,45 +126,46 @@ library(rlang, quietly = TRUE, warn.conflicts = FALSE)
 #   variables (except zero lenght mean any lenght)
 config_necessary_slots <- function() {
     list(# paths
-        RAW_DATA_DIR = character(1),
-        DATA_DIR = character(1),
-        OUTPUT_DIR = character(1),
-        LOG_DIR = character(1),
+        RAW_DATA_DIR = check_slot_path,  # character(1),
+        DATA_DIR = check_slot_path,  # character(1),
+        OUTPUT_DIR = check_slot_path,  # character(1),
+        LOG_DIR = check_slot_path,  # character(1),
         # parallel processing
-        NO_OF_WORKERS = "auto",
-        NO_OF_WORKERS_ACCIDENTS = "auto",
-        RAM_PER_CORE_GENERAL = double(1),
-        RAM_PER_CORE_ACCIDENTS = double(1),
+        NO_OF_WORKERS = check_slot_worker,  # "auto",
+        NO_OF_WORKERS_ACCIDENTS = check_slot_worker,  # "auto",
+        RAM_PER_CORE_GENERAL = check_slot_positive_number,  # double(1),
+        RAM_PER_CORE_ACCIDENTS = check_slot_positive_number,  # double(1),
         # map preparation
-        DISTRICT_BUFFER_SIZE = double(1),
-        LIXEL_SIZE = double(1),
-        LIXEL_MIN_DIST = double(1),
-        ACCIDENT_TO_ROAD_MAX_DISTANCE = double(1),
-        SUPPORTED_ROAD_CLASSES = character(0),
+        DISTRICT_BUFFER_SIZE = check_slot_positive_number,  # double(1),
+        LIXEL_SIZE = check_slot_positive_integer,  # double(1),
+        LIXEL_MIN_DIST = check_slot_positive_integer,  # double(1),
+        ACCIDENT_TO_ROAD_MAX_DISTANCE = check_slot_positive_number,  # double(1),
+        SUPPORTED_ROAD_CLASSES = check_slot_character_vector,  # character(0),
         # accident file masks
-        ACCIDENTS_FILE_NAME_PATTERN = character(1),
-        ACCIDENTS_GPS_FILE_NAME_PATTERN = character(1),
+        ACCIDENTS_FILE_NAME_PATTERN = check_slot_word,  # character(1),
+        ACCIDENTS_GPS_FILE_NAME_PATTERN = check_slot_word,  # character(1),
         # accident costs
-        UNIT_COSTS_DEAD = double(1),
-        UNIT_COSTS_SERIOUS_INJURY = double(1),
-        UNIT_COSTS_LIGHT_INJURY = double(1),
-        UNIT_COSTS_MATERIAL = double(1),
-        UNIT_COST_CONST = double(1),
+        UNIT_COSTS_DEAD = check_slot_nonnegative_number,  # double(1),
+        UNIT_COSTS_SERIOUS_INJURY = check_slot_nonnegative_number,  # double(1),
+        UNIT_COSTS_LIGHT_INJURY = check_slot_nonnegative_number,  # double(1),
+        UNIT_COSTS_MATERIAL = check_slot_nonnegative_number,  # double(1),
+        UNIT_COST_CONST = check_slot_nonnegative_number,  # double(1),
         # nkde
-        NKDE_WEIGHTS = character(1),
-        NKDE_BW = double(1),
-        NKDE_ADAPTIVE = logical(1),
-        NKDE_TRIM_BW = double(1),
-        NKDE_METHOD = character(1),
-        NKDE_AGG = double(1),
+        NKDE_WEIGHTS = check_slot_weight,  # character(1),
+        NKDE_BW = check_slot_positive_number,  # double(1),
+        NKDE_ADAPTIVE = check_slot_true_false,  # logical(1),
+        NKDE_TRIM_BW = check_slot_positive_number,  # double(1),
+        NKDE_METHOD = check_slot_method,  # character(1),
+        NKDE_AGG = check_slot_nonnegative_number,  # double(1),
         # cluster creation
-        CLUSTER_MIN_QUANTILE = double(1),
-        CLUSTER_ADDITIONAL_STEPS = double(1),
-        VISUAL_MIN_QUANTILE = double(1),
+        CLUSTER_MIN_QUANTILE = check_slot_quantile,  # double(1),
+        CLUSTER_ADDITIONAL_STEPS = check_slot_positive_integer,  # double(1),
+        VISUAL_MIN_QUANTILE = check_slot_quantile,  # double(1),
         # time windows
-        TIME_WINDOW = tibble::tibble(
-            from_date = as.Date(integer(0)),
-            to_date = as.Date(integer(0)))
+        TIME_WINDOW = check_slot_time_window
+        # tibble::tibble(
+        #     from_date = as.Date(integer(0)),
+        #     to_date = as.Date(integer(0)))
     )
 }
 
@@ -74,7 +173,7 @@ config_necessary_slots <- function() {
 config_supported_slots <- function() {
     list(
         # districts
-        DISTRICTS = character(0)
+        DISTRICTS = check_slot_character_vector  #  character(0)
     )
 }
 
@@ -83,7 +182,7 @@ config_supported_slots <- function() {
 # profile file, and their types
 # see help for config_necessary_slots()
 profile_necessary_slots <- function() {
-    list(PROFILE_NAME = character(1))
+    list(PROFILE_NAME = check_slot_profile_name)
 }
 
 
@@ -145,18 +244,13 @@ check_profile <- function(profile, file_name, necessary_slots, supported_slots) 
                                   collapse = ", "),
              call. = NA)
 
-    # check that present slots have correct type and length
-    f <- function(key) {
-        all(class(all_slots[[key]]) == class(profile[[key]])) &&
-            (length(all_slots[[key]]) == 0 ||
-                 all(length(all_slots[[key]]) == length(profile[[key]])))
-    }
-    correct_slots <- purrr::map_lgl(profile_names, f)
+    correct_slots <- purrr::map_lgl(profile_names,
+                                    ~all_slots[[.]](profile[[.]]))
     if (!all(correct_slots))
         stop("Variable(s) ",
              stringr::str_flatten(profile_names[!correct_slots],
                                   collapse = ", "),
-             " have either incorrect type or lenght.",
+             " have incorrect type, value, or length.",
              call. = NA)
 }
 
@@ -220,6 +314,20 @@ read_all_profiles <- function(folder) {
 }
 
 
+# profiles_to_tibble() converts list of profiles into a tibble
+profiles_to_tibble <- function(p) {
+    list_vars <- c("TIME_WINDOW", "DISTRICTS", "SUPPORTED_ROAD_CLASSES")
+    p <- p |>
+        purrr::map(as.list) |>
+        purrr::transpose()
+    list_idx <- which(names(p) %in% list_vars)
+    purrr::map_at(p, -list_idx, unlist) |>
+        tibble::as_tibble() |>
+        dplyr::select(PROFILE_NAME, everything())
+}
+
+
+
 # create_profiles() reads config and all profiles from path_to_source_configs
 # folder and writes it to path_to_configs RDS file
 #
@@ -254,9 +362,9 @@ create_profiles <- function(path_to_configs = path_to_configs(),
         source_files <- list.files(path_to_source_configs(),
                                    pattern = ".R", full.names = TRUE)
         if (is_behind(path_to_configs(), source_files)) {
-            logging::loginfo("config prep: configuration has changed---updating")
+            logging::loginfo("config prep: configuration is behind---updating")
             profiles <- read_all_profiles(path_to_source_configs) |>
-                purrr::map(as.list)
+                profiles_to_tibble()
             readr::write_rds(profiles, path_to_configs)
             logging::loginfo("config prep: profiles created")
         } else {
