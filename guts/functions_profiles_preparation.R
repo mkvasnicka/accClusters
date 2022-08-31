@@ -126,46 +126,43 @@ check_slot_time_window <- function(x) {
 #   variables (except zero lenght mean any lenght)
 config_necessary_slots <- function() {
     list(# paths
-        RAW_DATA_DIR = check_slot_path,  # character(1),
-        DATA_DIR = check_slot_path,  # character(1),
-        OUTPUT_DIR = check_slot_path,  # character(1),
-        LOG_DIR = check_slot_path,  # character(1),
+        RAW_DATA_DIR = check_slot_path,
+        DATA_DIR = check_slot_path,
+        OUTPUT_DIR = check_slot_path,
+        LOG_DIR = check_slot_path,
         # parallel processing
-        NO_OF_WORKERS = check_slot_worker,  # "auto",
-        NO_OF_WORKERS_ACCIDENTS = check_slot_worker,  # "auto",
-        RAM_PER_CORE_GENERAL = check_slot_positive_number,  # double(1),
-        RAM_PER_CORE_ACCIDENTS = check_slot_positive_number,  # double(1),
+        NO_OF_WORKERS = check_slot_worker,
+        NO_OF_WORKERS_ACCIDENTS = check_slot_worker,
+        RAM_PER_CORE_GENERAL = check_slot_positive_number,
+        RAM_PER_CORE_ACCIDENTS = check_slot_positive_number,
         # map preparation
-        DISTRICT_BUFFER_SIZE = check_slot_positive_number,  # double(1),
-        LIXEL_SIZE = check_slot_positive_integer,  # double(1),
-        LIXEL_MIN_DIST = check_slot_positive_integer,  # double(1),
-        ACCIDENT_TO_ROAD_MAX_DISTANCE = check_slot_positive_number,  # double(1),
-        SUPPORTED_ROAD_CLASSES = check_slot_character_vector,  # character(0),
+        DISTRICT_BUFFER_SIZE = check_slot_positive_number,
+        LIXEL_SIZE = check_slot_positive_integer,
+        LIXEL_MIN_DIST = check_slot_positive_integer,
+        ACCIDENT_TO_ROAD_MAX_DISTANCE = check_slot_positive_number,
+        SUPPORTED_ROAD_CLASSES = check_slot_character_vector,
         # accident file masks
-        ACCIDENTS_FILE_NAME_PATTERN = check_slot_word,  # character(1),
-        ACCIDENTS_GPS_FILE_NAME_PATTERN = check_slot_word,  # character(1),
+        ACCIDENTS_FILE_NAME_PATTERN = check_slot_word,
+        ACCIDENTS_GPS_FILE_NAME_PATTERN = check_slot_word,
         # accident costs
-        UNIT_COSTS_DEAD = check_slot_nonnegative_number,  # double(1),
-        UNIT_COSTS_SERIOUS_INJURY = check_slot_nonnegative_number,  # double(1),
-        UNIT_COSTS_LIGHT_INJURY = check_slot_nonnegative_number,  # double(1),
-        UNIT_COSTS_MATERIAL = check_slot_nonnegative_number,  # double(1),
-        UNIT_COST_CONST = check_slot_nonnegative_number,  # double(1),
+        UNIT_COST_DEAD = check_slot_nonnegative_number,
+        UNIT_COST_SERIOUS_INJURY = check_slot_nonnegative_number,
+        UNIT_COST_LIGHT_INJURY = check_slot_nonnegative_number,
+        UNIT_COST_MATERIAL = check_slot_nonnegative_number,
+        UNIT_COST_CONST = check_slot_nonnegative_number,
         # nkde
-        NKDE_WEIGHTS = check_slot_weight,  # character(1),
-        NKDE_BW = check_slot_positive_number,  # double(1),
-        NKDE_ADAPTIVE = check_slot_true_false,  # logical(1),
-        NKDE_TRIM_BW = check_slot_positive_number,  # double(1),
-        NKDE_METHOD = check_slot_method,  # character(1),
-        NKDE_AGG = check_slot_nonnegative_number,  # double(1),
+        NKDE_WEIGHTS = check_slot_weight,
+        NKDE_BW = check_slot_positive_number,
+        NKDE_ADAPTIVE = check_slot_true_false,
+        NKDE_TRIM_BW = check_slot_positive_number,
+        NKDE_METHOD = check_slot_method,
+        NKDE_AGG = check_slot_nonnegative_number,
         # cluster creation
-        CLUSTER_MIN_QUANTILE = check_slot_quantile,  # double(1),
-        CLUSTER_ADDITIONAL_STEPS = check_slot_positive_integer,  # double(1),
-        VISUAL_MIN_QUANTILE = check_slot_quantile,  # double(1),
+        CLUSTER_MIN_QUANTILE = check_slot_quantile,
+        CLUSTER_ADDITIONAL_STEPS = check_slot_positive_integer,
+        VISUAL_MIN_QUANTILE = check_slot_quantile,
         # time windows
         TIME_WINDOW = check_slot_time_window
-        # tibble::tibble(
-        #     from_date = as.Date(integer(0)),
-        #     to_date = as.Date(integer(0)))
     )
 }
 
@@ -193,8 +190,8 @@ profile_necessary_slots <- function() {
 profile_supported_slots <- function() {
     config_necessary_slots()[c("NKDE_WEIGHTS", "NKDE_BW", "NKDE_ADAPTIVE",
                                "NKDE_TRIM_BW", "NKDE_METHOD", "NKDE_AGG",
-                               "UNIT_COSTS_DEAD", "UNIT_COSTS_SERIOUS_INJURY",
-                               "UNIT_COSTS_LIGHT_INJURY", "UNIT_COSTS_MATERIAL",
+                               "UNIT_COST_DEAD", "UNIT_COST_SERIOUS_INJURY",
+                               "UNIT_COST_LIGHT_INJURY", "UNIT_COST_MATERIAL",
                                "UNIT_COST_CONST",
                                "CLUSTER_MIN_QUANTILE",
                                "CLUSTER_ADDITIONAL_STEPS",
@@ -321,9 +318,11 @@ profiles_to_tibble <- function(p) {
         purrr::map(as.list) |>
         purrr::transpose()
     list_idx <- which(names(p) %in% list_vars)
-    purrr::map_at(p, -list_idx, unlist) |>
+    p <- purrr::map_at(p, -list_idx, unlist) |>
         tibble::as_tibble() |>
         dplyr::select(PROFILE_NAME, everything())
+    p$TIME_WINDOW <- map(p$TIME_WINDOW, ~map_dfc(., as.Date))
+    p
 }
 
 
