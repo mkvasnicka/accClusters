@@ -9,11 +9,15 @@
 # Copyright(c) Michal Kvasnička
 # -------------------------------------
 
-require(sf)
-require(sfnetworks)
-require(spdep)
-require(dplyr)
+# load packages
+require(sf, quietly = TRUE, warn.conflicts = FALSE)
+require(sfnetworks, quietly = TRUE, warn.conflicts = FALSE)
+require(spdep, quietly = TRUE, warn.conflicts = FALSE)
+require(dplyr, quietly = TRUE, warn.conflicts = FALSE)
+
+# source functions
 source(file.path(RSCRIPTDIR, "functions_damage_cost.R"))
+
 
 
 # one district cluster tibble --------------------------------------------------
@@ -660,23 +664,32 @@ compute_clusters <- function(districts,
                              lixel_maps_dir,
                              accidents_dir,
                              cluster_dir,
-                             time_window,
-                             cluster_min_quantile, cluster_steps,
-                             visual_min_quantile,
-                             workers = NULL,
-                             other_files) {
+                             profiles
+                             # time_window,
+                             # cluster_min_quantile, cluster_steps,
+                             # visual_min_quantile
+                             ) {
     one_district <- function(densities_file, lixel_nb_file, accident_file,
                              output_file,
-                             cluster_min_quantile, cluster_steps,
+                             from_date, to_date,
+                             cluster_min_quantile,
+                             cluster_steps,
                              visual_min_quantile,
-                             from_date, to_date) {
+                             unit_cost_dead,
+                             unit_cost_serious_injury,
+                             unit_cost_light_injury,
+                             unit_cost_material,
+                             unit_cost_const) {
         start_logging(log_dir())
         logging::loginfo("clusters prep: creating %s", output_file)
         lixels <- readr::read_rds(densities_file)
         nb <- readr::read_rds(lixel_nb_file)
         accidents <- readr::read_rds(accident_file) |>
-            filter(accident_date >= from_date, accident_date <= to_date) |>
-            add_damage_cost()
+            dplyr::filter(accident_date >= from_date,
+                          accident_date <= to_date) |>
+            add_damage_cost(unit_cost_dead, unit_cost_serious_injury,
+                            unit_cost_light_injury, unit_cost_material,
+                            unit_cost_const)
         threshold <- quantile(lixels$density, cluster_min_quantile)
         visual_threshold <- quantile(lixels$density, visual_min_quantile)
 
@@ -713,31 +726,48 @@ compute_clusters <- function(districts,
         logging::loginfo("clusters prep: %s has been created", output_file)
     }
 
+    start_logging(log_dir())
     logging::loginfo("clusters prep: checking for updates")
     tryCatch({
         profile_name <- NULL
         if (exists("PROFILE_NAME"))
             profile_name <- PROFILE_NAME
 
-        workers <- get_number_of_workers(workers)
-
-        time_window <- handle_time_window(time_window)
-
-        districts <- purrr::map2(
-            time_window$from_date, time_window$to_date,
-            ~districts_behind(districts |>
-                                  mutate(from_date = .x, to_date = .y),
-                              target_fun = shiny_file_name,
-                              source_fun = list(lixel_nb_file_name,
-                                                accidents_file_name),
-                              target_folder = cluster_dir,
-                              source_folder = list(lixel_maps_dir,
-                                                   accidents_dir),
-                              other_files = other_files,
-                              from_date = .x, to_date = .y,
-                              profile_name = profile_name)
-        ) |>
-            dplyr::bind_rows()
+        districts <- districts |>
+            bind_cols(profiles |>
+                          dplyr::select(PROFILE_NAME, TIME_WINDOW,
+                                        CLUSTER_MIN_QUANTILE,
+                                        CLUSTER_ADDITIONAL_STEPS,
+                                        VISUAL_MIN_QUANTILE,
+                                        starts_with("UNIT_COST_")) |>
+                          tidyr::unnest(TIME_WINDOW) |>
+                          tidyr::nest(data = everything())) |>
+            tidyr::unnest(data)
+        districts <- districts |>
+            districts_behind(target_fun = shiny_file_name,
+                             source_fun = list(lixel_nb_file_name,
+                                               accidents_file_name),
+                             target_folder = cluster_dir,
+                             source_folder = list(lixel_maps_dir,
+                                                  accidents_dir),
+                             other_files = path_to_districts(),from_date = districts$from_date,
+                             to_date = districts$to_date,
+                             profile_name = districts$PROFILE_NAME)
+        # districts <- purrr::map2(
+        #     time_window$from_date, time_window$to_date,
+        #     ~districts_behind(districts |>
+        #                           mutate(from_date = .x, to_date = .y),
+        #                       target_fun = shiny_file_name,
+        #                       source_fun = list(lixel_nb_file_name,
+        #                                         accidents_file_name),
+        #                       target_folder = cluster_dir,
+        #                       source_folder = list(lixel_maps_dir,
+        #                                            accidents_dir),
+        #                       other_files = path_to_districts(),
+        #                       from_date = .x, to_date = .y,
+        #                       profile_name = profile_name)
+        # ) |>
+        #     dplyr::bind_rows()
         txt <- dplyr::if_else(nrow(districts) == 0,
                               "---skipping", " in parallel")
         logging::loginfo(
@@ -755,12 +785,19 @@ compute_clusters <- function(districts,
                                           to_date = districts$to_date,
                                           profile_name = profile_name),
             from_date = districts$from_date,
-            to_date = districts$to_date
+            to_date = districts$to_date,
+            cluster_min_quantile = districts$CLUSTER_MIN_QUANTILE,
+            cluster_steps = districts$CLUSTER_ADDITIONAL_STEPS,
+            visual_min_quantile = districts$VISUAL_MIN_QUANTILE,
+            unit_cost_dead = districts$UNIT_COST_DEAD,
+            unit_cost_serious_injury = districts$UNIT_COST_SERIOUS_INJURY,
+            unit_cost_light_injury = districts$UNIT_COST_LIGHT_INJURY,
+            unit_cost_material = districts$UNIT_COST_MATERIAL,
+            unit_cost_const = districts$UNIT_COST_CONST
         )
-        PWALK(tab, one_district, workers = workers,
-              cluster_min_quantile = cluster_min_quantile,
-              cluster_steps = cluster_steps,
-              visual_min_quantile = visual_min_quantile)
+        PWALK(tab, one_district,
+              workers = profiles$NO_OF_WORKERS[1],
+              ram_needed = profiles$RAM_PER_CORE_GENERAL[1])
         logging::loginfo("clusters prep: clusters have been updated")
     },
     error = function(e) {
