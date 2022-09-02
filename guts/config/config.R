@@ -89,12 +89,12 @@ ACCIDENTS_GPS_FILE_NAME_PATTERN <- "\\d{4}_databaze_GPS.csv"
 # damage costs -----------------------------------------------------------------
 
 # cost of various damages in mil. CZK: dead people, serious, and light injuries
-UNIT_COSTS_DEAD <- 12
-UNIT_COSTS_SERIOUS_INJURY <- UNIT_COSTS_DEAD / 4
-UNIT_COSTS_LIGHT_INJURY <- UNIT_COSTS_DEAD / 24
+UNIT_COST_DEAD <- 12
+UNIT_COST_SERIOUS_INJURY <- UNIT_COST_DEAD / 4
+UNIT_COST_LIGHT_INJURY <- UNIT_COST_DEAD / 24
 
 # material cost (in mil. CZK) is multiplied by this coefficient
-UNIT_COSTS_MATERIAL <- 1
+UNIT_COST_MATERIAL <- 1
 
 # the following coefficient (in mil. CZK) is added to each accidents' cost
 UNIT_COST_CONST <- 0
