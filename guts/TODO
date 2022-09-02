@@ -11,11 +11,14 @@ Tvorba klastrů
 Refactoring
 -----------
 
-- implementovat DISTRICTS v profilech
+- nachystat prepare_gis.R pro nové profily
 
-- co dělá process_command_line_arguments()?
-    - může být tam, co je?
-    - jak se budou předávat parametry? vlastně jen RSCRIPTDIR a CONFIGDIR
+- pročistit kód
+
+- vyhodit:
+    - process_command_line_arguments()
+    - unit_cost(s)()
+    - handle_time_widnow()
 
 - zafixovat adresářovou strukturu tak, aby stačilo zadat začátky cest
     - společný začátek cesty: DIR_ORIGIN
