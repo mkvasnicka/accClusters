@@ -73,28 +73,8 @@ write_to_shapefile <- function(tbl, folder, layer) {
 #   names longer than 8 letters and characters cannot include accented letters;
 #   therefore, attribute names are shortened and accents are removed; see
 #   write_to_shapefile()
-write_gis_files <- function(districts, time_window, gis_dir, shiny_dir) {
-    profile_name <- NULL
-    if (exists("PROFILE_NAME"))
-        profile_name <- PROFILE_NAME
-
-    time_window <- handle_time_window(time_window)
-
-    districts <- districts |> sf::st_drop_geometry()
-    tab <- purrr::map(seq_len(nrow(time_window)),
-                      ~(districts |>
-                            dplyr::mutate(from_date = time_window$from_date[.],
-                                          to_date = time_window$to_date[.]))) |>
-        dplyr::bind_rows()
-    tab <- tab |>
-        dplyr::mutate(shiny_filename = shiny_file_name(tab, folder = shiny_dir,
-                                                       profile_name = profile_name,
-                                                       from_date = from_date,
-                                                       to_date = to_date)) |>
-        dplyr::select(district_id, district_name, from_date, to_date,
-                      shiny_filename)
-
-    f <- function(row) {
+write_gis_files <- function(districts, gis_dir, shiny_dir, profiles) {
+    process_one_shiny_file <- function(row) {
         cls <- readr::read_rds(row$shiny_filename)
         row <- row |>
             dplyr::select(-c(shiny_filename)) |>
@@ -106,25 +86,54 @@ write_gis_files <- function(districts, time_window, gis_dir, shiny_dir) {
         list(lixels = lixels, accidents = accidents, clusters = clusters)
     }
 
-    if (is_behind(target = c(file.path(gis_dir, "clustered_accidents.dbf"),
-                             file.path(gis_dir, "clusters.dbf"),
-                             file.path(gis_dir, "high_densities.dbf")),
-                  source = tab$shiny_filename)) {
-        oo <- purrr::map(seq_len(nrow(tab)), ~f(tab[., ]))
-        lixels <- oo |> purrr::map("lixels") |>
-            dplyr::bind_rows() |>
-            dplyr::rename(lixel = lixel_id)
-        accidents <- oo |> purrr::map("accidents") |>
-            dplyr::bind_rows() |>
-            dplyr::rename(cost = accident_cost)
-        clusters <- oo |> purrr::map("clusters") |>
-            dplyr::bind_rows() |>
-            dplyr::rename(lenght = total_length,
-                          density = total_density,
-                          cpm = cost_per_meter)
+    start_logging(log_dir())
+    logging::loginfo("gis prep: checking for updates")
+    tryCatch({
+        districts <- districts |>
+            st_drop_geometry() |>
+            bind_cols(profiles |>
+                          dplyr::select(PROFILE_NAME, TIME_WINDOW) |>
+                          tidyr::unnest(TIME_WINDOW) |>
+                          tidyr::nest(data = everything())) |>
+            tidyr::unnest(data) |>
+            rename(profile_name = PROFILE_NAME)
+        tab <- districts |>
+            dplyr::mutate(shiny_filename = shiny_file_name(districts,
+                                                           folder = shiny_dir,
+                                                           profile_name = profile_name,
+                                                           from_date = from_date,
+                                                           to_date = to_date)) |>
+            dplyr::select(district_id, district_name, from_date, to_date,
+                          profile_name, shiny_filename)
 
-        write_to_shapefile(lixels, gis_dir, "high_densities")
-        write_to_shapefile(accidents, gis_dir, "clustered_accidents")
-        write_to_shapefile(clusters, gis_dir, "clusters")
-    }
+        if (is_behind(target = c(file.path(gis_dir, "clustered_accidents.dbf"),
+                                 file.path(gis_dir, "clusters.dbf"),
+                                 file.path(gis_dir, "high_densities.dbf")),
+                      source = tab$shiny_filename)) {
+            logging::loginfo("gis prep: gis files are behind; processing %i shiny files",
+                             nrow(tab))
+            oo <- purrr::map(seq_len(nrow(tab)), ~process_one_shiny_file(tab[., ]))
+            lixels <- oo |> purrr::map("lixels") |>
+                dplyr::bind_rows() |>
+                dplyr::rename(lixel = lixel_id)
+            accidents <- oo |> purrr::map("accidents") |>
+                dplyr::bind_rows() |>
+                dplyr::rename(cost = accident_cost)
+            clusters <- oo |> purrr::map("clusters") |>
+                dplyr::bind_rows() |>
+                dplyr::rename(lenght = total_length,
+                              density = total_density,
+                              cpm = cost_per_meter)
+
+            write_to_shapefile(lixels, gis_dir, "high_densities")
+            write_to_shapefile(accidents, gis_dir, "clustered_accidents")
+            write_to_shapefile(clusters, gis_dir, "clusters")
+            logging::loginfo("gis prep: gis files are created")
+        } else {
+            logging::loginfo("gis prep: everything is up-to-date---skipping")
+        }
+    },
+    error = function(e) {
+        logging::logerror("gis prep failed: %s", e)
+        stop("gis prep failed---stopping evaluation")})
 }

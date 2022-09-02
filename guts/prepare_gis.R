@@ -9,30 +9,29 @@
 # Copyright(c) Corporation Name
 # -------------------------------------
 
-# load necessary packages
-library(readr)
-
-
+# TEMP: remove
 # supply path to RSCRIPTDIR if it was not supplied outside
 if (!exists("RSCRIPTDIR")) RSCRIPTDIR <- "guts"
+# supply path to folder where user stores her config and profile
+if (!exists("DIR_ORIGIN")) DIR_ORIGIN <- "guts_data"
 
 
 # source necessary scripts
-source(file.path(RSCRIPTDIR, "guts_config.R"))
 source(file.path(RSCRIPTDIR, "functions_auxiliary.R"))
 source(file.path(RSCRIPTDIR, "functions_gis_preparation.R"))
 
 
 # process command-line parameters
-process_command_line_arguments(RSCRIPTDIR)
+# read user config/profiles
+profiles <- read_profiles()
 
 
 # read in districts
-districts <- readr::read_rds(path_to_districts())
+districts <- read_districts()
 
 
 # write GIS shape file; this doesn't update but it rewrites existing files
 write_gis_files(districts,
-                time_window = TIME_WINDOW,
                 gis_dir = gis_dir(),
-                shiny_dir = shiny_dir())
+                shiny_dir = shiny_dir(),
+                profiles)
