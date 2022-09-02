@@ -100,6 +100,15 @@ konfigurace
 
 ## Struktura vstupních dat {#kap:input-data}
 
+Adresářová struktura je pevná. Všechna data (vstupní, výstupní, mezivýpočty, konfigurace, logy) jsou umístěny v jednom adresáři. V\ tomto adresáři jsou následující podadresáře:
+
+- `config` ... adresář s\ konfigurací (`config.R`) a profily (`profile_XXX.R`)
+- `rawdata` ... adresář se vstupními daty
+- `data` ... adresář s\ mezivýpočty
+- `output` ... aresář s\ výslednými/výstupními daty
+- `log` ... adresář s\ logy
+
+
 Software **XYZ** vyžaduje tři datové vstupy:
 
 - mapový podklad o administrativním členění ČR,

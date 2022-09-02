@@ -358,6 +358,14 @@ create_profiles <- function(path_to_configs = path_to_configs(),
     start_logging(log_dir())
     tryCatch({
         logging::loginfo("config prep: checking for changes in configuration")
+        # check for config
+        cnf <- list.files(path_to_source_configs(),
+                          pattern = "config.R", full.names = TRUE)
+        if (length(cnf) != 1) {
+            logging::logerror("config prep: config.R is missing in %s",
+                              path_to_source_configs())
+            stop()
+        }
         source_files <- list.files(path_to_source_configs(),
                                    pattern = ".R", full.names = TRUE)
         if (is_behind(path_to_configs(), source_files)) {
