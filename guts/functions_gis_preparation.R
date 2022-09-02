@@ -79,7 +79,8 @@ write_gis_files <- function(districts, gis_dir, shiny_dir, profiles) {
         row <- row |>
             dplyr::select(-c(shiny_filename)) |>
             dplyr::rename(dst_id = district_id, dst_name = district_name,
-                          start = from_date, end = to_date)
+                          start = from_date, end = to_date,
+                          profile = profile_name)
         lixels <- dplyr::bind_cols(row, cls$lixels)
         accidents <- dplyr::bind_cols(row, cls$accidents)
         clusters <- dplyr::bind_cols(row, cls$cluster_statistics)

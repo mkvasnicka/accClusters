@@ -7,11 +7,12 @@ Tvorba klastrů
 - najít nějaké kritérium, jak stanovil kvantil a počet kroků rozšíření
     - PAI nefunguje ani na accident_cost, ani na densities
 
+- kontrola: klastry jsou stejné pro profil default a other -- to je divné
+
+
 
 Refactoring
 -----------
-
-- nachystat prepare_gis.R pro nové profily
 
 - pročistit kód
 
