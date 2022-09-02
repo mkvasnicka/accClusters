@@ -10,25 +10,6 @@
 # -------------------------------------
 
 
-# unit_cost_function() reads in config variables and returns them as a double
-# vector
-#
-# inputs:
-#   none
-#
-# value:
-#   named double vector of slots "dead", "serious_injury", "light_injury",
-#   "material_cost", and "const"; the last two should probably be 1 and zero
-#   respectively
-# unit_cost_function <- function() {
-#     c(dead = UNIT_COSTS_DEAD,
-#       serious_injury = UNIT_COSTS_SERIOUS_INJURY,
-#       light_injury = UNIT_COSTS_LIGHT_INJURY,
-#       material_cost = UNIT_COSTS_MATERIAL,
-#       const = UNIT_COST_CONST)
-# }
-
-
 # add_damage_cost(accidents) takes a tibble of accidents and adds a new column,
 # accident_cost
 #
