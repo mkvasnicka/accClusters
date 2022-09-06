@@ -568,14 +568,20 @@ PWALK <- function(.l, .f, workers = 1, ram_needed = NULL, ...) {
 #   one file; therefore, I have to start logging into the newest existing file;
 #   therefore, there must be a way to create a new log file
 create_log_file <- function(log_folder) {
-    dir.create(log_folder, showWarnings = FALSE, recursive = TRUE)
-    time <- as.character(Sys.time())
-    log_file <- file.path(
-        log_folder,
-        stringr::str_c(stringr::str_replace_all(time, "[\\s:]", "-"),".log")
+    tryCatch({
+        dir.create(log_folder, showWarnings = FALSE, recursive = TRUE)
+        time <- as.character(Sys.time())
+        log_file <- file.path(
+            log_folder,
+            stringr::str_c(stringr::str_replace_all(time, "[\\s:]", "-"),".log")
+        )
+        logging::addHandler(writeToFile, file = log_file)
+        logging::loginfo("log file created")
+    },
+    error = function(e) {
+        stop("creating new log file failed---stopping evaluation---see the log",
+             call. = NA)}
     )
-    logging::addHandler(writeToFile, file = log_file)
-    logging::loginfo("log file created")
 }
 
 
@@ -583,7 +589,7 @@ create_log_file <- function(log_folder) {
 # log_folder
 #
 # inputs:
-# - log_folder (character scalar) path to a folder where logs arestored
+# - log_folder (character scalar) path to a folder where logs are stored
 #
 # value:
 #   none; it starts logging into the newest .log file in log_folder
@@ -591,8 +597,8 @@ create_log_file <- function(log_folder) {
 # notes:
 # - for reason why it is done this way, see notes to create_log_file()
 start_logging <- function(log_folder) {
-    if (is.null(log_folder))
-        return(invisible(NULL))
+    # if (is.null(log_folder))
+    #     return(invisible(NULL))
     logging::basicConfig()
     log_file <- list.files(log_folder, pattern = "\\.log", full.names = TRUE) |>
         file.info() |>
