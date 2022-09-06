@@ -688,11 +688,11 @@ compute_clusters <- function(districts,
             add_clusters_to_lixels(cls) |>
             dplyr::filter(density >= visual_threshold | !is.na(cluster)) |>
             dplyr::select(lixel_id, density, cluster)
-        # accidents <- accidents |>
-        #     add_clusters_to_accidents(cls) |>
-        #     sf::st_drop_geometry() |>
-        #     dplyr::filter(!is.na(cluster)) |>
-        #     dplyr::select(accident_id, cluster, accident_cost)
+        accidents <- accidents |>
+            add_clusters_to_accidents(cls) |>
+            sf::st_drop_geometry() |>
+            dplyr::filter(!is.na(cluster)) |>
+            dplyr::select(accident_id, cluster, accident_cost)
         join_network <- function(geo) {
             geo |>
                 sfnetworks::as_sfnetwork(directed = FALSE) |>
@@ -707,20 +707,24 @@ compute_clusters <- function(districts,
             dplyr::summarise(geometry = join_network(geometry),
                              .groups = "drop") |>
             dplyr::left_join(clss, by = "cluster")
+        # crop all to true district boarder
         crop_to_district <- function(x, district) {
             x[sf::st_intersects(x, district, sparse = FALSE), ]
         }
+        lixels <- lixels |>
+            crop_to_district(geometry) |>
+            sf::st_transform(crs = WGS84)
+        cluster_statistics <- cluster_statistics |>
+            crop_to_district(geometry) |>
+            sf::st_transform(crs = WGS84)
+        accidents <- accidents |>
+            filter(cluster %in% unique(cluster_statistics$cluster))
+        # write to file
         write_dir_rds(
             list(
-                lixels = lixels |>
-                    crop_to_district(geometry) |>
-                    sf::st_transform(crs = WGS84),
-                # accidents = accidents |>
-                #     crop_to_district(geometry) |>
-                #     sf::st_transform(crs = WGS84),
-                cluster_statistics = cluster_statistics |>
-                    crop_to_district(geometry) |>
-                    sf::st_transform(crs = WGS84)
+                lixels = lixels,
+                accidents = accidents,
+                cluster_statistics = cluster_statistics
             ),
             file = output_file)
         logging::loginfo("clusters prep: %s has been created", output_file)
