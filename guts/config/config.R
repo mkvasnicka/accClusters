@@ -133,7 +133,7 @@ NKDE_METHOD <- "discontinuous"
 
 # to which distance in meters are the accidents aggregated---for a faster
 # computation
-NKDE_AGG = 1
+NKDE_AGG <- 1
 
 
 
@@ -167,4 +167,4 @@ TIME_WINDOW <- tibble::tribble(
 
 # if only some districts should be processed, set DISTRICTS to character vector
 # of their ids
-# DISTRICTS = c("CZ0642", "CZ0643")
+# DISTRICTS <- c("CZ0642", "CZ0643")

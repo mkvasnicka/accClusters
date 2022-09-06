@@ -2,7 +2,7 @@
 # Script:   prepare_maps.R
 # Author:   Michal Kvasnička
 # Purpose:
-# Inputs:   OSM map and districts
+# Inputs:   OSM map, districts, profiles, and log file.
 # Outputs:  files with various represetnations of OSM maps restricted to roads
 #           and to individual districts
 # Notes:
