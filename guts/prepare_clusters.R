@@ -35,9 +35,4 @@ compute_clusters(districts,
                  lixel_maps_dir = path_to_lixels_maps_dir(),
                  accidents_dir = path_to_accidents_dir(),
                  cluster_dir = shiny_dir(),
-                 profiles
-                 # time_window = TIME_WINDOW,
-                 # cluster_min_quantile = CLUSTER_MIN_QUANTILE,
-                 # cluster_steps = CLUSTER_ADDITIONAL_STEPS,
-                 # visual_min_quantile = VISUAL_MIN_QUANTILE
-                 )
+                 profiles)

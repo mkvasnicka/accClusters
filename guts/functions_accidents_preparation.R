@@ -14,13 +14,13 @@
 # https://r-spatial.github.io/sf/reference/st_nearest_feature.html
 
 # packages
-require(dplyr, quietly = TRUE, warn.conflicts = FALSE)
-require(purrr, quietly = TRUE, warn.conflicts = FALSE)
-require(tidyr, quietly = TRUE, warn.conflicts = FALSE)
-require(readr, quietly = TRUE, warn.conflicts = FALSE)
-require(stringr, quietly = TRUE, warn.conflicts = FALSE)
-require(lubridate, quietly = TRUE, warn.conflicts = FALSE)
-require(sf, quietly = TRUE, warn.conflicts = FALSE)
+library(dplyr, verbose = FALSE, warn.conflicts = FALSE)
+library(purrr, verbose = FALSE, warn.conflicts = FALSE)
+library(tidyr, verbose = FALSE, warn.conflicts = FALSE)
+library(readr, verbose = FALSE, warn.conflicts = FALSE)
+library(stringr, verbose = FALSE, warn.conflicts = FALSE)
+library(lubridate, verbose = FALSE, warn.conflicts = FALSE)
+library(sf, verbose = FALSE, warn.conflicts = FALSE)
 
 
 # projections
