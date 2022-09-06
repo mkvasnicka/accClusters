@@ -114,48 +114,81 @@ read_raw_gps_files <- function(path, skip) {
 # value:
 #    tibble
 read_raw_outcomes_files <- function(path, skip) {
-    # TODO: vlastní funkce! + není duplicita dále?
-    data_vozidla_type <-
-        readr::read_csv(path,
-                        skip = skip,
-                        col_types = cols(
-                            .default = col_integer(),
-                            p1 = col_character()
-                        )
-        ) |>
-        dplyr::distinct(p1, id_vozidla, p44)
-
     readr::read_csv(path,
                     skip = skip,
                     col_types = readr::cols(
                         .default = col_integer(),
                         p1 = col_character()
-                    )) |>
-        dplyr::filter(p59g == 1) |>
-        dplyr::left_join(., data_vozidla_type, by = c("p1", "id_vozidla") ) |>
-        dplyr::mutate(
-            type = dplyr::case_when(
-                p44 %in% c(0,1,2) ~ "motobike",
-                p44 == 13 ~ "bike",
-                p44 %in% c(3,4) ~ "car",
-                p44 %in% c(5,6,7) ~ "truck",
-                TRUE ~ "other"
-            ),
-            driver = ifelse(p59a == 1, "driver", "crew")
-        ) |>
-        dplyr::group_by(p1, type, driver) %>%
-        dplyr::summarise(
-            obs = n(),
-            .groups = "drop"
-        ) |>
-        tidyr::pivot_wider(
-            names_from = c(type, driver),
-            values_from = obs,
-            id_cols = p1,
-            names_sep = "_",
-            names_prefix = "casualties_",
-            values_fill = 0
-        )
+                    ))
+        # dplyr::filter(p59g == 1) |>
+        # dplyr::left_join(., data_vozidla_type, by = c("p1", "id_vozidla") ) |>
+        # dplyr::mutate(
+        #     type = dplyr::case_when(
+        #         p44 %in% c(0,1,2) ~ "motobike",
+        #         p44 == 13 ~ "bike",
+        #         p44 %in% c(3,4) ~ "car",
+        #         p44 %in% c(5,6,7) ~ "truck",
+        #         TRUE ~ "other"
+        #     ),
+        #     driver = ifelse(p59a == 1, "driver", "crew")
+        # ) |>
+        # dplyr::group_by(p1, type, driver) %>%
+        # dplyr::summarise(
+        #     obs = n(),
+        #     .groups = "drop"
+        # ) |>
+        # tidyr::pivot_wider(
+        #     names_from = c(type, driver),
+        #     values_from = obs,
+        #     id_cols = p1,
+        #     names_sep = "_",
+        #     names_prefix = "casualties_",
+        #     values_fill = 0
+        # )
+
+
+    # TODO: vlastní funkce! + není duplicita dále?
+    # data_vozidla_type <-
+    #     readr::read_csv(path,
+    #                     skip = skip,
+    #                     col_types = cols(
+    #                         .default = col_integer(),
+    #                         p1 = col_character()
+    #                     )
+    #     ) |>
+    #     dplyr::distinct(p1, id_vozidla, p44)
+
+    # readr::read_csv(path,
+    #                 skip = skip,
+    #                 col_types = readr::cols(
+    #                     .default = col_integer(),
+    #                     p1 = col_character()
+    #                 )) |>
+    #     dplyr::filter(p59g == 1) |>
+    #     dplyr::left_join(., data_vozidla_type, by = c("p1", "id_vozidla") ) |>
+    #     dplyr::mutate(
+    #         type = dplyr::case_when(
+    #             p44 %in% c(0,1,2) ~ "motobike",
+    #             p44 == 13 ~ "bike",
+    #             p44 %in% c(3,4) ~ "car",
+    #             p44 %in% c(5,6,7) ~ "truck",
+    #             TRUE ~ "other"
+    #         ),
+    #         driver = ifelse(p59a == 1, "driver", "crew")
+    #     ) |>
+    #     dplyr::group_by(p1, type, driver) %>%
+    #     dplyr::summarise(
+    #         obs = n(),
+    #         .groups = "drop"
+    #     ) |>
+    #     tidyr::pivot_wider(
+    #         names_from = c(type, driver),
+    #         values_from = obs,
+    #         id_cols = p1,
+    #         names_sep = "_",
+    #         names_prefix = "casualties_",
+    #         values_fill = 0
+    #     )
 }
 
 
@@ -168,27 +201,27 @@ read_raw_outcomes_files <- function(path, skip) {
 #
 # value:
 #    tibble
-read_raw_age_files <- function(path, skip) {
-    readr::read_csv(path,
-                    skip = 6,
-                    col_types = readr::cols(
-                        .default = col_integer(),
-                        p1 = col_character()
-                    )) |>
-        # the first vehicle only
-        dplyr::filter(id_vozidla == 1) |>
-        # data for drivers only
-        dplyr::filter(p59a == 1) |>
-        dplyr::mutate(
-            vek = ifelse(
-                p59d <= (year(today()) - 2000),
-                2000 + p59e,
-                1900 + p59e
-            ),
-            vek = vek - year(p2)
-        ) |>
-        dplyr::select(p1,driver_age = vek)
-}
+# read_raw_age_files <- function(path, skip) {
+#     readr::read_csv(path,
+#                     skip = 6,
+#                     col_types = readr::cols(
+#                         .default = col_integer(),
+#                         p1 = col_character()
+#                     )) |>
+#         # the first vehicle only
+#         dplyr::filter(id_vozidla == 1) |>
+#         # data for drivers only
+#         dplyr::filter(p59a == 1) |>
+#         dplyr::mutate(
+#             vek = ifelse(
+#                 p59d <= (year(today()) - 2000),
+#                 2000 + p59e,
+#                 1900 + p59e
+#             ),
+#             vek = vek - year(p2)
+#         ) |>
+#         dplyr::select(p1,driver_age = vek)
+# }
 
 
 # read_raw_pedestrians_files() reads pedestrians files
@@ -232,17 +265,25 @@ read_raw_vehicles_files <- function(path, skip) {
                         .default = col_integer(),
                         p1 = col_character()
                     )
-    ) |>
-        dplyr::mutate(
-            vehicle_bike = p44 == 13,
-            vehicle_motobike = p44 %in% c(0,1,2)
-        ) |>
-        dplyr::group_by(p1) |>
-        dplyr::summarise(
-            involved_bike = any(vehicle_bike),
-            involved_motobike = any(vehicle_motobike),
-            .groups = "drop"
-        )
+    )
+
+    # readr::read_csv(path,
+    #                 skip = skip,
+    #                 col_types = cols(
+    #                     .default = col_integer(),
+    #                     p1 = col_character()
+    #                 )
+    # ) |>
+    #     dplyr::mutate(
+    #         vehicle_bike = p44 == 13,
+    #         vehicle_motobike = p44 %in% c(0,1,2)
+    #     ) |>
+    #     dplyr::group_by(p1) |>
+    #     dplyr::summarise(
+    #         involved_bike = any(vehicle_bike),
+    #         involved_motobike = any(vehicle_motobike),
+    #         .groups = "drop"
+    #     )
 }
 
 
@@ -306,11 +347,11 @@ read_raw_accidents <- function(folder, profiles, skip = 6) {
                            read_raw_outcomes_files, skip = skip) |>
         dplyr::bind_rows()
 
-    age <- purrr::map(list.files(path = folder,
-                                 pattern = ACCIDENTS_FILE_NAME_PATTERN,
-                                 full.names = TRUE),
-                      read_raw_age_files, skip = skip) |>
-        dplyr::bind_rows()
+    # age <- purrr::map(list.files(path = folder,
+    #                              pattern = ACCIDENTS_FILE_NAME_PATTERN,
+    #                              full.names = TRUE),
+    #                   read_raw_age_files, skip = skip) |>
+    #     dplyr::bind_rows()
 
     pedestrians <- purrr::map(list.files(path = folder,
                                          pattern = ACCIDENTS_FILE_NAME_PATTERN,
@@ -324,35 +365,131 @@ read_raw_accidents <- function(folder, profiles, skip = 6) {
                            read_raw_vehicles_files, skip = skip) |>
         dplyr::bind_rows()
 
-    accidents <-
-        dplyr::left_join(accidents, gps, by = "p1") |>
-        dplyr::filter(!is.na(coord_x), !is.na(coord_y)) |>
-        dplyr::distinct()
+
+    # Data transformations
+    accidents <- gps |>
+        # Remove missing observations with missing coordinates
+        tidyr::drop_na(starts_with("coord")) |>
+        # Remove duplicities (keeps the first recrod)
+        dplyr::distinct(p1, .keep_all = TRUE) |>
+        # Join accidents data
+        dplyr::right_join(accidents, by = "p1") |>
+        # Remove unmatched coordinates and accidents without ID
+        tidyr::drop_na(p1, starts_with("coord")) |>
+        # Remove duplicities (keeps first record)
+        dplyr::distinct(p1, .keep_all = TRUE)
+
+    casualties <- outcomes |>
+        dplyr::left_join(vehicles, by = c("p1", "id_vozidla")) |>
+        dplyr::group_by(p1) |>
+        dplyr::filter(p59g == 1) |>
+        dplyr::mutate(
+            type = dplyr::case_when(
+                p44 %in% c(0,1,2) ~ "motobike",
+                p44 == 13 ~ "bike",
+                p44 %in% c(3,4) ~ "car",
+                p44 %in% c(5,6,7) ~ "truck",
+                TRUE ~ "other"
+            ),
+            driver = ifelse(p59a == 1,"driver","crew")
+        ) |>
+        dplyr::group_by(p1, type, driver) |>
+        dplyr::summarise(
+            obs = dplyr::n(),
+            .groups = "drop"
+        ) |>
+        tidyr::pivot_wider(
+            names_from = c(type,driver),
+            values_from = obs,
+            id_cols = p1,
+            names_sep = "_",
+            names_prefix = "casualties_",
+            values_fill = 0
+        )
+
+    # Year of birth of a driver from the first vehicle
+    birth <- outcomes |>
+        dplyr::filter(id_vozidla == 1) |>
+        dplyr::filter(p59a == 1) |>
+        mutate(
+            vek = ifelse(
+                p59d <= (
+                    lubridate::year(
+                        lubridate::today()
+                    )-2000),
+                2000 + p59d,
+                1900 + p59d
+            )
+        ) %>%
+        dplyr::select(p1, driver_birth = vek) |>
+        dplyr::distinct(p1, .keep_all = TRUE)
+
+    involved_vehicles <- vehicles |>
+        dplyr::mutate(
+            vehicle_bike = p44 == 13,
+            vehicle_motobike = p44 %in% c(0,1,2)
+        ) %>%
+        dplyr::group_by(p1) %>%
+        dplyr::summarise(
+            involved_bike = any(vehicle_bike),
+            involved_motobike = any(vehicle_motobike),
+            .groups = "drop"
+        )
+
+    # accidents <-
+    #     dplyr::left_join(accidents, gps, by = "p1") |>
+    #     dplyr::filter(!is.na(coord_x), !is.na(coord_y)) |>
+    #     dplyr::distinct()
 
     accidents <- list(
         accidents,
-        outcomes,
-        pedestrians,
-        vehicles,
-        age
+        casualties,
+        birth,
+        data_pedestrians,
+        involved_vehicles
     ) |>
-        reduce(left_join, by = "p1") |>
-        mutate(
-            across(where(is.logical), replace_na, FALSE),
-            across(starts_with("casualties"), replace_na, 0L),
-            driver_age = ifelse(p10 == 1, driver_age, NA)
+        purrr::reduce(
+            dplyr::left_join,
+            by = "p1"
+        ) |>
+        # Age of drivers who caused the accident
+        dplyr::mutate(
+            driver_age = ifelse(
+                p10 == 1,
+                lubridate::year(p2) - driver_birth,
+                NA
+            )
+        ) |>
+        dplyr::select(
+            -driver_birth
+        ) |>
+        dplyr::mutate(
+            dplyr::across(
+                where(is.logical),
+                tidyr::replace_na, FALSE
+            )
+        ) |>
+        dplyr::mutate(
+            dplyr::across(
+                tidyselect::starts_with("casualties"),
+                tidyr::replace_na, 0L
+            )
         ) |>
         sf::st_as_sf(coords = c("coord_x", "coord_y"),
                      crs = PLANARY_PROJECTION)
 
+    #return(accidents)
+
     accidents |>
         dplyr::mutate(
             accident_id = p1,
-            accident_date = as.Date(p2a),
+            accident_date = as.Date(p2),
             accident_dead = p13a,
             accident_serious_injury = p13b,
             accident_light_injury = p13c,
-            accident_material_cost = p14 / 100 * 1e6  # in mil. CZK
+            accident_material_cost = p14 / 100 * 1e6,  # in mil. CZK
+            # Stepan:
+            accident_datetime = p2
         ) |>
         dplyr::select(accident_id:accident_material_cost, everything())
 }
