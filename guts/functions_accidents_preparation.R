@@ -778,7 +778,8 @@ create_districts_accidents <- function(districts,
                                       target_folder = accident_dir,
                                       source_folder = lixel_dir,
                                       other_files = c(path_to_districts(),
-                                                      path_to_accidents))
+                                                      path_to_accidents,
+                                                      path_to_configs()))
         txt <- dplyr::if_else(nrow(districts) == 0, "---skipping", " in parallel")
         logging::loginfo(
             "district accidents prep: %d districts will be uppdated%s",
