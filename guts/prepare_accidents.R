@@ -35,9 +35,20 @@ create_accidents(path_to_all_accidents = path_to_raw_accidents(),
                  profiles = profiles)
 
 
-# crop the accidents to buffered districts and snap them to selected roads
+# crop the accidents to buffered districts and snap them to selected roads---for
+# density computation
 create_districts_accidents(districts,
                            path_to_accidents = path_to_raw_accidents(),
                            lixel_dir = path_to_lixels_maps_dir(),
                            accident_dir = path_to_accidents_dir(),
                            profiles = profiles)
+
+
+# crop the accidents to buffered districts and snap them to selected roads---for
+# shiny
+create_districts_accidents(districts,
+                           path_to_accidents = path_to_raw_accidents(),
+                           lixel_dir = path_to_lixels_maps_dir(),
+                           accident_dir = path_to_shiny_accidents_dir(),
+                           profiles = profiles,
+                           shiny = TRUE)

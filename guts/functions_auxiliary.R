@@ -131,6 +131,11 @@ output_dir <- function() {
     file.path(DIR_ORIGIN, "output")
 }
 
+# path to folder where accidents in individual districts for shiny are stored
+path_to_shiny_accidents_dir <- function() {
+    file.path(output_dir(), "accidents")
+}
+
 # path to folder where the final product used in shiny in stored
 shiny_dir <- function() {
     file.path(output_dir(), "shiny")

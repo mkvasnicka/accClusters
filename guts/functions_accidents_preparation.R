@@ -606,7 +606,6 @@ get_points_close_to_lines <- function(points, lines, dist = 100,
 # - dist (numeric scalar) ... a distance from lines (default is 100 m)
 # - all_points (logical scalar) ... if TRUE, the points outside the buffer are
 #   added, otherwise they are omitted (default)
-# - verbose (logical scalar) ... if TRUE, it shows the progress
 #
 # value:
 #   a sf of points; these points are snapped to the lines; only points
@@ -621,22 +620,17 @@ get_points_close_to_lines <- function(points, lines, dist = 100,
 #
 # TODO: rozmyslet si, jestli potřebuju držet body, které nejsou přilepené na silnice
 snap_points_to_lines <- function(points, lines, dist = 100,
-                                 all_points = FALSE, verbose = FALSE) {
-    inside <- get_points_close_to_lines(points, lines, dist = dist,
-                                        verbose = verbose)
+                                 all_points = FALSE) {
+    inside <- get_points_close_to_lines(points, lines, dist = dist)
     buff_points <- points[inside, ]
-    if (verbose) message("Finding nearest features...")
     nf <- sf::st_nearest_feature(buff_points, lines)
-    if (verbose) message("Finding nearest points...")
     np <- sf::st_nearest_points(buff_points, lines[nf, ], pairwise = TRUE)
     np <- sf::st_cast(np, "POINT")[c(FALSE, TRUE)]
-    if (verbose) message("Adding attributes...")
     out <- sf::st_drop_geometry(buff_points)
     out$lixel_id <- lines$lixel_id[nf]
     out$geometry <- np
     out <- st_as_sf(out)
     if (all_points) {
-        if (verbose) message("Adding points outside buffer...")
         out$valid <- TRUE
         outside <- points[!inside, ]
         outside$valid <- FALSE
@@ -662,27 +656,112 @@ snap_points_to_lines <- function(points, lines, dist = 100,
 #   stored
 # - accident_dir ... (character scalar) path to folder where the new accidents
 #   files should be stored
+# - shiny ... (logical scalar) whether the result is used for further
+#   computation of densities (FALSE, default), or for shiny output (TRUE)
 #
 # value:
 #   none; data are written to disk
+#
+# output:
+#   - if shiny = TRUE
+#       - accidents within the non-buffered districts are kept
+#       - all accidents within the buffer are kept with no regards to their
+#           distance to road system; variable denotes whether they are close to
+#           to roads
+#       - all variables are kept
+#       - accidents are projected to WGS-84
+#   - if shiny = FALSE
+#       - accident within the buffered districts are kept
+#       - only accidents close to roads are kept
+#       - only variables needed for density computations are kept
+#       - accidents are projected to PLANARY_PROJECTION
 #
 # notes:
 # - the accidents that are farther from roads than max_distance are removed
 # - remaining accident are snapped to roads, i.e., their position is changed
 #   such that they lie on a road---they are moved to their closest points on
 #   their closest line
+# create_districts_accidents <- function(districts,
+#                                        path_to_accidents,
+#                                        lixel_dir,
+#                                        accident_dir,
+#                                        profiles) {
+#     one_file <- function(input_file, output_file, accidents, max_distance) {
+#         start_logging(log_dir())
+#         logging::loginfo("district accidents prep: creating %s", output_file)
+#         lines <- readr::read_rds(input_file)
+#         snapped_points <- snap_points_to_lines(accidents, lines,
+#                                                dist = max_distance)
+#         write_dir_rds(snapped_points, output_file)
+#         logging::loginfo("district accidents prep: %s has been created",
+#                          output_file)
+#     }
+#
+#     start_logging(log_dir())
+#     logging::loginfo("district accidents prep: checking for uppdates")
+#
+#     tryCatch({
+#         accidents <- readr::read_rds(path_to_accidents)
+#         districts <- districts_behind(districts,
+#                                       target_fun = accidents_file_name,
+#                                       source_fun = lixel_file_name,
+#                                       target_folder = accident_dir,
+#                                       source_folder = lixel_dir,
+#                                       other_files = c(path_to_districts(),
+#                                                       path_to_accidents))
+#         txt <- dplyr::if_else(nrow(districts) == 0, "---skipping", " in parallel")
+#         logging::loginfo(
+#             "district accidents prep: %d districts will be uppdated%s",
+#             nrow(districts), txt)
+#         tab <- tibble::tibble(
+#             input_file = lixel_file_name(districts, lixel_dir),
+#             output_file = accidents_file_name(districts, accident_dir))
+#         PWALK(tab, one_file,
+#               workers = profiles$NO_OF_WORKERS_ACCIDENTS[[1]],
+#               ram_needed = profiles$RAM_PER_CORE_ACCIDENTS[[1]],
+#               accidents = accidents,
+#               max_distance = profiles$ACCIDENT_TO_ROAD_MAX_DISTANCE[[1]]
+#               )
+#         logging::loginfo(
+#             "district accidents prep: district accidents have been updated")
+#     },
+#     error = function(e) {
+#         logging::logerror("district accidents prep failed: %s", e)
+#         stop("district accidents prep failed---stopping evaluation")})
+# }
 create_districts_accidents <- function(districts,
                                        path_to_accidents,
                                        lixel_dir,
                                        accident_dir,
                                        profiles,
-                                       max_distance = profiles$ACCIDENT_TO_ROAD_MAX_DISTANCE[[1]]) {
-    one_file <- function(input_file, output_file, accidents) {
+                                       shiny = FALSE) {
+    one_file <- function(geometry,
+                         input_file,
+                         output_file,
+                         shiny,
+                         accidents,
+                         max_distance) {
         start_logging(log_dir())
         logging::loginfo("district accidents prep: creating %s", output_file)
         lines <- readr::read_rds(input_file)
+        accidents <- accidents[sf::st_intersects(accidents,
+                                                 geometry,
+                                                 sparse = FALSE), ]
         snapped_points <- snap_points_to_lines(accidents, lines,
-                                               dist = max_distance)
+                                               dist = max_distance,
+                                               all_points = shiny)
+        # if the output is not for shiny, only a subset of necessary variables
+        # is kept
+        if (!shiny)
+            snapped_points <- snapped_points |>
+            select(accident_id, accident_date, accident_dead,
+                   accident_serious_injury, accident_light_injury,
+                   accident_material_cost, lixel_id)
+        # if the output is for shiny, it must be re-projected to WGS84
+        snapped_points <- sf::st_transform(snapped_points,
+                                           crs = ifelse(shiny,
+                                                        WGS84,
+                                                        PLANARY_PROJECTION))
         write_dir_rds(snapped_points, output_file)
         logging::loginfo("district accidents prep: %s has been created",
                          output_file)
@@ -704,13 +783,24 @@ create_districts_accidents <- function(districts,
         logging::loginfo(
             "district accidents prep: %d districts will be uppdated%s",
             nrow(districts), txt)
-        tab <- tibble::tibble(
-            input_file = lixel_file_name(districts, lixel_dir),
-            output_file = accidents_file_name(districts, accident_dir))
+        # accidents are cropped to districts; if the output is not for shiny,
+        # districts must be buffered
+        if (!shiny)
+            districts <- sf::st_buffer(districts,
+                                       dist = profiles$DISTRICT_BUFFER_SIZE[[1]])
+        tab <- districts |>
+            dplyr::select() |>
+            dplyr::mutate(
+                input_file = lixel_file_name(districts, lixel_dir),
+                output_file = accidents_file_name(districts, accident_dir),
+                shiny = shiny
+            )
         PWALK(tab, one_file,
               workers = profiles$NO_OF_WORKERS_ACCIDENTS[[1]],
               ram_needed = profiles$RAM_PER_CORE_ACCIDENTS[[1]],
-              accidents = accidents)
+              accidents = accidents,
+              max_distance = profiles$ACCIDENT_TO_ROAD_MAX_DISTANCE[[1]]
+        )
         logging::loginfo(
             "district accidents prep: district accidents have been updated")
     },
