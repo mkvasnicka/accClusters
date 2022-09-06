@@ -10,13 +10,15 @@
 # -------------------------------------
 
 # load packages
-require(sf, quietly = TRUE, warn.conflicts = FALSE)
-require(sfnetworks, quietly = TRUE, warn.conflicts = FALSE)
-require(spdep, quietly = TRUE, warn.conflicts = FALSE)
-require(dplyr, quietly = TRUE, warn.conflicts = FALSE)
+library(sf, verbose = FALSE, warn.conflicts = FALSE)
+library(sfnetworks, verbose = FALSE, warn.conflicts = FALSE)
+library(spdep, verbose = FALSE, warn.conflicts = FALSE)
+library(dplyr, verbose = FALSE, warn.conflicts = FALSE)
 
-# source functions
-source(file.path(RSCRIPTDIR, "functions_damage_cost.R"))
+
+# projections
+PLANARY_PROJECTION <- 5514  # Křovák
+WGS84 <- 4326  # WGS84
 
 
 
@@ -635,21 +637,8 @@ optimize_cluster_parameters <- function(lixels, nb, accidents,
 #   lixelized roads in individual districts are stored
 # - accidents_dir ... (character scalar) path to folder where accidents snapped
 #   to roads in individual districts are stored
-# - time_window ... (either character scalar or tibble with two columns)
-#   - if time_window is character scalar, it is a path to TSV file where time
-#       window is stored; see help for read_time_window_file()
-#   - if time_window is tibble, it must have two columns (from_date and to_date)
-#       which includes Dates or character vectors in YYYY-MM-DD format
-#       convertible to Dates
-# - cluster_min_quantile ... (numeric scalar in (0, 1)) threshold for lixels to
-#   constitute clusters in step 1, see notes
-# - cluster_steps ... (non-negative integer scalar) how many lixels are
-#   recursively added to clusters
-# - visual_min_quantile ... (numeric scalar in (0, 1)) threshold for lixel
-#   density for lixels that will be stored in lixel table
-# - workers ... (NULL or integer scalar) number of cores used in parallel
-# - other_files ... (character vector) paths to other files that can determine
-#   whether existing files are up-to-date
+# - cluster_dir  # TODO: doplnit nápovědu
+# - profiles  # TODO: doplnit nápovědu
 #
 # value:
 #   none; data are written to disk
@@ -664,12 +653,11 @@ compute_clusters <- function(districts,
                              lixel_maps_dir,
                              accidents_dir,
                              cluster_dir,
-                             profiles
-                             # time_window,
-                             # cluster_min_quantile, cluster_steps,
-                             # visual_min_quantile
-                             ) {
-    one_district <- function(densities_file, lixel_nb_file, accident_file,
+                             profiles) {
+    one_district <- function(geometry,
+                             densities_file,
+                             lixel_nb_file,
+                             accident_file,
                              output_file,
                              from_date, to_date,
                              cluster_min_quantile,
@@ -700,11 +688,11 @@ compute_clusters <- function(districts,
             add_clusters_to_lixels(cls) |>
             dplyr::filter(density >= visual_threshold | !is.na(cluster)) |>
             dplyr::select(lixel_id, density, cluster)
-        accidents <- accidents |>
-            add_clusters_to_accidents(cls) |>
-            sf::st_drop_geometry() |>
-            dplyr::filter(!is.na(cluster)) |>
-            dplyr::select(accident_id, cluster, accident_cost)
+        # accidents <- accidents |>
+        #     add_clusters_to_accidents(cls) |>
+        #     sf::st_drop_geometry() |>
+        #     dplyr::filter(!is.na(cluster)) |>
+        #     dplyr::select(accident_id, cluster, accident_cost)
         join_network <- function(geo) {
             geo |>
                 sfnetworks::as_sfnetwork(directed = FALSE) |>
@@ -719,9 +707,21 @@ compute_clusters <- function(districts,
             dplyr::summarise(geometry = join_network(geometry),
                              .groups = "drop") |>
             dplyr::left_join(clss, by = "cluster")
+        crop_to_district <- function(x, district) {
+            x[sf::st_intersects(x, district, sparse = FALSE), ]
+        }
         write_dir_rds(
-            list(lixels = lixels, accidents = accidents,
-                 cluster_statistics = cluster_statistics),
+            list(
+                lixels = lixels |>
+                    crop_to_district(geometry) |>
+                    sf::st_transform(crs = WGS84),
+                # accidents = accidents |>
+                #     crop_to_district(geometry) |>
+                #     sf::st_transform(crs = WGS84),
+                cluster_statistics = cluster_statistics |>
+                    crop_to_district(geometry) |>
+                    sf::st_transform(crs = WGS84)
+            ),
             file = output_file)
         logging::loginfo("clusters prep: %s has been created", output_file)
     }
@@ -773,28 +773,30 @@ compute_clusters <- function(districts,
         logging::loginfo(
             "clusters prep: %d districts x times will be uppdated%s",
             nrow(districts), txt)
-        tab <- tibble::tibble(
-            densities_file = densities_file_name(districts, densities_dir,
-                                                 from_date = districts$from_date,
-                                                 to_date = districts$to_date,
-                                                 profile_name = profile_name),
-            lixel_nb_file = lixel_nb_file_name(districts, lixel_maps_dir),
-            accident_file = accidents_file_name(districts, accidents_dir),
-            output_file = shiny_file_name(districts, cluster_dir,
-                                          from_date = districts$from_date,
-                                          to_date = districts$to_date,
-                                          profile_name = districts$PROFILE_NAME),
-            from_date = districts$from_date,
-            to_date = districts$to_date,
-            cluster_min_quantile = districts$CLUSTER_MIN_QUANTILE,
-            cluster_steps = districts$CLUSTER_ADDITIONAL_STEPS,
-            visual_min_quantile = districts$VISUAL_MIN_QUANTILE,
-            unit_cost_dead = districts$UNIT_COST_DEAD,
-            unit_cost_serious_injury = districts$UNIT_COST_SERIOUS_INJURY,
-            unit_cost_light_injury = districts$UNIT_COST_LIGHT_INJURY,
-            unit_cost_material = districts$UNIT_COST_MATERIAL,
-            unit_cost_const = districts$UNIT_COST_CONST
-        )
+        tab <- districts |>
+            dplyr::select() |>
+            dplyr::mutate(
+                densities_file = densities_file_name(districts, densities_dir,
+                                                     from_date = districts$from_date,
+                                                     to_date = districts$to_date,
+                                                     profile_name = profile_name),
+                lixel_nb_file = lixel_nb_file_name(districts, lixel_maps_dir),
+                accident_file = accidents_file_name(districts, accidents_dir),
+                output_file = shiny_file_name(districts, cluster_dir,
+                                              from_date = districts$from_date,
+                                              to_date = districts$to_date,
+                                              profile_name = districts$PROFILE_NAME),
+                from_date = districts$from_date,
+                to_date = districts$to_date,
+                cluster_min_quantile = districts$CLUSTER_MIN_QUANTILE,
+                cluster_steps = districts$CLUSTER_ADDITIONAL_STEPS,
+                visual_min_quantile = districts$VISUAL_MIN_QUANTILE,
+                unit_cost_dead = districts$UNIT_COST_DEAD,
+                unit_cost_serious_injury = districts$UNIT_COST_SERIOUS_INJURY,
+                unit_cost_light_injury = districts$UNIT_COST_LIGHT_INJURY,
+                unit_cost_material = districts$UNIT_COST_MATERIAL,
+                unit_cost_const = districts$UNIT_COST_CONST
+            )
         PWALK(tab, one_district,
               workers = profiles$NO_OF_WORKERS[1],
               ram_needed = profiles$RAM_PER_CORE_GENERAL[1])

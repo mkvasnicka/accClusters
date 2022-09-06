@@ -14,9 +14,6 @@ require(spNetwork, quietly = TRUE, warn.conflicts = FALSE)
 require(readr, quietly = TRUE, warn.conflicts = FALSE)
 require(tibble, quietly = TRUE, warn.conflicts = FALSE)
 
-# necessary functions
-source(file.path(RSCRIPTDIR, "functions_damage_cost.R"))
-
 
 
 # density computation ----------------------------------------------------------

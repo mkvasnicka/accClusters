@@ -490,7 +490,7 @@ read_raw_accidents <- function(folder, profiles) {
     accidents |>
         dplyr::mutate(
             accident_date = as.Date(p2),
-            accident_material_cost = p14 / 100 * 1e6  # in mil. CZK
+            accident_material_cost = p14 * 100 / 1e6  # in mil. CZK
         ) |>
         dplyr::rename(
             accident_id = p1,
