@@ -83,6 +83,14 @@ ACCIDENTS_FILE_NAME_PATTERN <- "\\d{4}_databaze_nehody.csv"
 # regex for major gps file of accident data
 ACCIDENTS_GPS_FILE_NAME_PATTERN <- "\\d{4}_databaze_GPS.csv"
 
+# regex for outcomes file of accident data
+ACCIDENTS_OUTCOMES_FILE_NAME_PATTERN <- "\\d{4}_databaze_nasledky.csv"
+
+# regex for pedestrians file of accident data
+ACCIDENTS_PEDESTRIANS_FILE_NAME_PATTERN <- "\\d{4}_databaze_chodci.csv"
+
+# regex for vehicles file of accident data
+ACCIDENTS_VEHICLES_FILE_NAME_PATTERN <- "\\d{4}_databaze_vozidla.csv"
 
 
 

@@ -144,6 +144,9 @@ config_necessary_slots <- function() {
         # accident file masks
         ACCIDENTS_FILE_NAME_PATTERN = check_slot_word,
         ACCIDENTS_GPS_FILE_NAME_PATTERN = check_slot_word,
+        ACCIDENTS_OUTCOMES_FILE_NAME_PATTERN = check_slot_word,
+        ACCIDENTS_PEDESTRIANS_FILE_NAME_PATTERN = check_slot_word,
+        ACCIDENTS_VEHICLES_FILE_NAME_PATTERN = check_slot_word,
         # accident costs
         UNIT_COST_DEAD = check_slot_nonnegative_number,
         UNIT_COST_SERIOUS_INJURY = check_slot_nonnegative_number,

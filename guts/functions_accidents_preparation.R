@@ -341,10 +341,12 @@ read_raw_accidents <- function(folder, profiles, skip = 6) {
     ) |>
         dplyr::bind_rows()
 
-    outcomes <- purrr::map(list.files(path = folder,
-                                      pattern = ACCIDENTS_FILE_NAME_PATTERN,
-                                      full.names = TRUE),
-                           read_raw_outcomes_files, skip = skip) |>
+    outcomes <- purrr::map(
+        list.files(path = folder,
+                   pattern = profiles$ACCIDENTS_OUTCOMES_FILE_NAME_PATTERN[[1]],
+                   full.names = TRUE),
+        read_raw_outcomes_files, skip = skip
+    ) |>
         dplyr::bind_rows()
 
     # age <- purrr::map(list.files(path = folder,
@@ -353,16 +355,20 @@ read_raw_accidents <- function(folder, profiles, skip = 6) {
     #                   read_raw_age_files, skip = skip) |>
     #     dplyr::bind_rows()
 
-    pedestrians <- purrr::map(list.files(path = folder,
-                                         pattern = ACCIDENTS_FILE_NAME_PATTERN,
-                                         full.names = TRUE),
-                              read_raw_pedestrians_files, skip = skip) |>
+    pedestrians <- purrr::map(
+        list.files(path = folder,
+                   pattern = profiles$ACCIDENTS_PEDESTRIANS_FILE_NAME_PATTERN[[1]],
+                   full.names = TRUE),
+        read_raw_pedestrians_files, skip = skip
+    ) |>
         dplyr::bind_rows()
 
-    vehicles <- purrr::map(list.files(path = folder,
-                                      pattern = ACCIDENTS_FILE_NAME_PATTERN,
-                                      full.names = TRUE),
-                           read_raw_vehicles_files, skip = skip) |>
+    vehicles <- purrr::map(
+        list.files(path = folder,
+                   pattern = profiles$ACCIDENTS_VEHICLES_FILE_NAME_PATTERN[[1]],
+                   full.names = TRUE),
+        read_raw_vehicles_files, skip = skip
+    ) |>
         dplyr::bind_rows()
 
 
