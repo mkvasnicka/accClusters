@@ -451,7 +451,7 @@ read_raw_accidents <- function(folder, profiles, skip = 6) {
         accidents,
         casualties,
         birth,
-        data_pedestrians,
+        pedestrians,
         involved_vehicles
     ) |>
         purrr::reduce(
@@ -484,20 +484,32 @@ read_raw_accidents <- function(folder, profiles, skip = 6) {
         sf::st_as_sf(coords = c("coord_x", "coord_y"),
                      crs = PLANARY_PROJECTION)
 
-    #return(accidents)
-
     accidents |>
         dplyr::mutate(
-            accident_id = p1,
             accident_date = as.Date(p2),
+            accident_material_cost = p14 / 100 * 1e6  # in mil. CZK
+        ) |>
+        dplyr::rename(
+            accident_id = p1,
             accident_dead = p13a,
             accident_serious_injury = p13b,
             accident_light_injury = p13c,
-            accident_material_cost = p14 / 100 * 1e6,  # in mil. CZK
             # Stepan:
-            accident_datetime = p2
+            accident_datetime = p2,
+            accident_type = p6,
+            accident_obstacle_type = p8,
+            accident_fault = p10,
+            accident_alcohol = p11,
+            accident_cause = p12
         ) |>
-        dplyr::select(accident_id:accident_material_cost, everything())
+        dplyr::select(
+          -p14
+        ) |>
+        dplyr::select(
+            accident_id,
+            accident_date,
+            everything()
+            )
 }
 
 
