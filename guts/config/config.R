@@ -92,6 +92,9 @@ ACCIDENTS_PEDESTRIANS_FILE_NAME_PATTERN <- "\\d{4}_databaze_chodci.csv"
 # regex for vehicles file of accident data
 ACCIDENTS_VEHICLES_FILE_NAME_PATTERN <- "\\d{4}_databaze_vozidla.csv"
 
+# how many first rows should be skipped in each CSV file
+ACCIDENTS_FILES_SKIP <- 6L
+
 
 
 # damage costs -----------------------------------------------------------------

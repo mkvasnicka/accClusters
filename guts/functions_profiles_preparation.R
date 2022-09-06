@@ -147,6 +147,7 @@ config_necessary_slots <- function() {
         ACCIDENTS_OUTCOMES_FILE_NAME_PATTERN = check_slot_word,
         ACCIDENTS_PEDESTRIANS_FILE_NAME_PATTERN = check_slot_word,
         ACCIDENTS_VEHICLES_FILE_NAME_PATTERN = check_slot_word,
+        ACCIDENTS_FILES_SKIP = check_slot_positive_integer,
         # accident costs
         UNIT_COST_DEAD = check_slot_nonnegative_number,
         UNIT_COST_SERIOUS_INJURY = check_slot_nonnegative_number,

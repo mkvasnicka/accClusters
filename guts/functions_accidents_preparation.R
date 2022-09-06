@@ -321,14 +321,14 @@ read_raw_vehicles_files <- function(path, skip) {
 # - the CSVs can be extracted from XLS by prepare_raw_accidents.sh script
 #
 # TODO: standardizovat názvy polí nehodách
-read_raw_accidents <- function(folder, profiles, skip = 6) {
+read_raw_accidents <- function(folder, profiles) {
 
     accidents <- purrr::map(
         list.files(path = folder,
                    pattern = profiles$ACCIDENTS_FILE_NAME_PATTERN[[1]],
                    full.names = TRUE),
         read_raw_accidents_files,
-        skip = skip
+        skip = profiles$ACCIDENTS_FILES_SKIP[[1]]
     ) |>
         dplyr::bind_rows()
 
@@ -337,7 +337,7 @@ read_raw_accidents <- function(folder, profiles, skip = 6) {
                    pattern = profiles$ACCIDENTS_GPS_FILE_NAME_PATTERN[[1]],
                    full.names = TRUE),
         read_raw_gps_files,
-        skip = skip
+        skip = profiles$ACCIDENTS_FILES_SKIP[[1]]
     ) |>
         dplyr::bind_rows()
 
@@ -345,7 +345,8 @@ read_raw_accidents <- function(folder, profiles, skip = 6) {
         list.files(path = folder,
                    pattern = profiles$ACCIDENTS_OUTCOMES_FILE_NAME_PATTERN[[1]],
                    full.names = TRUE),
-        read_raw_outcomes_files, skip = skip
+        read_raw_outcomes_files,
+        skip = profiles$ACCIDENTS_FILES_SKIP[[1]]
     ) |>
         dplyr::bind_rows()
 
@@ -359,7 +360,8 @@ read_raw_accidents <- function(folder, profiles, skip = 6) {
         list.files(path = folder,
                    pattern = profiles$ACCIDENTS_PEDESTRIANS_FILE_NAME_PATTERN[[1]],
                    full.names = TRUE),
-        read_raw_pedestrians_files, skip = skip
+        read_raw_pedestrians_files,
+        skip = profiles$ACCIDENTS_FILES_SKIP[[1]]
     ) |>
         dplyr::bind_rows()
 
@@ -367,7 +369,8 @@ read_raw_accidents <- function(folder, profiles, skip = 6) {
         list.files(path = folder,
                    pattern = profiles$ACCIDENTS_VEHICLES_FILE_NAME_PATTERN[[1]],
                    full.names = TRUE),
-        read_raw_vehicles_files, skip = skip
+        read_raw_vehicles_files,
+        skip = profiles$ACCIDENTS_FILES_SKIP[[1]]
     ) |>
         dplyr::bind_rows()
 
