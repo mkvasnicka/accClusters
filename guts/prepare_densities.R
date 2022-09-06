@@ -36,13 +36,4 @@ compute_densities(districts,
                   sample_dir = path_to_lixels_maps_dir(),  # LIXEL_MAPS_DIR,
                   accidents_dir = path_to_accidents_dir(),  # ACCIDENTS_DIR,
                   density_dir = path_to_densities_dir(),  # DENSITIES_DIR,
-                  profiles = profiles
-                  # time_window = TIME_WINDOW,
-                  # weights = NKDE_WEIGHTS,
-                  # bw = NKDE_BW,
-                  # adaptive = NKDE_ADAPTIVE,
-                  # trim_bw = NKDE_TRIM_BW,
-                  # method = NKDE_METHOD,
-                  # agg = NKDE_AGG,
-                  # workers = NO_OF_WORKERS
-                  )
+                  profiles = profiles)
