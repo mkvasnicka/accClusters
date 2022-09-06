@@ -1,8 +1,8 @@
 # -------------------------------------
-# Script:   districts_preparation_functions.R
+# Script:   functions_districts_preparation.R
 # Author:   Michal Kvasnička
-# Purpose:  This script defines functions to read in polygons of individual
-#           districts in the Czech Republic. Implicitly "okresy".
+# Purpose:  This script defines functions for reading and writing polygons
+#           of individual districts in the Czech Republic. Implicitly "okresy".
 # Inputs:   none
 # Outputs:  functions
 # Notes:
@@ -11,9 +11,9 @@
 # -------------------------------------
 
 # packages
-require(dplyr, quietly = TRUE, warn.conflicts = FALSE)
-require(glue, quietly = TRUE, warn.conflicts = FALSE)
-require(sf, quietly = TRUE, warn.conflicts = FALSE)
+library(dplyr, verbose = FALSE, warn.conflicts = FALSE)
+library(glue, verbose = FALSE, warn.conflicts = FALSE)
+library(sf, verbose = FALSE, warn.conflicts = FALSE)
 
 
 # projections

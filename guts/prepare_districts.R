@@ -1,10 +1,10 @@
 # -------------------------------------
-# Script:   prepare_maps.R
+# Script:   prepare_districts.R
 # Author:   Michal Kvasnička
 # Purpose:  This script creates/updates districts (okresy now). It reads them
-#           from ARCCR maps and tranforms to Křovák CRS. These polygons are used
-#           to crop roads to districts.
-# Inputs:   ARCCR maps of political districts in the Czech Republic.
+#           from a shape file(s) and transforms them to Křovák CRS.
+# Inputs:   A shape file of political districts in the Czech Republic, profiles,
+#           and log file.
 # Outputs:  sf tibble districts (saved on disk)
 # Notes:
 #

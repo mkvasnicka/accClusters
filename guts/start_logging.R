@@ -1,9 +1,10 @@
 # -------------------------------------
 # Script:   start_logging.R
 # Author:   Michal Kvasnička
-# Purpose:
-# Inputs:
-# Outputs:
+# Purpose:  This script create a new log file which is used by the following
+#           scripts for logging.
+# Inputs:   none
+# Outputs:  it creates the log file.
 # Notes:
 #
 # Copyright(c) Michal Kvasnička

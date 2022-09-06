@@ -1,7 +1,8 @@
 # -------------------------------------
-# Script:   functions_profiles.R
+# Script:   functions_profiles_preparation.R
 # Author:   Michal Kvasnička
-# Purpose:
+# Purpose:  This scripts defines various functions used for config/profile
+#           reading, checking, and storing.
 # Inputs:   none
 # Outputs:  functions
 # Notes:
@@ -9,11 +10,11 @@
 # Copyright(c) Michal Kvasnička
 # -------------------------------------
 
-library(tibble, quietly = TRUE, warn.conflicts = FALSE)
-library(purrr, quietly = TRUE, warn.conflicts = FALSE)
-library(stringr, quietly = TRUE, warn.conflicts = FALSE)
-library(readr, quietly = TRUE, warn.conflicts = FALSE)
-library(rlang, quietly = TRUE, warn.conflicts = FALSE)
+library(tibble, verbose = FALSE, warn.conflicts = FALSE)
+library(purrr, verbose = FALSE, warn.conflicts = FALSE)
+library(stringr, verbose = FALSE, warn.conflicts = FALSE)
+library(readr, verbose = FALSE, warn.conflicts = FALSE)
+library(rlang, verbose = FALSE, warn.conflicts = FALSE)
 
 
 # variable checks --------------------------------------------------------------
