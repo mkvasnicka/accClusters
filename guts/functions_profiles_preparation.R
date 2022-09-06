@@ -18,79 +18,83 @@ library(rlang, quietly = TRUE, warn.conflicts = FALSE)
 
 # variable checks --------------------------------------------------------------
 
+# These functions are used to define/check that variables supplied by the user
+# in config.R/profiles have (in principle) valid values.
+
+# all slots in vector are known
 is_known <- function(x) {
     !all(is.na(x))
 }
 
-
+# is known character scalar
 check_slot_word <- function(x) {
     is.character(x) && length(x) == 1 && is_known(x)
 }
 
-
+# is known numeric scalar
 check_slot_number <- function(x) {
     is.numeric(x) && length(x) == 1 && is_known(x)
 }
 
-
+# is valid path
 # TODO: kontrola, že je platná cesta
 check_slot_path <- function(x) {
     check_slot_word(x)
 }
 
-
+# is not-empty known character vector
 check_slot_character_vector <- function(x) {
     is.character(x) && length(x) > 0 && is_known(x)
 }
 
-
+# is known positive integer scalar
 check_slot_positive_integer <- function(x) {
     check_slot_number(x) && x > 0 && round(x) == x
 }
 
-
-check_slot_worker <- function(x) {
-    (check_slot_word(x) && x == "auto") || check_slot_positive_integer(x)
-}
-
-
+# is known postive numeric scalar
 check_slot_positive_number <- function(x) {
     check_slot_number(x) == 1 && x > 0
 }
 
-
+# is known non-negative numeric scalar
 check_slot_nonnegative_number <- function(x) {
     check_slot_number(x) && x >= 0
 }
 
-
+# is known numeric scalar in interval [0, 1]
 check_slot_quantile <- function(x) {
     check_slot_number(x) && x >= 0 && x <= 1
 }
 
-
+# is known logical scalar
 check_slot_true_false <- function(x) {
     is.logical(x) && length(x) == 1 && is_known(x)
 }
 
+# number of workers: either "autor" or known positive integer
+check_slot_worker <- function(x) {
+    (check_slot_word(x) && x == "auto") || check_slot_positive_integer(x)
+}
 
+# is valid NKDE method: "continuous" or "discontinuous"
 check_slot_method <- function(x) {
     check_slot_word(x) && x %in% c("continuous", "discontinuous")
 }
 
-
+# is valid NKDE weight constant: "cost" or "equal"
 check_slot_weight <- function(x) {
     check_slot_word(x) && x %in% c("cost", "equal")
 }
 
-
+# is valid profile name
 check_slot_profile_name <- function(x) {
     check_slot_word(x) &&
         stringr::str_length(x) > 0 &&
         stringr::str_length(str_remove_all(x, "[A-Za-z0-9]")) == 0
 }
 
-
+# is valid time window tibble
 check_slot_time_window <- function(x) {
     # test formal structure
     p1 <- tibble::is_tibble(x) &&
@@ -116,14 +120,15 @@ check_slot_time_window <- function(x) {
 # expected variables -----------------------------------------------------------
 
 # config_necessary_slots() returns list of all variables that must be present in
-# a config file and their types; no other variables may be present
+# a config file and their types; only variables defined by
+# config_necessary_slots() and config_supported_slots() may be present
 #
 # inputs:
 #   none
 #
 # value:
-#   named list; names are name of variables, define classes and lenghts of the
-#   variables (except zero lenght mean any lenght)
+#   named list; names are name of variables, values are functions used to check
+#   its value validity
 config_necessary_slots <- function() {
     list(# paths
         RAW_DATA_DIR = check_slot_path,
@@ -171,6 +176,16 @@ config_necessary_slots <- function() {
 }
 
 
+# config_supported_slots() returns list of all variables that may be present in
+# a config file and their types; only variables defined by
+# config_necessary_slots() and config_supported_slots() may be present
+#
+# inputs:
+#   none
+#
+# value:
+#   named list; names are name of variables, values are functions used to check
+#   its value validity
 config_supported_slots <- function() {
     list(
         # districts
@@ -179,17 +194,20 @@ config_supported_slots <- function() {
 }
 
 
-# profile_necessary_slots() returns names of all variables that must be in a
-# profile file, and their types
+# profile_necessary_slots() returns list of all variables that must be present
+# in a profile file and their types; only variables defined by
+# profile_necessary_slots() and profile_supported_slots() may be present
+#
 # see help for config_necessary_slots()
 profile_necessary_slots <- function() {
     list(PROFILE_NAME = check_slot_profile_name)
 }
 
 
-# profile_supported_slots() returns names of all variables that may be in a
-# profile file, and their types, other than those returned by
-# profile_necessary_slots()
+# profile_supported_slots() returns list of all variables that may be present in
+# a profile file and their types; only variables defined by
+# profile_necessary_slots() and profile_supported_slots() may be present
+#
 # see help for config_necessary_slots()
 profile_supported_slots <- function() {
     config_necessary_slots()[c("NKDE_WEIGHTS", "NKDE_BW", "NKDE_ADAPTIVE",
@@ -297,7 +315,8 @@ read_profile <- function(config, profile) {
 # value: list of environments; each environment is one profile
 read_all_profiles <- function(folder) {
     config <- read_config(file.path(folder, "config.R"))
-    profiles <- list.files(folder, pattern = "profile.*\\.R", full.names = TRUE)
+    profiles <- list.files(folder, pattern = "profile_.*\\.R",
+                           full.names = TRUE)
     profiles <- purrr::map(profiles, ~read_profile(config, .))
     if (length(profiles) > 0) {
         profile_names <- profiles |> purrr::map_chr("PROFILE_NAME")
