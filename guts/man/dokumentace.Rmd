@@ -83,7 +83,7 @@ Tato kapitola popisuje, jaké hardwarové a softwarové vybavení je potřeba, j
 
 Výpočty jsou poměrně hardwarově náročné. Proto se předpokládá následující konfigurace hardwaru a softwaru:
 
-- procesor třídy i5 nebo vyšší, minimálně 8\ jader (větší počet jader je výhodou),
+- minimálně procesor třídy i5 (vyšší je lepší), minimálně 8\ jader (větší počet jader je výhodou),
 - minimálně 32\ GB operační paměti (více jader vyžaduje více operační paměti),
 - operační systém **TODO**,
 - **TODO**
@@ -100,51 +100,51 @@ konfigurace
 
 ## Struktura vstupních dat {#kap:input-data}
 
-Adresářová struktura je pevná. Všechna data (vstupní, výstupní, mezivýpočty, konfigurace, logy) jsou umístěny v jednom adresáři. V\ tomto adresáři jsou následující podadresáře:
+Adresářová struktura je pevná. Všechna data (vstupní, výstupní, mezivýpočty, konfigurace, logy) jsou umístěny v jednom adresáři (`DIRORIGIN`). V\ tomto adresáři jsou následující podadresáře:
 
 - `config` ... adresář s\ konfigurací (`config.R`) a profily (`profile_XXX.R`)
 - `rawdata` ... adresář se vstupními daty
 - `data` ... adresář s\ mezivýpočty
-- `output` ... aresář s\ výslednými/výstupními daty
+- `output` ... adresář s\ výslednými/výstupními daty
 - `log` ... adresář s\ logy
 
 
 Software **XYZ** vyžaduje tři datové vstupy:
 
-- mapový podklad o administrativním členění ČR,
+- mapový podklad o administrativním členění ČR -- používají se data ČÚZK,
 - mapový podklad silniční sítě\ -- používá se OpenStreetMap (`czech-republic-latest.osm.pbf`) a
-- popis jednotlivých dopravních nehod ve formátu CSV.
-
-Všechna tato vstupní data je třeba umístit do následujících adresářů:
-
-- administrativní členění: `RAW_DATA_DIR/acrcr/arccr_4_1.gdb/`,
-- silniční síť OSM: `RAW_DATA_DIR/osm/czech-republic-latest.osm.pbf` a
-- nehody: `RAW_DATA_DIR/accidents/`,
-
-kde cestu k\ těmto adresářům můžete nastavit v\ konfiguračním souboru pomocí proměnné `RAW_DATA_DIR`. Pokud ji nenastavíte, použije se implicitní cesta `DIR_ORIGIN/rawdata`, kde `DIR_ORIGIN` je společná počáteční cesta ke všem datům systému **XYZ**.
+- data k\ jednotlivým dopravním nehodám ve formátu CSV.
 
 
-### ARC ČR: Administrativní členění ČR
+### Administrativní členění ČR
 
-Mapový podklad pro administrativní členění připravuje firma ARCDATA Praha (https://www.arcdata.cz/). Systém **XYZ** využívá verzi ARC\ ČR\ 4.1, která je k\ dispozici ke stažení zdarma na adrese https://www.arcdata.cz/produkty/geograficka-data/arccr-4-0.
+Jako mapový podklad pro administrativní členění se používají data ČÚZK.
 
-Stáhněte soubor `ArcČR_4_1.ppkx`, rozzipujte jej (v\ závislosti na operačním systému může vyžadovat změnu koncovky jména souboru na `.zip`), přesuňte podadresář `arccr_4_1/p20/arcčr_4_1.gdb` do adresáře `RAW_DATA_DIR/acrcr` a přejmenujte adresář na `arccr_4_1.gdb` (tj.\ odstraňte háček nad "č").
+Mapový podklad je k\ dispozici na Geoportalu ČUZK. Jedná se o\ Soubor správních hranic a hranic katastrálních území ČR.
 
-Tento soubor je vhodné změnit vždy, když se změní hranice okresů ČR. Po aktualizace mapy okresů je třeba aktualizovat všechna data, viz oddíl\  \ref{sec:aktutalizace-dat}.
+- zdroj: https://geoportal.cuzk.cz/(S(uufahw3bishqszcklzne0nex))/Default.aspx?mode=TextMeta&side=dSady_hranice10&metadataID=CZ-CUZK-SH-V&mapid=5&head_tab=sekce-02-gp&menu=2521
+- přímý odkaz: https://geoportal.cuzk.cz/zakazky/SPH/SPH_SHP_JTSK.zip
+
+Stažený soubor rozzipujte a kompletní obsah adresáře `JTSK` překopírujte od adrsáře `DIRORIGIN/rawdata/cuzk`.
+
+Mapový podklad administrativního členění ČR je nutné aktualizovat vždy, když se změní hranice okresů ČR. Po aktualizace mapy okresů je třeba aktualizovat všechna data, viz oddíl\ \ref{sec:aktutalizace-dat}.
 
 
-### OpenStreetMap
+### Silniční síť ČR
 
-Silniční síť OpenStreetMaps musí být zabalena do jednoho souboru typu `.osm.pbf`. Předpokládá se využití mapového podkladu sbaleného firmou GEOFABRIC (https://www.geofabrik.de/), který obsahuje nejnovější podobu silniční sítě v\ ČR.
+Jako mapový podklad pro silniční síť se používají data OpenStreetMaps ve formátu jednoho souboru typu `.osm.pbf`. Předpokládá se využití mapového podkladu sbaleného firmou GEOFABRIC (https://www.geofabrik.de/), který obsahuje nejnovější podobu silniční sítě v\ ČR.
 
-Soubor najdete ke stažení na adrese https://download.geofabrik.de/europe/czech-republic.html; stahujte první odkaz (https://download.geofabrik.de/europe/czech-republic-latest.osm.pbf, "suitable for Osmium, Osmosis, imposm, osm2pgsql, mkgmap, and others".) Soubor vložte do adresáře `RAW_DATA_DIR/osm`.
+- zdroj: https://download.geofabrik.de/europe/czech-republic.html; stahujte první odkaz
+- přímý odkaz: https://download.geofabrik.de/europe/czech-republic-latest.osm.pbf, "suitable for Osmium, Osmosis, imposm, osm2pgsql, mkgmap, and others"
 
-Předpokládá se, že silniční síť je v\ systému **XYZ** třeba akutalizovat pouze jednou za několik let. Po aktualizace mapy silniční sítě je třeba aktualizovat všechna data, viz oddíl\  \ref{sec:aktutalizace-dat}.
+Soubor vložte do adresáře `DIRORIGIN/rawdata/osm`.
+
+Mapu silniční sítě je v\ systému třeba jednou za několik let akutalizovat. Po aktualizace mapy silniční sítě je třeba aktualizovat všechna data, viz oddíl\  \ref{sec:aktutalizace-dat}.
 
 
 ### Data o nehodách
 
-Data o\ nehodách je třeba umístit do adresáře `RAW_DATA_DIR/accidents` ve formátu CSV. Data pro každý rok se skládají ze souborů
+Zdrojem dat o\ nehodách je PČR. Předpokládá se, že data pro každý rok se skládají z\ pěti souborů typu CSV:
 
 - `####_databaze_nehody.csv`,
 - `####_databaze_GPS.csv`,
@@ -154,6 +154,111 @@ Data o\ nehodách je třeba umístit do adresáře `RAW_DATA_DIR/accidents` ve f
 
 kde `####` představuje daný rok (např.\ 2021).
 
+Data o\ nehodách je třeba umístit do adresáře `DIRORIGIN/rawdata/accidents` ve formátu CSV.
+
+
+
+## Konfigurace systému
+
+Přípravu dat pro vizualizaci míst s\ vysokou nehodovostí je možné do jisté míry nastavit. K\ tomu slouží především soubor `DIRORIGIN/config/config.R`. Jedná se o\ R\ skript, který musí dodržet platná syntaktická pravidla jazyka\ R. V\ nejjednodušším případě stačí modifikovat hodnoty proměnných, které skript definuje. Je ovšem také možné používat platné výrazy a dokonce vytvářet vlastní proměnné. Tyto proměnné je však nutné na konci skriptu smazat (mohou tedy sloužit pouze pro zpřehlednění konfigurace).
+
+Ve skriptu `config.R` platí následující pravidla:
+
+- vše od znaku křížek (`#`) do konce řádku je komentář
+- hodnota se do proměnné přiřazuje pomocí znaku šipka (`<-`), složeného ze znaků menší (`<`) a pomlčka (`-`)
+- skript může obsahovat pouze níže uvedené proměnné
+- tyto proměnné musejí mít přiřazenou platnou hodnotu
+
+
+### Vlastní konfigurace (config.R)
+
+Skript `config.R` může obsahovat následující proměnné, rozdělené do několik sekcí:
+
+
+#### Nastavení paralelních výpočtů
+Většina přípravy dat probíhá paralelně na větším počtu jader. V\ této sekci se nastavuje, kolik jader může být využito. Jsou zde dvě možnosti: Buď uživatel nastaví počet jader sám, nebo dovolí systému, aby počet jader sám odhadl. V\ prvním případě uživatel nastaví proměnné `NO_OF_WORKERS` a `NO_OF_WORKERS_ACCIDENTS` na počet jader, který se má použít, ve druhém nechá obě proměnné nastavené na `"auto"` a zároveň nastaví proměnné `RAM_PER_CORE_GENERAL` a `RAM_PER_CORE_ACCIDENTS` na počet GB paměti RAM, který musí být dostupný na výpočet na jedno jádro. V\ současné době jsou tyto proměnné nastavené na konzervativní úrovni 3 a 10\ GB respektive. Při zvětšení objemu zpracovávaných dat však může být nezbytné tyto proměnné zvětšit.
+
+
+#### Příprava mapových podkladů
+U\ vlastních mapových podkladů je třeba nastavit čtyři parametry.
+
+1. Všechny výpočty probíhají po jednotlivých okresech. Aby nedocházelo ke zkreslením na hranicích okresu, je po dobu výpočtu třeba zahrnout i\ silnice nehody, které leží nedaleko za hranicí okresu (na konci výpočtu budou údaje ležící za hranicí okresu opět odříznuty). Proměnná `DISTRICT_BUFFER_SIZE` určuje o\ kolik metrů se má pro potřeby výpočtu posunout hranice okresu. Hodnota této proměnné musí být dostatečně větší než hodnota proměnných `NKDE_BW` (a `NKDE_TRIM_BW`, pokud je  hodnota `NKDE_ADAPTIVE` nastavena na `TRUE`).
+
+2. Pro účely výpočtů se silniční síť rozdělí do krátkých, relativně homogenních úseků (lixelů). Tyto lixely musejí být tak krátké, aby byly v\ rámci silniční sítě velmi podobně dlouhé; zároveň však platí, že čím jsou kratší, tím je jich více a výpočet běží pomaleji a vyžaduje vyšší zdroje. Současné nastavení je proto při současném stavu zdrojů a kvalitě mapových podkladů zřejmě optimální. Uživatel je však může změnit pomocí dvou proměnných: Proměnná `LIXEL_SIZE` nastavuje typickou délku lixelu v\ metrech (doporučené nastavení je 5\ metrů). Proměnná `LIXEL_MIN_DIST` určuje minimální délku lixelu v\ metrech; kratší lixely budou připojeny k\ sousednímu lixelu.
+
+3. OpenStreetMaps obsahují cesty mnoha typů, z\ nichž mnohé nejsou určeny pro motorová vozidla. Při práci s\ mapovými podklady se tyto typy cest ignorují. Proměnná `SUPPORTED_ROAD_CLASSES` obsahuje výčet všech typů cest, které se mají použít. V\ současné době je ve skriptu výčet všech typů cest, které OpenStreetMaps nyní používají, s\ tím, že nevhodné typy jsou odstraněny pomocí komentářů.
+
+4. Některé nehody mohou být zaměřeny velmi nepřesně\ -- daleko od silniční sítě. V\ takovém případě se při výpočtu rizikových míst ignorují. Proměnná `ACCIDENT_TO_ROAD_MAX_DISTANCE` určuje maximální vzdálenost od silniční sítě v\ metrech, při které jsou nehody použitý při hledání rizikových oblastí.
+
+
+#### Váhy nehod
+Všechny nehody si nejsou rovny\ -- některé jsou závažnější než jiné. Při výpočtu rizikových míst se proto různé nehody váží. Hodnota nehody je rovna 
+
+$$d \times D + s \times S + l \times L + m \times M + c,$$
+
+kde $D$\ je počet lidí, kteří při nehodě zahynuli, $S$\ je počet vážně zraněných, $L$\ je počet lehce zraněných a $M$\ je hodnota materiální školdy v\ milionech\ Kč. Uživatel může zadat konstanty $d$, $s$, $l$, $m$ a $c$, které $d$, $s$ a $l$ určují hodnotu statistického života, hodnotu vážného a lehkého zranění respektive. Přirozené hodnoty $m=1$ a $c=0$.
+
+Tyto koeficienty je možné nastavit pomocí proměnných `UNIT_COST_DEAD` ($d$),
+`UNIT_COST_SERIOUS_INJURY` ($s$), `UNIT_COST_LIGHT_INJURY` ($l$), `UNIT_COST_MATERIAL` ($m$) a `UNIT_COST_CONST` ($c$).
+
+Hodnota nehod se při výpočtu rizikových oblastí používá pouze v\ případě, kdy je proměnná `NKDE_WEIGHTS` nastavena na hodnotu `"cost"`, viz dále.
+
+
+#### Parametry výpočtu hustot
+
+`NKDE_WEIGHTS` <- "cost" "equal"
+
+NKDE bandwidth in meters\
+`NKDE_BW` <- 300
+
+whether adaptive bandwidth is used---either TRUE or FALSE; TRUE may produce
+slightly more precise results but the computation would be much slower\
+`NKDE_ADAPTIVE` <- FALSE
+
+maximum bandwidth tried when NKDE_ADAPTIVE is TRUE---in meters\
+`NKDE_TRIM_BW` <- 600
+
+NKDE method---either "continuous" or "discontinuous"; "discontinuous" is less
+precise but much faster\
+`NKDE_METHOD` <- "discontinuous"
+
+to which distance in meters are the accidents aggregated---for a faster
+computation\
+`NKDE_AGG` <- 1
+
+
+##### Parametry pro hledání klastrů
+Mechanismus hledání klastrů je poměrně jednoduchý. Nejdříve se najdou všechny souvislé lixely s\ hustotou pravděpodobnosti vyšší než zadaný práh\ $h$. Tak vzniknou prvotní klastry. Následně se tyto klastry rozšíří na všechny strany o\ $v$\ lixelů. V\ posledním kroku spojí ty klastry, které mají vzájemný průnik.
+
+Práh\ $h$ je stanoven dynamicky jako určitý vysoký kvantil. Tento kvantil je určen proměnnou `CLUSTER_MIN_QUANTILE`, která musí nabývat hodnotu z\ intervalu $[0,1]$, typicky však velmi blízkou jedné. Počet dodatečných lixelů\ $v$ je určen proměnnou `CLUSTER_ADDITIONAL_STEPS` (minimální hodnota je\ 1).
+
+Do interaktivní aplikace jsou exportovány i\ lixely, které mají vysokou hodnotu pravděpodobnosti nehody. Minimální kvantil lixelů, které jsou takto exportovány, určuje proměnná `VISUAL_MIN_QUANTILE`. Tato proměnná musí mít vždy menší hodnotu než `CLUSTER_MIN_QUANTILE`.
+
+
+#### Časová okna
+
+from- and to-dates when densities and clusters are computed
+format: YYYY-MM-DD\
+TIME_WINDOW <- tibble::tribble(
+    ~from_date,    ~to_date,
+    "2019-01-01",  "2021-12-31",
+    "2018-01-01",  "2020-12-31"
+)
+
+
+
+#### Vybrané okresy
+Pokud z\ nějakého důvodu hledat rizikové oblasti ve všech okresech, je možné vypočet spustit pouze pro vybrané okresy. Nepovinná proměnná `DISTRICTS` v\ takovém případě vyjmenuje CZ\ NUT3 vybraných okresů.
+
+Pokud mají výpočty proběhnout pro všechny okresy, pak proměnná `DISTRICTS` nesmí být v\ konfiguračním souboru vytvořena.
+
+
+### Profily
+
+
+### Zpracovaná konfigurace a profily
+
+Software pro přípravu dat nejdříve načte konfiguraci a všechny profily, zkontroluje je a uloží do souboru `profiles.rds`. Tento soubor proto vymažte pouze v\ případě, kdy je třeba zajistit kompletní přepočítání konfigurace a profilů, např.\ v\ případě, kdy byl některý profil smazán.
 
 
 
@@ -168,6 +273,10 @@ kde `####` představuje daný rok (např.\ 2021).
 ## Spuštění systému {#sec:aktutalizace-dat}
 
 
+
+## Aktualizace dat
+
+pro změně vstupních dat a konfigurace/profilů -- ala Makefile
 
 
 
