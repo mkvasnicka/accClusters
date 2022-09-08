@@ -328,7 +328,7 @@ read_raw_accidents <- function(folder, profiles) {
                    pattern = accidents_file_name_pattern(),
                    full.names = TRUE),
         read_raw_accidents_files,
-        skip = profiles$ACCIDENTS_FILES_SKIP[[1]]
+        skip = 0
     ) |>
         dplyr::bind_rows()
 
@@ -337,7 +337,7 @@ read_raw_accidents <- function(folder, profiles) {
                    pattern = accidents_gps_name_pattern(),
                    full.names = TRUE),
         read_raw_gps_files,
-        skip = profiles$ACCIDENTS_FILES_SKIP[[1]]
+        skip = 0
     ) |>
         dplyr::bind_rows()
 
@@ -346,7 +346,7 @@ read_raw_accidents <- function(folder, profiles) {
                    pattern = accidents_outcomes_name_pattern(),
                    full.names = TRUE),
         read_raw_outcomes_files,
-        skip = profiles$ACCIDENTS_FILES_SKIP[[1]]
+        skip = 0
     ) |>
         dplyr::bind_rows()
 
@@ -355,7 +355,7 @@ read_raw_accidents <- function(folder, profiles) {
                    pattern = accidents_pedestrians_name_pattern(),
                    full.names = TRUE),
         read_raw_pedestrians_files,
-        skip = profiles$ACCIDENTS_FILES_SKIP[[1]]
+        skip = 0
     ) |>
         dplyr::bind_rows()
 
@@ -364,7 +364,7 @@ read_raw_accidents <- function(folder, profiles) {
                    pattern = accidents_vehicles_name_pattern(),
                    full.names = TRUE),
         read_raw_vehicles_files,
-        skip = profiles$ACCIDENTS_FILES_SKIP[[1]]
+        skip = 0
     ) |>
         dplyr::bind_rows()
 
