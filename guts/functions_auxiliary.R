@@ -270,6 +270,38 @@ shiny_file_name <- function(districts, folder = NULL, ...) {
 
 
 
+# accidents files regexes ------------------------------------------------------
+
+# regex for major accident-data file
+accidents_file_name_pattern <- function() {
+    "\\d{4}_databaze_nehody.csv"
+}
+
+# regex for major gps file of accident data
+accidents_gps_name_pattern <- function() {
+    "\\d{4}_databaze_GPS.csv"
+}
+
+# regex for outcomes file of accident data
+accidents_outcomes_name_pattern <- function() {
+    "\\d{4}_databaze_nasledky.csv"
+}
+
+# regex for pedestrians file of accident data
+accidents_pedestrians_name_pattern <- function() {
+    "\\d{4}_databaze_chodci.csv"
+}
+
+# regex for vehicles file of accident data
+accidents_vehicles_name_pattern <- function() {
+    "\\d{4}_databaze_vozidla.csv"
+}
+
+# how many first rows should be skipped in each CSV file
+ACCIDENTS_FILES_SKIP <- 6L
+
+
+
 # reading/writing files --------------------------------------------------------
 
 # create_dir_for_file(file) recursively creates folders needed to save file

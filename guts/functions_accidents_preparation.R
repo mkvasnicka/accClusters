@@ -325,7 +325,7 @@ read_raw_accidents <- function(folder, profiles) {
 
     accidents <- purrr::map(
         list.files(path = folder,
-                   pattern = profiles$ACCIDENTS_FILE_NAME_PATTERN[[1]],
+                   pattern = accidents_file_name_pattern(),
                    full.names = TRUE),
         read_raw_accidents_files,
         skip = profiles$ACCIDENTS_FILES_SKIP[[1]]
@@ -334,7 +334,7 @@ read_raw_accidents <- function(folder, profiles) {
 
     gps <- purrr::map(
         list.files(path = folder,
-                   pattern = profiles$ACCIDENTS_GPS_FILE_NAME_PATTERN[[1]],
+                   pattern = accidents_gps_name_pattern(),
                    full.names = TRUE),
         read_raw_gps_files,
         skip = profiles$ACCIDENTS_FILES_SKIP[[1]]
@@ -343,22 +343,16 @@ read_raw_accidents <- function(folder, profiles) {
 
     outcomes <- purrr::map(
         list.files(path = folder,
-                   pattern = profiles$ACCIDENTS_OUTCOMES_FILE_NAME_PATTERN[[1]],
+                   pattern = accidents_outcomes_name_pattern(),
                    full.names = TRUE),
         read_raw_outcomes_files,
         skip = profiles$ACCIDENTS_FILES_SKIP[[1]]
     ) |>
         dplyr::bind_rows()
 
-    # age <- purrr::map(list.files(path = folder,
-    #                              pattern = ACCIDENTS_FILE_NAME_PATTERN,
-    #                              full.names = TRUE),
-    #                   read_raw_age_files, skip = skip) |>
-    #     dplyr::bind_rows()
-
     pedestrians <- purrr::map(
         list.files(path = folder,
-                   pattern = profiles$ACCIDENTS_PEDESTRIANS_FILE_NAME_PATTERN[[1]],
+                   pattern = accidents_pedestrians_name_pattern(),
                    full.names = TRUE),
         read_raw_pedestrians_files,
         skip = profiles$ACCIDENTS_FILES_SKIP[[1]]
@@ -367,7 +361,7 @@ read_raw_accidents <- function(folder, profiles) {
 
     vehicles <- purrr::map(
         list.files(path = folder,
-                   pattern = profiles$ACCIDENTS_VEHICLES_FILE_NAME_PATTERN[[1]],
+                   pattern = accidents_vehicles_name_pattern(),
                    full.names = TRUE),
         read_raw_vehicles_files,
         skip = profiles$ACCIDENTS_FILES_SKIP[[1]]

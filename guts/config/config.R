@@ -9,28 +9,6 @@
 # Copyright(c) Michal Kvasnička
 # -------------------------------------
 
-# paths ------------------------------------------------------------------------
-
-# start of all paths
-DIR_ORIGIN <- "guts"
-
-# path to raw data
-RAW_DATA_DIR <- file.path(DIR_ORIGIN, "rawdata")
-
-# paths to created data
-DATA_DIR <- file.path(DIR_ORIGIN, "data")
-
-# outputs
-OUTPUT_DIR <- file.path(DIR_ORIGIN, "output")
-
-# logging
-LOG_DIR <- file.path(DIR_ORIGIN, "log")
-
-# remove DIR_ORIGIN---it isn't supported
-rm(DIR_ORIGIN)
-
-
-
 # parallel processing ----------------------------------------------------------
 
 # how many cores should be used in parallel
@@ -72,28 +50,6 @@ SUPPORTED_ROAD_CLASSES <- c("motorway", "motorway_link",
                             # "cycleway", "sidewalk", "crossing",
                             "construction"
 )
-
-
-
-# accidents files masks --------------------------------------------------------
-
-# regex for major accident-data file
-ACCIDENTS_FILE_NAME_PATTERN <- "\\d{4}_databaze_nehody.csv"
-
-# regex for major gps file of accident data
-ACCIDENTS_GPS_FILE_NAME_PATTERN <- "\\d{4}_databaze_GPS.csv"
-
-# regex for outcomes file of accident data
-ACCIDENTS_OUTCOMES_FILE_NAME_PATTERN <- "\\d{4}_databaze_nasledky.csv"
-
-# regex for pedestrians file of accident data
-ACCIDENTS_PEDESTRIANS_FILE_NAME_PATTERN <- "\\d{4}_databaze_chodci.csv"
-
-# regex for vehicles file of accident data
-ACCIDENTS_VEHICLES_FILE_NAME_PATTERN <- "\\d{4}_databaze_vozidla.csv"
-
-# how many first rows should be skipped in each CSV file
-ACCIDENTS_FILES_SKIP <- 6L
 
 
 
@@ -153,18 +109,26 @@ VISUAL_MIN_QUANTILE <- 0.95
 
 # time windows -----------------------------------------------------------------
 
-# from- and to-dates when densities and clusters are computed
-# format: YYYY-MM-DD
-TIME_WINDOW <- tibble::tribble(
-    ~from_date,    ~to_date,
-    "2019-01-01",  "2021-12-31",
-    "2018-01-01",  "2020-12-31"
-)
+# whether to create time windows for the last complete years
+TIME_WINDOW_AUTO <- TRUE
+
+# if so, how long should each window be (in years)
+TIME_WINDOW_LENGHT <- 3
+
+# and how many such windows should be created
+TIME_WINDOW_NUMBER <- 2
+
+# possible additional time windows; format: YYYY-MM-DD
+# TIME_WINDOW <- tibble::tribble(
+#     ~from_date,    ~to_date,
+#     "2019-01-01",  "2021-12-31",
+#     "2018-01-01",  "2020-12-31"
+# )
 
 
 
 # districts --------------------------------------------------------------------
 
 # if only some districts should be processed, set DISTRICTS to character vector
-# of their ids
+# of their ids; otherwise, comment it
 # DISTRICTS <- c("CZ0642", "CZ0643")

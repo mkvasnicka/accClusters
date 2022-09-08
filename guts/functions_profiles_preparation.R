@@ -131,11 +131,11 @@ check_slot_time_window <- function(x) {
 #   named list; names are name of variables, values are functions used to check
 #   its value validity
 config_necessary_slots <- function() {
-    list(# paths
-        RAW_DATA_DIR = check_slot_path,
-        DATA_DIR = check_slot_path,
-        OUTPUT_DIR = check_slot_path,
-        LOG_DIR = check_slot_path,
+    list(# paths -- fixed in code
+        # RAW_DATA_DIR = check_slot_path,
+        # DATA_DIR = check_slot_path,
+        # OUTPUT_DIR = check_slot_path,
+        # LOG_DIR = check_slot_path,
         # parallel processing
         NO_OF_WORKERS = check_slot_worker,
         NO_OF_WORKERS_ACCIDENTS = check_slot_worker,
@@ -147,13 +147,13 @@ config_necessary_slots <- function() {
         LIXEL_MIN_DIST = check_slot_positive_integer,
         ACCIDENT_TO_ROAD_MAX_DISTANCE = check_slot_positive_number,
         SUPPORTED_ROAD_CLASSES = check_slot_character_vector,
-        # accident file masks
-        ACCIDENTS_FILE_NAME_PATTERN = check_slot_word,
-        ACCIDENTS_GPS_FILE_NAME_PATTERN = check_slot_word,
-        ACCIDENTS_OUTCOMES_FILE_NAME_PATTERN = check_slot_word,
-        ACCIDENTS_PEDESTRIANS_FILE_NAME_PATTERN = check_slot_word,
-        ACCIDENTS_VEHICLES_FILE_NAME_PATTERN = check_slot_word,
-        ACCIDENTS_FILES_SKIP = check_slot_positive_integer,
+        # accident file masks -- fixed in code
+        # ACCIDENTS_FILE_NAME_PATTERN = check_slot_word,
+        # ACCIDENTS_GPS_FILE_NAME_PATTERN = check_slot_word,
+        # ACCIDENTS_OUTCOMES_FILE_NAME_PATTERN = check_slot_word,
+        # ACCIDENTS_PEDESTRIANS_FILE_NAME_PATTERN = check_slot_word,
+        # ACCIDENTS_VEHICLES_FILE_NAME_PATTERN = check_slot_word,
+        # ACCIDENTS_FILES_SKIP = check_slot_positive_integer,
         # accident costs
         UNIT_COST_DEAD = check_slot_nonnegative_number,
         UNIT_COST_SERIOUS_INJURY = check_slot_nonnegative_number,
@@ -172,7 +172,9 @@ config_necessary_slots <- function() {
         CLUSTER_ADDITIONAL_STEPS = check_slot_positive_integer,
         VISUAL_MIN_QUANTILE = check_slot_quantile,
         # time windows
-        TIME_WINDOW = check_slot_time_window
+        TIME_WINDOW_AUTO = check_slot_true_false,
+        TIME_WINDOW_LENGHT = check_slot_positive_integer,
+        TIME_WINDOW_NUMBER = check_slot_positive_integer
     )
 }
 
@@ -190,7 +192,9 @@ config_necessary_slots <- function() {
 config_supported_slots <- function() {
     list(
         # districts
-        DISTRICTS = check_slot_character_vector  #  character(0)
+        DISTRICTS = check_slot_character_vector,
+        # time window
+        TIME_WINDOW = check_slot_time_window
     )
 }
 
@@ -211,7 +215,8 @@ profile_necessary_slots <- function() {
 #
 # see help for config_necessary_slots()
 profile_supported_slots <- function() {
-    config_necessary_slots()[c("NKDE_WEIGHTS", "NKDE_BW", "NKDE_ADAPTIVE",
+    c(
+        config_necessary_slots()[c("NKDE_WEIGHTS", "NKDE_BW", "NKDE_ADAPTIVE",
                                "NKDE_TRIM_BW", "NKDE_METHOD", "NKDE_AGG",
                                "UNIT_COST_DEAD", "UNIT_COST_SERIOUS_INJURY",
                                "UNIT_COST_LIGHT_INJURY", "UNIT_COST_MATERIAL",
@@ -219,9 +224,58 @@ profile_supported_slots <- function() {
                                "CLUSTER_MIN_QUANTILE",
                                "CLUSTER_ADDITIONAL_STEPS",
                                "VISUAL_MIN_QUANTILE",
-                               "TIME_WINDOW")]
+                               "TIME_WINDOW_AUTO",
+                               "TIME_WINDOW_LENGHT",
+                               "TIME_WINDOW_NUMBER")],
+        config_necessary_slots()[c("TIME_WINDOW")]
+    )
 }
 
+
+
+# automatic time windows -------------------------------------------------------
+
+auto_time_window <- function(length, number) {
+    last_complete_year <- lubridate::year(lubridate::today()) - 1
+    f <- function(end_year, length, shift) {
+        tibble::tibble(
+            from_date = stringr::str_c(end_year - (shift + 1) * length + 1,
+                                       "-01-01"),
+            to_date = stringr::str_c(end_year - shift * length, "-12-31")
+        )
+    }
+    purrr::map_dfr(seq_len(number) - 1,
+                   ~f(last_complete_year, length, .)) #|>
+        # dplyr::mutate(across(everything(), as.Date))
+}
+
+
+compact_time_window <- function(profile) {
+    empty_date <- character(0)
+    empty_window <- tibble::tibble(from_date = empty_date, to_date = empty_date)
+    auto_window <- manual_window <- empty_window
+    if (profile$TIME_WINDOW_AUTO)
+        auto_window <- auto_time_window(profile$TIME_WINDOW_LENGHT,
+                                        profile$TIME_WINDOW_NUMBER)
+    if ("TIME_WINDOW" %in% names(profile))
+        manual_window <- profile$TIME_WINDOW
+    time_window <- dplyr::bind_rows(auto_window, manual_window) |>
+        dplyr::distinct()
+    if (nrow(time_window) == 0) {
+        logging::logerror("config prep: profile %s has empty time windows",
+                          profile$PROFILE_NAME)
+        stop("config prep: profile has empty time windows")
+    }
+    profile$TIME_WINDOW <- time_window
+    rm(TIME_WINDOW_AUTO, TIME_WINDOW_LENGHT, TIME_WINDOW_NUMBER,
+       envir = profile)
+    profile
+}
+
+
+compact_all_time_windows <- function(profiles) {
+    purrr::map(profiles, compact_time_window)
+}
 
 
 # reading profiles -------------------------------------------------------------
@@ -395,6 +449,7 @@ create_profiles <- function(path_to_configs = path_to_configs(),
         if (is_behind(path_to_configs(), source_files)) {
             logging::loginfo("config prep: configuration is behind---updating")
             profiles <- read_all_profiles(path_to_source_configs) |>
+                compact_all_time_windows() |>
                 profiles_to_tibble()
             readr::write_rds(profiles, path_to_configs)
             logging::loginfo("config prep: profiles created")

@@ -59,10 +59,18 @@ VISUAL_MIN_QUANTILE <- 0.95
 
 # time windows -----------------------------------------------------------------
 
-# from- and to-dates when densities and clusters are computed
-# format: YYYY-MM-DD
-TIME_WINDOW <- tibble::tribble(
-    ~from_date,    ~to_date,
-    "2019-01-01",  "2021-12-31",
-    "2018-01-01",  "2020-12-31"
-)
+# whether to create time windows for the last complete years
+TIME_WINDOW_AUTO <- TRUE
+
+# if so, how long should each window be (in years)
+TIME_WINDOW_LENGHT <- 3
+
+# and how many such windows should be created
+TIME_WINDOW_NUMBER <- 2
+
+# possible additional time windows; format: YYYY-MM-DD
+# TIME_WINDOW <- tibble::tribble(
+#     ~from_date,    ~to_date,
+#     "2019-01-01",  "2021-12-31",
+#     "2018-01-01",  "2020-12-31"
+# )
