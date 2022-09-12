@@ -131,6 +131,11 @@ output_dir <- function() {
     file.path(DIR_ORIGIN, "output")
 }
 
+# path to districts for shiny
+path_to_shiny_districts <- function() {
+    file.path(output_dir(), "districts", "districts.rds")
+}
+
 # path to folder where accidents in individual districts for shiny are stored
 path_to_shiny_accidents_dir <- function() {
     file.path(output_dir(), "accidents")
@@ -138,7 +143,7 @@ path_to_shiny_accidents_dir <- function() {
 
 # path to folder where the final product used in shiny in stored
 shiny_dir <- function() {
-    file.path(output_dir(), "shiny")
+    file.path(output_dir(), "clusters")
 }
 
 # path to folder where finald product for GIS (shape file) is stored
@@ -259,7 +264,7 @@ shiny_file_name <- function(districts, folder = NULL, ...) {
     pars <- list(...)
     stopifnot(all(c("from_date", "to_date") %in% names(pars)))
     txt <- stringr::str_c(
-        "shiny_{id}_",
+        "clusters_{id}_",
         if ("profile_name" %in% names(pars) && !is.null(pars$profile_name))
             "{profile_name}_"
         else

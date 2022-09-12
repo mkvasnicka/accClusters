@@ -31,9 +31,9 @@ districts <- read_districts()
 
 # compute hotspots, i.e., NKDE
 compute_densities(districts,
-                  maps_dir = path_to_map_dir(),  # SF_MAPS_DIR,
-                  lixel_dir = path_to_lixels_maps_dir(),  # LIXEL_MAPS_DIR,
-                  sample_dir = path_to_lixels_maps_dir(),  # LIXEL_MAPS_DIR,
-                  accidents_dir = path_to_accidents_dir(),  # ACCIDENTS_DIR,
-                  density_dir = path_to_densities_dir(),  # DENSITIES_DIR,
+                  maps_dir = path_to_map_dir(),
+                  lixel_dir = path_to_lixels_maps_dir(),
+                  sample_dir = path_to_lixels_maps_dir(),
+                  accidents_dir = path_to_accidents_dir(),
+                  density_dir = path_to_densities_dir(),
                   profiles = profiles)
