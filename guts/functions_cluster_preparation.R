@@ -14,6 +14,8 @@ library(sf, verbose = FALSE, warn.conflicts = FALSE)
 library(sfnetworks, verbose = FALSE, warn.conflicts = FALSE)
 library(spdep, verbose = FALSE, warn.conflicts = FALSE)
 library(dplyr, verbose = FALSE, warn.conflicts = FALSE)
+library(tidyr, verbose = FALSE, warn.conflicts = FALSE)
+library(purrr, verbose = FALSE, warn.conflicts = FALSE)
 
 
 # projections
@@ -459,6 +461,63 @@ optimize_cluster_parameters <- function(lixels, nb, accidents,
 
 # cluster preparation ----------------------------------------------------------
 
+#
+compute_clusters_for_parameters <- function(quantile, threshold,
+                                            cluster_steps,
+                                            lixels, accidents, nb, geometry) {
+    cls <- compute_cluster_tibble(lixels, nb, threshold, cluster_steps)
+    clss <- cluster_statistics(lixels, accidents, cls)
+
+    lixels <- lixels |>
+        add_clusters_to_lixels(cls) |>
+        dplyr::select(lixel_id, density, cluster)
+    accidents <- accidents |>
+        add_clusters_to_accidents(cls) |>
+        sf::st_drop_geometry() |>
+        dplyr::filter(!is.na(cluster)) |>
+        dplyr::select(accident_id, cluster, accident_cost)
+    join_network <- function(geo) {
+        geo |>
+            sfnetworks::as_sfnetwork(directed = FALSE) |>
+            tidygraph::convert(sfnetworks::to_spatial_smooth) |>
+            sfnetworks::activate("edges") |>
+            sf::st_as_sf() |>
+            sf::st_union()
+    }
+    cluster_statistics <- lixels |>
+        dplyr::filter(!is.na(cluster)) |>
+        dplyr::group_by(cluster) |>
+        dplyr::summarise(geometry = join_network(geometry),
+                         .groups = "drop") |>
+        dplyr::left_join(clss, by = "cluster")
+    # crop all to true district boarder
+    crop_to_district <- function(x, district) {
+        x[sf::st_intersects(x, district, sparse = FALSE), ]
+    }
+    # lixels <- lixels |>
+    #     crop_to_district(geometry) |>
+    #     sf::st_transform(crs = WGS84)
+    cluster_statistics <- cluster_statistics |>
+        filter(!is.na(cost)) |>  # removes clusters that include no accident
+        crop_to_district(geometry)
+    # cluster centroids
+    centroids <- cluster_statistics |>
+        sf::st_geometry() |>
+        sf::st_centroid() |>
+        sf::st_transform(WGS84) |>
+        sf::st_coordinates()
+    cluster_statistics <- dplyr::bind_cols(
+        cluster_statistics |> sf::st_transform(crs = WGS84),
+        centroids)
+    accidents <- accidents |>
+        filter(cluster %in% unique(cluster_statistics$cluster))
+    tibble::tibble(quantile = quantile,
+                   # threshold = threshold,
+                   additional_lixels = cluster_steps,
+                   accidents = list(accidents),
+                   clusters = list(cluster_statistics))
+}
+
 # # compute_one_time_clusters() computes hotspot clusters for one time period
 # # given by parameters from_date and to_date
 # #
@@ -678,55 +737,22 @@ compute_clusters <- function(districts,
             add_damage_cost(unit_cost_dead, unit_cost_serious_injury,
                             unit_cost_light_injury, unit_cost_material,
                             unit_cost_const)
-        threshold <- quantile(lixels$density, cluster_min_quantile)
-        visual_threshold <- quantile(lixels$density, visual_min_quantile)
 
-        cls <- compute_cluster_tibble(lixels, nb, threshold, cluster_steps)
-        clss <- cluster_statistics(lixels, accidents, cls)
+        # TODO: vytáhnout do parametrů
+        pars <- tidyr::expand_grid(
+            # quantile = seq(from = 0.975, to = 0.999, by = 0.002),
+            # cluster_steps = 1:10
+            quantile = 0.975,
+            cluster_steps = 10
+        ) |>
+            dplyr::mutate(threshold = quantile(lixels$density, quantile)) |>
+            dplyr::select(quantile, threshold, cluster_steps)
+        output <- purrr::pmap_dfr(pars, compute_clusters_for_parameters,
+                                  lixels = lixels, accidents = accidents,
+                                  nb = nb, geometry = geometry)
 
-        lixels <- lixels |>
-            add_clusters_to_lixels(cls) |>
-            dplyr::filter(density >= visual_threshold | !is.na(cluster)) |>
-            dplyr::select(lixel_id, density, cluster)
-        accidents <- accidents |>
-            add_clusters_to_accidents(cls) |>
-            sf::st_drop_geometry() |>
-            dplyr::filter(!is.na(cluster)) |>
-            dplyr::select(accident_id, cluster, accident_cost)
-        join_network <- function(geo) {
-            geo |>
-                sfnetworks::as_sfnetwork(directed = FALSE) |>
-                tidygraph::convert(sfnetworks::to_spatial_smooth) |>
-                sfnetworks::activate("edges") |>
-                sf::st_as_sf() |>
-                sf::st_union()
-        }
-        cluster_statistics <- lixels |>
-            dplyr::filter(!is.na(cluster)) |>
-            dplyr::group_by(cluster) |>
-            dplyr::summarise(geometry = join_network(geometry),
-                             .groups = "drop") |>
-            dplyr::left_join(clss, by = "cluster")
-        # crop all to true district boarder
-        crop_to_district <- function(x, district) {
-            x[sf::st_intersects(x, district, sparse = FALSE), ]
-        }
-        lixels <- lixels |>
-            crop_to_district(geometry) |>
-            sf::st_transform(crs = WGS84)
-        cluster_statistics <- cluster_statistics |>
-            crop_to_district(geometry) |>
-            sf::st_transform(crs = WGS84)
-        accidents <- accidents |>
-            filter(cluster %in% unique(cluster_statistics$cluster))
         # write to file
-        write_dir_rds(
-            list(
-                lixels = lixels,
-                accidents = accidents,
-                cluster_statistics = cluster_statistics
-            ),
-            file = output_file)
+        write_dir_rds(output, file = output_file)
         logging::loginfo("clusters prep: %s has been created", output_file)
     }
 
