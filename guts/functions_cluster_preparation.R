@@ -770,9 +770,9 @@ compute_clusters <- function(districts,
                             unit_cost_light_injury, unit_cost_material,
                             unit_cost_const)
 
+        severity <- seq(from = cluster_severity_limit, to = 1,
+                        by = -cluster_severity_step) / 1000
         pars <- tidyr::expand_grid(
-            severity = seq(from = cluster_severity_limit, to = 1,
-                           by = -cluster_severity_step) / 1000,
             quantile = 1 - severity,
             cluster_steps = 1:cluster_step_limit
         ) |>
