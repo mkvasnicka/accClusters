@@ -756,8 +756,9 @@ compute_clusters <- function(districts,
                              unit_cost_light_injury,
                              unit_cost_material,
                              unit_cost_const,
-                             cluster_severities,
-                             cluster_steps) {
+                             cluster_severity_limit,
+                             cluster_severity_step,
+                             cluster_step_limit) {
         start_logging(log_dir())
         logging::loginfo("clusters prep: creating %s", output_file)
         lixels <- readr::read_rds(densities_file)
@@ -770,8 +771,10 @@ compute_clusters <- function(districts,
                             unit_cost_const)
 
         pars <- tidyr::expand_grid(
-            quantile = 1 - cluster_severities,
-            cluster_steps = cluster_steps
+            severity = seq(from = cluster_severity_limit, to = 1,
+                           by = -cluster_severity_step) / 1000,
+            quantile = 1 - severity,
+            cluster_steps = 1:cluster_step_limit
         ) |>
             dplyr::mutate(threshold = quantile(lixels$density, quantile)) |>
             dplyr::select(quantile, threshold, cluster_steps)
@@ -790,8 +793,9 @@ compute_clusters <- function(districts,
         districts <- districts |>
             bind_cols(profiles |>
                           dplyr::select(PROFILE_NAME, TIME_WINDOW,
-                                        CLUSTER_SEVERITIES,
-                                        CLUSTER_STEPS,
+                                        CLUSTER_SEVERITY_LIMIT,
+                                        CLUSTER_SEVERITY_STEP,
+                                        CLUSTER_STEP_LIMIT,
                                         starts_with("UNIT_COST_")) |>
                           tidyr::unnest(TIME_WINDOW) |>
                           tidyr::nest(data = everything())
@@ -842,8 +846,9 @@ compute_clusters <- function(districts,
                                               profile_name = districts$PROFILE_NAME),
                 from_date = districts$from_date,
                 to_date = districts$to_date,
-                cluster_severities = districts$CLUSTER_SEVERITIES,
-                cluster_steps = districts$CLUSTER_STEPS,
+                cluster_severity_limit = districts$CLUSTER_SEVERITY_LIMIT,
+                cluster_severity_step = districts$CLUSTER_SEVERITY_STEP,
+                cluster_step_limit = districts$CLUSTER_STEP_LIMIT,
                 unit_cost_dead = districts$UNIT_COST_DEAD,
                 unit_cost_serious_injury = districts$UNIT_COST_SERIOUS_INJURY,
                 unit_cost_light_injury = districts$UNIT_COST_LIGHT_INJURY,
