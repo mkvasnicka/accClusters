@@ -241,13 +241,41 @@ make_clusters <- function(lixels, nb, threshold, steps) {
 #     }
 #     clusters
 # }
-join_clusters <- function(clusters) {
+# join_clusters <- function(clusters) {
+#     i <- 1L
+#     while (i <= length(clusters)) {
+#         joined <- FALSE
+#         j <- i + 1L
+#         while (j <= length(clusters)) {
+#             if (length(base::intersect(clusters[[i]], clusters[[j]])) > 0) {
+#                 clusters[[i]] <- unique(c(clusters[[i]], clusters[[j]]))
+#                 clusters[[j]] <- NULL
+#                 joined <- TRUE
+#             } else {
+#                 j <- j + 1L
+#             }
+#         }
+#         if (!joined)
+#             i <- i + 1L
+#     }
+#     clusters
+# }
+join_clusters <- function(clusters, nbs) {
+    neighbors <- function(c1, c2, nbs) {
+        next_to <- function(x, y, nbs) {
+            length(base::intersect(unique(unlist(nbs[x])), y)) > 0
+        }
+        # the clusters share at least one lixel
+        length(base::intersect(c1, c2)) > 0 ||
+            # or their are neighbors
+            next_to(c1, c2, nbs) || next_to(c2, c1, nbs)
+    }
     i <- 1L
     while (i <= length(clusters)) {
         joined <- FALSE
         j <- i + 1L
         while (j <= length(clusters)) {
-            if (length(base::intersect(clusters[[i]], clusters[[j]])) > 0) {
+            if (neighbors(clusters[[i]], clusters[[j]], nbs)) {
                 clusters[[i]] <- unique(c(clusters[[i]], clusters[[j]]))
                 clusters[[j]] <- NULL
                 joined <- TRUE
@@ -296,7 +324,7 @@ join_clusters <- function(clusters) {
 # }
 compute_cluster_tibble <- function(lixels, nb, threshold, steps) {
     lst <- make_clusters(lixels, nb, threshold, steps) |>
-        join_clusters()
+        join_clusters(nb)
     if (length(lst) == 0)
         return(tibble::tibble(cluster = integer(0), lixel_id = integer(0)))
     lid <- lixels |> st_drop_geometry() |> pull(lixel_id)
@@ -740,10 +768,10 @@ compute_clusters <- function(districts,
 
         # TODO: vytáhnout do parametrů
         pars <- tidyr::expand_grid(
-            # quantile = seq(from = 0.975, to = 0.999, by = 0.002),
-            # cluster_steps = 1:10
-            quantile = 0.975,
-            cluster_steps = 10
+            quantile = seq(from = 0.975, to = 0.999, by = 0.002),
+            cluster_steps = 1:10
+            # quantile = 0.975,
+            # cluster_steps = 10
         ) |>
             dplyr::mutate(threshold = quantile(lixels$density, quantile)) |>
             dplyr::select(quantile, threshold, cluster_steps)
