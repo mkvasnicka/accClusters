@@ -63,6 +63,14 @@ check_slot_nonnegative_number <- function(x) {
     check_slot_number(x) && x >= 0
 }
 
+check_slot_quantile_vector <- function(x) {
+    is.numeric(x) && length(x) > 0 && all(x >= 0) && all(x <= 1)
+}
+
+check_slot_positive_integer_vector <- function(x) {
+    is.integer(x) && length(x) > 0 && all(x > 0)
+}
+
 # is known numeric scalar in interval [0, 1]
 check_slot_quantile <- function(x) {
     check_slot_number(x) && x >= 0 && x <= 1
@@ -168,9 +176,11 @@ config_necessary_slots <- function() {
         NKDE_METHOD = check_slot_method,
         NKDE_AGG = check_slot_nonnegative_number,
         # cluster creation
-        CLUSTER_MIN_QUANTILE = check_slot_quantile,
-        CLUSTER_ADDITIONAL_STEPS = check_slot_positive_integer,
-        VISUAL_MIN_QUANTILE = check_slot_quantile,
+        # CLUSTER_MIN_QUANTILE = check_slot_quantile,
+        # CLUSTER_ADDITIONAL_STEPS = check_slot_positive_integer,
+        # VISUAL_MIN_QUANTILE = check_slot_quantile,
+        CLUSTER_SEVERITIES = check_slot_quantile_vector,
+        CLUSTER_STEPS = check_slot_positive_integer_vector,
         # time windows
         TIME_WINDOW_AUTO = check_slot_true_false,
         TIME_WINDOW_LENGHT = check_slot_positive_integer,
@@ -221,9 +231,7 @@ profile_supported_slots <- function() {
                                "UNIT_COST_DEAD", "UNIT_COST_SERIOUS_INJURY",
                                "UNIT_COST_LIGHT_INJURY", "UNIT_COST_MATERIAL",
                                "UNIT_COST_CONST",
-                               "CLUSTER_MIN_QUANTILE",
-                               "CLUSTER_ADDITIONAL_STEPS",
-                               "VISUAL_MIN_QUANTILE",
+                               "CLUSTER_SEVERITIES", "CLUSTER_STEPS",
                                "TIME_WINDOW_AUTO",
                                "TIME_WINDOW_LENGHT",
                                "TIME_WINDOW_NUMBER")],

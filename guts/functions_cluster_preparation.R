@@ -539,7 +539,8 @@ compute_clusters_for_parameters <- function(quantile, threshold,
         centroids)
     accidents <- accidents |>
         filter(cluster %in% unique(cluster_statistics$cluster))
-    tibble::tibble(quantile = quantile,
+    tibble::tibble(severity = as.integer(round((1 - quantile) * 1000)),
+                   # quantile = quantile,
                    # threshold = threshold,
                    additional_lixels = cluster_steps,
                    accidents = list(accidents),
@@ -754,7 +755,9 @@ compute_clusters <- function(districts,
                              unit_cost_serious_injury,
                              unit_cost_light_injury,
                              unit_cost_material,
-                             unit_cost_const) {
+                             unit_cost_const,
+                             cluster_severities,
+                             cluster_steps) {
         start_logging(log_dir())
         logging::loginfo("clusters prep: creating %s", output_file)
         lixels <- readr::read_rds(densities_file)
@@ -766,12 +769,9 @@ compute_clusters <- function(districts,
                             unit_cost_light_injury, unit_cost_material,
                             unit_cost_const)
 
-        # TODO: vytáhnout do parametrů
         pars <- tidyr::expand_grid(
-            quantile = seq(from = 0.975, to = 0.999, by = 0.002),
-            cluster_steps = 1:10
-            # quantile = 0.975,
-            # cluster_steps = 10
+            quantile = 1 - cluster_severities,
+            cluster_steps = cluster_steps
         ) |>
             dplyr::mutate(threshold = quantile(lixels$density, quantile)) |>
             dplyr::select(quantile, threshold, cluster_steps)
@@ -787,19 +787,15 @@ compute_clusters <- function(districts,
     start_logging(log_dir())
     logging::loginfo("clusters prep: checking for updates")
     tryCatch({
-        profile_name <- NULL
-        if (exists("PROFILE_NAME"))
-            profile_name <- PROFILE_NAME
-
         districts <- districts |>
             bind_cols(profiles |>
                           dplyr::select(PROFILE_NAME, TIME_WINDOW,
-                                        CLUSTER_MIN_QUANTILE,
-                                        CLUSTER_ADDITIONAL_STEPS,
-                                        VISUAL_MIN_QUANTILE,
+                                        CLUSTER_SEVERITIES,
+                                        CLUSTER_STEPS,
                                         starts_with("UNIT_COST_")) |>
                           tidyr::unnest(TIME_WINDOW) |>
-                          tidyr::nest(data = everything())) |>
+                          tidyr::nest(data = everything())
+            ) |>
             tidyr::unnest(data)
         districts <- districts |>
             districts_behind(target_fun = shiny_file_name,
@@ -846,9 +842,8 @@ compute_clusters <- function(districts,
                                               profile_name = districts$PROFILE_NAME),
                 from_date = districts$from_date,
                 to_date = districts$to_date,
-                cluster_min_quantile = districts$CLUSTER_MIN_QUANTILE,
-                cluster_steps = districts$CLUSTER_ADDITIONAL_STEPS,
-                visual_min_quantile = districts$VISUAL_MIN_QUANTILE,
+                cluster_severities = districts$CLUSTER_SEVERITIES,
+                cluster_steps = districts$CLUSTER_STEPS,
                 unit_cost_dead = districts$UNIT_COST_DEAD,
                 unit_cost_serious_injury = districts$UNIT_COST_SERIOUS_INJURY,
                 unit_cost_light_injury = districts$UNIT_COST_LIGHT_INJURY,
