@@ -97,7 +97,7 @@ path_to_raw_accidents <- function() {
 
 # path to created data folder
 data_dir <- function() {
-    file.path(DIR_ORIGIN, "data")
+    file.path(DIR_ORIGIN, "tmp")
 }
 
 # path to districts

@@ -1,10 +1,4 @@
 data
-rawdata
 tmp
-log
-data_tmp
-shiny
-output
-rawdata.old
 config/*rds
 .Rproj.user

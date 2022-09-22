@@ -8,10 +8,10 @@
 set -e
 
 # folder where R scripts are stored---unless replaced with -r option
-RSCRIPTDIR_IMPLICIT=guts
+RSCRIPTDIR_IMPLICIT=.
 
 # folder where all data are stored---unless replaced with -b option
-DIRORIGIN_IMPLICIT=guts_data
+DIRORIGIN_IMPLICIT=data
 
 # help
 help()
