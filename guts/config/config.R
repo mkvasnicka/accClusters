@@ -95,15 +95,13 @@ NKDE_AGG <- 1
 
 # cluster parameters -----------------------------------------------------------
 
-# lixels with at least this density quantile (0, 1) constitute cluster cores
-CLUSTER_MIN_QUANTILE <- 0.995
+# clusters are computed for severity quantiles
+# seq(from = CLUSTER_SEVERITY_LIMIT, to = 1, by = -CLUSTER_SEVERITY_STEP) / 1000
+CLUSTER_SEVERITY_LIMIT <- 25
+CLUSTER_SEVERITY_STEP <- 2
 
-# this many lixels are added to each cluster
-CLUSTER_ADDITIONAL_STEPS <- 5
-
-# lixels with at least this density quantile (0, 1) are stored for density
-# visualization
-VISUAL_MIN_QUANTILE <- 0.95
+# several lixels are added to clusters; 1:CLUSTER_STEP_LIMIT are added
+CLUSTER_STEP_LIMIT <- 10
 
 
 
