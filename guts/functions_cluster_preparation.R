@@ -271,7 +271,7 @@ join_clusters <- function(clusters, nbs) {
             next_to(c1, c2, nbs) || next_to(c2, c1, nbs)
     }
     i <- 1L
-    while (i <= length(clusters)) {
+    while (i < length(clusters)) {
         joined <- FALSE
         j <- i + 1L
         while (j <= length(clusters)) {
