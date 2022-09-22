@@ -7,9 +7,20 @@ Tvorba klastrů
 - najít nějaké kritérium, jak stanovil kvantil a počet kroků rozšíření
     - PAI nefunguje ani na accident_cost, ani na densities
 
+- kontrola: klastry jsou stejné pro profil default a other -- to je divné
+
+
 
 Refactoring
 -----------
+
+- pročistit kód
+
+- vyhodit:
+    - process_command_line_arguments()
+    - unit_cost(s)()
+    - handle_time_widnow()
+
 - zafixovat adresářovou strukturu tak, aby stačilo zadat začátky cest
     - společný začátek cesty: DIR_ORIGIN
     - alternativní začátky cest: RAW_DATA_DIR, DATA_DIR, OUTPUT_DIR a LOG_DIR

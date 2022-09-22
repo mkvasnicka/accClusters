@@ -13,16 +13,278 @@
 # https://stackoverflow.com/questions/51292952/snap-a-point-to-the-closest-point-on-a-line-segment-using-sf
 # https://r-spatial.github.io/sf/reference/st_nearest_feature.html
 
-require(dplyr)
-require(purrr)
-require(readr)
-require(lubridate)
-require(sf)
+# packages
+library(dplyr, verbose = FALSE, warn.conflicts = FALSE)
+library(purrr, verbose = FALSE, warn.conflicts = FALSE)
+library(tidyr, verbose = FALSE, warn.conflicts = FALSE)
+library(readr, verbose = FALSE, warn.conflicts = FALSE)
+library(stringr, verbose = FALSE, warn.conflicts = FALSE)
+library(lubridate, verbose = FALSE, warn.conflicts = FALSE)
+library(sf, verbose = FALSE, warn.conflicts = FALSE)
+
+
+# projections
+PLANARY_PROJECTION <- 5514  # Křovák
+WGS84 <- 4326  # WGS84
+
 
 
 # prepare raw police data ------------------------------------------------------
 
-# TODO: připravit skutečná policejní data
+# read_raw_accidents_files() reads accidents files
+#
+# inputs:
+# - path ... (character vector) paths to files with major accident tables in CSV
+# - skip ... (round nonnegative numeric scalar) how many first rows in CSV
+#   should be skipped
+#
+# value:
+#    tibble
+read_raw_accidents_files <- function(path, skip) {
+    readr::read_csv(path,
+                    skip = skip,
+                    col_types = readr::cols(
+                        .default = col_integer(),
+                        p1 = col_character(),
+                        p2a = col_character(),
+                        p2b = col_character()
+                    )
+    ) |>
+        dplyr::select(
+            p1,   # ID nehody
+            p2a,  # datum
+            p2b,  # čas
+            p6,   # druh nehody
+            p8,   # Srážky
+            p10,  # zavinění
+            p11,  # alkohol u viníka
+            p12,  # Příčina nehody
+            p13a, # Následky: usmrceno
+            p13b, # Následky: těžce zraněno osob
+            p13c, # Následky: lehce zraněno osob
+            p14   # Následky: hmotná škoda
+        ) |>
+        dplyr::mutate(
+            p2b = stringr::str_pad(p2b, width = 4, side = "left", pad = "0"),
+            p2b = ifelse(
+                stringr::str_sub(p2b, 3, 3) == 6,
+                stringr::str_c(str_sub(p2b, 1, 2), "0", str_sub(p2b, 4)),
+                p2b
+            ),
+            p2b = ifelse(p2b == "2500", "2400", p2b),
+            p2 = stringr::str_c(p2a, " ",
+                                stringr::str_sub(p2b, 1, 2), ":",
+                                stringr::str_sub(p2b,3,4)) |>
+                lubridate::as_datetime(format = "%d.%m.%Y %H:%M")
+        ) |>
+        dplyr::select(-p2b, -p2a)
+}
+
+
+# read_raw_gps_files() reads GPS files
+#
+# inputs:
+# - path ... (character vector) paths to files with major GPS tables in CSV
+# - skip ... (round nonnegative numeric scalar) how many first rows in CSV
+#   should be skipped
+#
+# value:
+#    tibble
+read_raw_gps_files <- function(path, skip) {
+    readr::read_csv(path,
+                    skip = skip,
+                    col_types = readr::cols(.default = col_character())
+    ) |>
+        dplyr::mutate(
+            d = stringr::str_replace_all(d, ",", ".") %>% as.double(),
+            e = stringr::str_replace_all(e, "," ,".") %>% as.double()
+        ) |>
+        dplyr::select(p1, d, e) |>
+        dplyr::rename(coord_x = d, coord_y = e)
+}
+
+
+# read_raw_outcomes_files() reads outcomes files
+#
+# inputs:
+# - path ... (character vector) paths to files with major outcomes tables in CSV
+# - skip ... (round nonnegative numeric scalar) how many first rows in CSV
+#   should be skipped
+#
+# value:
+#    tibble
+read_raw_outcomes_files <- function(path, skip) {
+    readr::read_csv(path,
+                    skip = skip,
+                    col_types = readr::cols(
+                        .default = col_integer(),
+                        p1 = col_character()
+                    ))
+        # dplyr::filter(p59g == 1) |>
+        # dplyr::left_join(., data_vozidla_type, by = c("p1", "id_vozidla") ) |>
+        # dplyr::mutate(
+        #     type = dplyr::case_when(
+        #         p44 %in% c(0,1,2) ~ "motobike",
+        #         p44 == 13 ~ "bike",
+        #         p44 %in% c(3,4) ~ "car",
+        #         p44 %in% c(5,6,7) ~ "truck",
+        #         TRUE ~ "other"
+        #     ),
+        #     driver = ifelse(p59a == 1, "driver", "crew")
+        # ) |>
+        # dplyr::group_by(p1, type, driver) %>%
+        # dplyr::summarise(
+        #     obs = n(),
+        #     .groups = "drop"
+        # ) |>
+        # tidyr::pivot_wider(
+        #     names_from = c(type, driver),
+        #     values_from = obs,
+        #     id_cols = p1,
+        #     names_sep = "_",
+        #     names_prefix = "casualties_",
+        #     values_fill = 0
+        # )
+
+
+    # TODO: vlastní funkce! + není duplicita dále?
+    # data_vozidla_type <-
+    #     readr::read_csv(path,
+    #                     skip = skip,
+    #                     col_types = cols(
+    #                         .default = col_integer(),
+    #                         p1 = col_character()
+    #                     )
+    #     ) |>
+    #     dplyr::distinct(p1, id_vozidla, p44)
+
+    # readr::read_csv(path,
+    #                 skip = skip,
+    #                 col_types = readr::cols(
+    #                     .default = col_integer(),
+    #                     p1 = col_character()
+    #                 )) |>
+    #     dplyr::filter(p59g == 1) |>
+    #     dplyr::left_join(., data_vozidla_type, by = c("p1", "id_vozidla") ) |>
+    #     dplyr::mutate(
+    #         type = dplyr::case_when(
+    #             p44 %in% c(0,1,2) ~ "motobike",
+    #             p44 == 13 ~ "bike",
+    #             p44 %in% c(3,4) ~ "car",
+    #             p44 %in% c(5,6,7) ~ "truck",
+    #             TRUE ~ "other"
+    #         ),
+    #         driver = ifelse(p59a == 1, "driver", "crew")
+    #     ) |>
+    #     dplyr::group_by(p1, type, driver) %>%
+    #     dplyr::summarise(
+    #         obs = n(),
+    #         .groups = "drop"
+    #     ) |>
+    #     tidyr::pivot_wider(
+    #         names_from = c(type, driver),
+    #         values_from = obs,
+    #         id_cols = p1,
+    #         names_sep = "_",
+    #         names_prefix = "casualties_",
+    #         values_fill = 0
+    #     )
+}
+
+
+# read_raw_age_files() reads age files
+#
+# inputs:
+# - path ... (character vector) paths to files with major age tables in CSV
+# - skip ... (round nonnegative numeric scalar) how many first rows in CSV
+#   should be skipped
+#
+# value:
+#    tibble
+# read_raw_age_files <- function(path, skip) {
+#     readr::read_csv(path,
+#                     skip = 6,
+#                     col_types = readr::cols(
+#                         .default = col_integer(),
+#                         p1 = col_character()
+#                     )) |>
+#         # the first vehicle only
+#         dplyr::filter(id_vozidla == 1) |>
+#         # data for drivers only
+#         dplyr::filter(p59a == 1) |>
+#         dplyr::mutate(
+#             vek = ifelse(
+#                 p59d <= (year(today()) - 2000),
+#                 2000 + p59e,
+#                 1900 + p59e
+#             ),
+#             vek = vek - year(p2)
+#         ) |>
+#         dplyr::select(p1,driver_age = vek)
+# }
+
+
+# read_raw_pedestrians_files() reads pedestrians files
+#
+# inputs:
+# - path ... (character vector) paths to files with major pedestrians tables in
+#   CSV
+# - skip ... (round nonnegative numeric scalar) how many first rows in CSV
+#   should be skipped
+#
+# value:
+#    tibble
+read_raw_pedestrians_files <- function(path, skip) {
+    readr::read_csv(path,
+                    skip = skip,
+                    col_types = readr::cols(
+                        .default = col_integer(),
+                        p1 = col_character()
+                    )) |>
+        dplyr::group_by(p1) |>
+        dplyr::summarise(
+            casualties_pedestrian = sum(p33g == 1, na.rm = TRUE)
+        ) |>
+        mutate(involved_pedestrian = TRUE)
+}
+
+
+# read_raw_vehicles_files() reads vehicles files
+#
+# inputs:
+# - path ... (character vector) paths to files with major vehicles tables in CSV
+# - skip ... (round nonnegative numeric scalar) how many first rows in CSV
+#   should be skipped
+#
+# value:
+#    tibble
+read_raw_vehicles_files <- function(path, skip) {
+    readr::read_csv(path,
+                    skip = skip,
+                    col_types = cols(
+                        .default = col_integer(),
+                        p1 = col_character()
+                    )
+    )
+
+    # readr::read_csv(path,
+    #                 skip = skip,
+    #                 col_types = cols(
+    #                     .default = col_integer(),
+    #                     p1 = col_character()
+    #                 )
+    # ) |>
+    #     dplyr::mutate(
+    #         vehicle_bike = p44 == 13,
+    #         vehicle_motobike = p44 %in% c(0,1,2)
+    #     ) |>
+    #     dplyr::group_by(p1) |>
+    #     dplyr::summarise(
+    #         involved_bike = any(vehicle_bike),
+    #         involved_motobike = any(vehicle_motobike),
+    #         .groups = "drop"
+    #     )
+}
 
 
 # read_raw_accidents(folder, skip = 6) reads and geolocates all accidents
@@ -59,117 +321,192 @@ require(sf)
 # - the CSVs can be extracted from XLS by prepare_raw_accidents.sh script
 #
 # TODO: standardizovat názvy polí nehodách
-read_raw_accidents <- function(folder, skip = 6) {
-    read_accidents <- function(path, skip = 6) {
-        accidents <- readr::read_csv(path,
-                                     skip = skip,
-                                     na = c("", "NA", "NULL"),
-                                     col_types = cols(
-                                         .default = col_integer(),
-                                         p1 = col_character(),
-                                         p2a = col_character()  #,
-                                         # p2b = col_integer(),
-                                         # p3 = col_character(),
-                                         # p4a = col_double(),
-                                         # p4b = col_double(),
-                                         # p4c = col_double(),
-                                         # p5a = col_double(),
-                                         # p5b = col_double(),
-                                         # p6 = col_double(),
-                                         # p7 = col_double(),
-                                         # p8 = col_double(),
-                                         # p9 = col_double(),
-                                         # p10 = col_double(),
-                                         # p11 = col_double(),
-                                         # p12 = col_double(),
-                                         # p13a = col_double(),
-                                         # p13b = col_double(),
-                                         # p13c = col_double(),
-                                         # p14 = col_double(),
-                                         # p34 = col_double(),
-                                         # p35 = col_double(),
-                                         # p36 = col_double(),
-                                         # p15 = col_double(),
-                                         # p16 = col_double(),
-                                         # p17 = col_double(),
-                                         # p18 = col_double(),
-                                         # p19 = col_double(),
-                                         # p20 = col_double(),
-                                         # p21 = col_double(),
-                                         # p22 = col_double(),
-                                         # p23 = col_double(),
-                                         # p24 = col_double(),
-                                         # p27 = col_double(),
-                                         # p28 = col_double(),
-                                         # p37 = col_character(),
-                                         # p38 = col_character(),
-                                         # p39 = col_character(),
-                                         # p40 = col_character(),
-                                         # p41 = col_character(),
-                                         # krok = col_double(),
-                                         # typ = col_double(),
-                                         # dzt = col_double(),
-                                         # dzl = col_double(),
-                                         # dzb = col_double()
-                                     ))
-    }
+read_raw_accidents <- function(folder, profiles) {
 
-    read_gps <- function(path, skip = 6) {
-        read_csv(path,
-                 skip = 6,
-                 col_types = cols(
-                     .default = col_skip(),
-                     p1 = col_character(),
-                     # a = col_number(),
-                     # b = col_number(),
-                     # c = col_character(),
-                     d = col_number(),
-                     e = col_number()  # ,
-                     # f = col_number(),
-                     # g = col_number(),
-                     # h = col_character(),
-                     # i = col_character(),
-                     # j = col_logical(),
-                     # k = col_character(),
-                     # l = col_character(),
-                     # m = col_character(),
-                     # n = col_character(),
-                     # o = col_character(),
-                     # p = col_character(),
-                     # q = col_character(),
-                     # r = col_double(),
-                     # s = col_double(),
-                     # t = col_character()
-                 )) |>
-            rename(coord_x = d, coord_y = e) |>
-            mutate(coord_x = coord_x / 1e3,
-                   coord_y = coord_y / 1e3)
-    }
+    accidents <- purrr::map(
+        list.files(path = folder,
+                   pattern = accidents_file_name_pattern(),
+                   full.names = TRUE),
+        read_raw_accidents_files,
+        skip = 0
+    ) |>
+        dplyr::bind_rows()
 
-    accidents <- purrr::map(list.files(path = folder,
-                                       pattern = ACCIDENTS_FILE_NAME_PATTERN,
-                                       full.names = TRUE),
-                            read_accidents, skip = skip) |>
+    gps <- purrr::map(
+        list.files(path = folder,
+                   pattern = accidents_gps_name_pattern(),
+                   full.names = TRUE),
+        read_raw_gps_files,
+        skip = 0
+    ) |>
         dplyr::bind_rows()
-    gps <- purrr::map(list.files(path = folder,
-                                 pattern = ACCIDENTS_GPS_FILE_NAME_PATTERN,
-                                 full.names = TRUE),
-                      read_gps, skip = skip) |>
+
+    outcomes <- purrr::map(
+        list.files(path = folder,
+                   pattern = accidents_outcomes_name_pattern(),
+                   full.names = TRUE),
+        read_raw_outcomes_files,
+        skip = 0
+    ) |>
         dplyr::bind_rows()
-    dplyr::left_join(accidents, gps, by = "p1") |>
-        dplyr::filter(!is.na(coord_x), !is.na(coord_y)) |>
-        dplyr::distinct() |>
-        sf::st_as_sf(coords = c("coord_x", "coord_y"),
-                     crs = PLANARY_PROJECTION) |>
+
+    pedestrians <- purrr::map(
+        list.files(path = folder,
+                   pattern = accidents_pedestrians_name_pattern(),
+                   full.names = TRUE),
+        read_raw_pedestrians_files,
+        skip = 0
+    ) |>
+        dplyr::bind_rows()
+
+    vehicles <- purrr::map(
+        list.files(path = folder,
+                   pattern = accidents_vehicles_name_pattern(),
+                   full.names = TRUE),
+        read_raw_vehicles_files,
+        skip = 0
+    ) |>
+        dplyr::bind_rows()
+
+
+    # Data transformations
+    accidents <- gps |>
+        # Remove missing observations with missing coordinates
+        tidyr::drop_na(starts_with("coord")) |>
+        # Remove duplicities (keeps the first recrod)
+        dplyr::distinct(p1, .keep_all = TRUE) |>
+        # Join accidents data
+        dplyr::right_join(accidents, by = "p1") |>
+        # Remove unmatched coordinates and accidents without ID
+        tidyr::drop_na(p1, starts_with("coord")) |>
+        # Remove duplicities (keeps first record)
+        dplyr::distinct(p1, .keep_all = TRUE)
+
+    casualties <- outcomes |>
+        dplyr::left_join(vehicles, by = c("p1", "id_vozidla")) |>
+        dplyr::group_by(p1) |>
+        dplyr::filter(p59g == 1) |>
         dplyr::mutate(
+            type = dplyr::case_when(
+                p44 %in% c(0,1,2) ~ "motobike",
+                p44 == 13 ~ "bike",
+                p44 %in% c(3,4) ~ "car",
+                p44 %in% c(5,6,7) ~ "truck",
+                TRUE ~ "other"
+            ),
+            driver = ifelse(p59a == 1,"driver","crew")
+        ) |>
+        dplyr::group_by(p1, type, driver) |>
+        dplyr::summarise(
+            obs = dplyr::n(),
+            .groups = "drop"
+        ) |>
+        tidyr::pivot_wider(
+            names_from = c(type,driver),
+            values_from = obs,
+            id_cols = p1,
+            names_sep = "_",
+            names_prefix = "casualties_",
+            values_fill = 0
+        )
+
+    # Year of birth of a driver from the first vehicle
+    birth <- outcomes |>
+        dplyr::filter(id_vozidla == 1) |>
+        dplyr::filter(p59a == 1) |>
+        mutate(
+            vek = ifelse(
+                p59d <= (
+                    lubridate::year(
+                        lubridate::today()
+                    )-2000),
+                2000 + p59d,
+                1900 + p59d
+            )
+        ) %>%
+        dplyr::select(p1, driver_birth = vek) |>
+        dplyr::distinct(p1, .keep_all = TRUE)
+
+    involved_vehicles <- vehicles |>
+        dplyr::mutate(
+            vehicle_bike = p44 == 13,
+            vehicle_motobike = p44 %in% c(0,1,2)
+        ) %>%
+        dplyr::group_by(p1) %>%
+        dplyr::summarise(
+            involved_bike = any(vehicle_bike),
+            involved_motobike = any(vehicle_motobike),
+            .groups = "drop"
+        )
+
+    # accidents <-
+    #     dplyr::left_join(accidents, gps, by = "p1") |>
+    #     dplyr::filter(!is.na(coord_x), !is.na(coord_y)) |>
+    #     dplyr::distinct()
+
+    accidents <- list(
+        accidents,
+        casualties,
+        birth,
+        pedestrians,
+        involved_vehicles
+    ) |>
+        purrr::reduce(
+            dplyr::left_join,
+            by = "p1"
+        ) |>
+        # Age of drivers who caused the accident
+        dplyr::mutate(
+            driver_age = ifelse(
+                p10 == 1,
+                lubridate::year(p2) - driver_birth,
+                NA
+            )
+        ) |>
+        dplyr::select(
+            -driver_birth
+        ) |>
+        dplyr::mutate(
+            dplyr::across(
+                where(is.logical),
+                tidyr::replace_na, FALSE
+            )
+        ) |>
+        dplyr::mutate(
+            dplyr::across(
+                tidyselect::starts_with("casualties"),
+                tidyr::replace_na, 0L
+            )
+        ) |>
+        sf::st_as_sf(coords = c("coord_x", "coord_y"),
+                     crs = PLANARY_PROJECTION)
+
+    accidents |>
+        dplyr::mutate(
+            accident_date = as.Date(p2),
+            accident_material_cost = p14 * 100 / 1e6  # in mil. CZK
+        ) |>
+        dplyr::rename(
             accident_id = p1,
-            accident_date = lubridate::dmy(p2a),
             accident_dead = p13a,
             accident_serious_injury = p13b,
             accident_light_injury = p13c,
-            accident_material_cost = p14 / 100 * 1e6  # in mil. CZK
+            # Stepan:
+            accident_datetime = p2,
+            accident_type = p6,
+            accident_obstacle_type = p8,
+            accident_fault = p10,
+            accident_alcohol = p11,
+            accident_cause = p12
         ) |>
-        dplyr::select(accident_id:accident_material_cost, everything())
+        dplyr::select(
+          -p14
+        ) |>
+        dplyr::select(
+            accident_id,
+            accident_date,
+            everything()
+            )
 }
 
 
@@ -187,14 +524,17 @@ read_raw_accidents <- function(folder, skip = 6) {
 #
 # notes:
 # - for assumptions on input files, see help for read_raw_accidents()
-create_accidents <- function(path_to_all_accidents, raw_accidents_dir) {
+create_accidents <- function(path_to_all_accidents, raw_accidents_dir,
+                             profiles) {
+    start_logging(log_dir())
     logging::loginfo("accidents prep: checking for updates")
     if (is_behind(path_to_all_accidents,
-                  list.files(raw_accidents_dir, pattern = "csv",
-                             full.names = TRUE))) {
+                  c(list.files(raw_accidents_dir, pattern = "csv",
+                             full.names = TRUE),
+                    path_to_configs()))) {
         logging::loginfo("accidents prep: accidents data are behind---updating")
         tryCatch({
-            accidents <- read_raw_accidents(raw_accidents_dir)
+            accidents <- read_raw_accidents(raw_accidents_dir, profiles)
             write_dir_rds(accidents, path_to_all_accidents)
             logging::loginfo(
                 "accidents prep: data on all accidents have been updated")
@@ -260,7 +600,6 @@ get_points_close_to_lines <- function(points, lines, dist = 100,
 # - dist (numeric scalar) ... a distance from lines (default is 100 m)
 # - all_points (logical scalar) ... if TRUE, the points outside the buffer are
 #   added, otherwise they are omitted (default)
-# - verbose (logical scalar) ... if TRUE, it shows the progress
 #
 # value:
 #   a sf of points; these points are snapped to the lines; only points
@@ -275,22 +614,17 @@ get_points_close_to_lines <- function(points, lines, dist = 100,
 #
 # TODO: rozmyslet si, jestli potřebuju držet body, které nejsou přilepené na silnice
 snap_points_to_lines <- function(points, lines, dist = 100,
-                                 all_points = FALSE, verbose = FALSE) {
-    inside <- get_points_close_to_lines(points, lines, dist = dist,
-                                        verbose = verbose)
+                                 all_points = FALSE) {
+    inside <- get_points_close_to_lines(points, lines, dist = dist)
     buff_points <- points[inside, ]
-    if (verbose) message("Finding nearest features...")
     nf <- sf::st_nearest_feature(buff_points, lines)
-    if (verbose) message("Finding nearest points...")
     np <- sf::st_nearest_points(buff_points, lines[nf, ], pairwise = TRUE)
     np <- sf::st_cast(np, "POINT")[c(FALSE, TRUE)]
-    if (verbose) message("Adding attributes...")
     out <- sf::st_drop_geometry(buff_points)
     out$lixel_id <- lines$lixel_id[nf]
     out$geometry <- np
     out <- st_as_sf(out)
     if (all_points) {
-        if (verbose) message("Adding points outside buffer...")
         out$valid <- TRUE
         outside <- points[!inside, ]
         outside$valid <- FALSE
@@ -316,54 +650,152 @@ snap_points_to_lines <- function(points, lines, dist = 100,
 #   stored
 # - accident_dir ... (character scalar) path to folder where the new accidents
 #   files should be stored
+# - shiny ... (logical scalar) whether the result is used for further
+#   computation of densities (FALSE, default), or for shiny output (TRUE)
 #
 # value:
 #   none; data are written to disk
+#
+# output:
+#   - if shiny = TRUE
+#       - accidents within the non-buffered districts are kept
+#       - all accidents within the buffer are kept with no regards to their
+#           distance to road system; variable denotes whether they are close to
+#           to roads
+#       - all variables are kept
+#       - accidents are projected to WGS-84
+#   - if shiny = FALSE
+#       - accident within the buffered districts are kept
+#       - only accidents close to roads are kept
+#       - only variables needed for density computations are kept
+#       - accidents are projected to PLANARY_PROJECTION
 #
 # notes:
 # - the accidents that are farther from roads than max_distance are removed
 # - remaining accident are snapped to roads, i.e., their position is changed
 #   such that they lie on a road---they are moved to their closest points on
 #   their closest line
+# create_districts_accidents <- function(districts,
+#                                        path_to_accidents,
+#                                        lixel_dir,
+#                                        accident_dir,
+#                                        profiles) {
+#     one_file <- function(input_file, output_file, accidents, max_distance) {
+#         start_logging(log_dir())
+#         logging::loginfo("district accidents prep: creating %s", output_file)
+#         lines <- readr::read_rds(input_file)
+#         snapped_points <- snap_points_to_lines(accidents, lines,
+#                                                dist = max_distance)
+#         write_dir_rds(snapped_points, output_file)
+#         logging::loginfo("district accidents prep: %s has been created",
+#                          output_file)
+#     }
+#
+#     start_logging(log_dir())
+#     logging::loginfo("district accidents prep: checking for uppdates")
+#
+#     tryCatch({
+#         accidents <- readr::read_rds(path_to_accidents)
+#         districts <- districts_behind(districts,
+#                                       target_fun = accidents_file_name,
+#                                       source_fun = lixel_file_name,
+#                                       target_folder = accident_dir,
+#                                       source_folder = lixel_dir,
+#                                       other_files = c(path_to_districts(),
+#                                                       path_to_accidents))
+#         txt <- dplyr::if_else(nrow(districts) == 0, "---skipping", " in parallel")
+#         logging::loginfo(
+#             "district accidents prep: %d districts will be uppdated%s",
+#             nrow(districts), txt)
+#         tab <- tibble::tibble(
+#             input_file = lixel_file_name(districts, lixel_dir),
+#             output_file = accidents_file_name(districts, accident_dir))
+#         PWALK(tab, one_file,
+#               workers = profiles$NO_OF_WORKERS_ACCIDENTS[[1]],
+#               ram_needed = profiles$RAM_PER_CORE_ACCIDENTS[[1]],
+#               accidents = accidents,
+#               max_distance = profiles$ACCIDENT_TO_ROAD_MAX_DISTANCE[[1]]
+#               )
+#         logging::loginfo(
+#             "district accidents prep: district accidents have been updated")
+#     },
+#     error = function(e) {
+#         logging::logerror("district accidents prep failed: %s", e)
+#         stop("district accidents prep failed---stopping evaluation")})
+# }
 create_districts_accidents <- function(districts,
                                        path_to_accidents,
-                                       max_distance,
                                        lixel_dir,
                                        accident_dir,
-                                       workers = NULL,
-                                       other_dependencies = NULL) {
-    one_file <- function(input_file, output_file, accidents) {
+                                       profiles,
+                                       shiny = FALSE) {
+    one_file <- function(geometry,
+                         input_file,
+                         output_file,
+                         shiny,
+                         accidents,
+                         max_distance) {
         start_logging(log_dir())
         logging::loginfo("district accidents prep: creating %s", output_file)
         lines <- readr::read_rds(input_file)
+        accidents <- accidents[sf::st_intersects(accidents,
+                                                 geometry,
+                                                 sparse = FALSE), ]
         snapped_points <- snap_points_to_lines(accidents, lines,
-                                               dist = max_distance)
+                                               dist = max_distance,
+                                               all_points = shiny)
+        # if the output is not for shiny, only a subset of necessary variables
+        # is kept
+        if (!shiny)
+            snapped_points <- snapped_points |>
+            select(accident_id, accident_date, accident_dead,
+                   accident_serious_injury, accident_light_injury,
+                   accident_material_cost, lixel_id)
+        # if the output is for shiny, it must be re-projected to WGS84
+        snapped_points <- sf::st_transform(snapped_points,
+                                           crs = ifelse(shiny,
+                                                        WGS84,
+                                                        PLANARY_PROJECTION))
         write_dir_rds(snapped_points, output_file)
         logging::loginfo("district accidents prep: %s has been created",
                          output_file)
     }
 
+    start_logging(log_dir())
     logging::loginfo("district accidents prep: checking for uppdates")
 
     tryCatch({
         accidents <- readr::read_rds(path_to_accidents)
-        workers <- get_number_of_workers(workers,
-                                         ram_needed = RAM_PER_CORE_ACCIDENTS)
         districts <- districts_behind(districts,
                                       target_fun = accidents_file_name,
                                       source_fun = lixel_file_name,
                                       target_folder = accident_dir,
                                       source_folder = lixel_dir,
-                                      other_files = c(other_dependencies,
-                                                      path_to_accidents))
+                                      other_files = c(path_to_districts(),
+                                                      path_to_accidents,
+                                                      path_to_configs()))
         txt <- dplyr::if_else(nrow(districts) == 0, "---skipping", " in parallel")
         logging::loginfo(
             "district accidents prep: %d districts will be uppdated%s",
             nrow(districts), txt)
-        tab <- tibble::tibble(
-            input_file = lixel_file_name(districts, lixel_dir),
-            output_file = accidents_file_name(districts, accident_dir))
-        PWALK(tab, one_file, accidents = accidents, workers = workers)
+        # accidents are cropped to districts; if the output is not for shiny,
+        # districts must be buffered
+        if (!shiny)
+            districts <- sf::st_buffer(districts,
+                                       dist = profiles$DISTRICT_BUFFER_SIZE[[1]])
+        tab <- districts |>
+            dplyr::select() |>
+            dplyr::mutate(
+                input_file = lixel_file_name(districts, lixel_dir),
+                output_file = accidents_file_name(districts, accident_dir),
+                shiny = shiny
+            )
+        PWALK(tab, one_file,
+              workers = profiles$NO_OF_WORKERS_ACCIDENTS[[1]],
+              ram_needed = profiles$RAM_PER_CORE_ACCIDENTS[[1]],
+              accidents = accidents,
+              max_distance = profiles$ACCIDENT_TO_ROAD_MAX_DISTANCE[[1]]
+        )
         logging::loginfo(
             "district accidents prep: district accidents have been updated")
     },

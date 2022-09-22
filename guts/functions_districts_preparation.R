@@ -1,8 +1,8 @@
 # -------------------------------------
-# Script:   districts_preparation_functions.R
+# Script:   functions_districts_preparation.R
 # Author:   Michal Kvasnička
-# Purpose:  This script defines functions to read in polygons of individual
-#           districts in the Czech Republic. Implicitly "okresy".
+# Purpose:  This script defines functions for reading and writing polygons
+#           of individual districts in the Czech Republic. Implicitly "okresy".
 # Inputs:   none
 # Outputs:  functions
 # Notes:
@@ -10,10 +10,15 @@
 # Copyright(c) Michal Kvasnička
 # -------------------------------------
 
-# needed packages
-require(dplyr)
-require(glue)
-require(sf)
+# packages
+library(dplyr, verbose = FALSE, warn.conflicts = FALSE)
+library(glue, verbose = FALSE, warn.conflicts = FALSE)
+library(sf, verbose = FALSE, warn.conflicts = FALSE)
+
+
+# projections
+PLANARY_PROJECTION <- 5514  # Křovák
+WGS84 <- 4326  # WGS84
 
 
 
@@ -80,13 +85,23 @@ read_districts_cuzk <- function(path_to_districts, layer = "SPH_OKRES") {
 #   a new/updated districts shapefile is used; it is because the providers
 #   change the variable names, coding, etc., between versions
 create_districts <- function(path_to_districts, path_to_raw_districts,
-                             reader = read_districts_cuzk) {
+                             reader = read_districts_cuzk,
+                             profiles) {
+    start_logging(log_dir())
     logging::loginfo("districts prep: checking for updates")
-    if (is_behind(path_to_districts, path_to_raw_districts)) {
+    if (is_behind(path_to_districts,
+                  c(path_to_raw_districts, path_to_configs()))) {
         logging::loginfo(
             "districts prep: districts table is behind and will be updated")
         tryCatch({
             districts <- suppressMessages(reader(path_to_raw_districts))
+            if ("DISTRICTS" %in% names(profiles)) {
+                districts <- districts |>
+                    dplyr::filter(district_id %in% profiles$DISTRICTS[[1]])
+                logging::loginfo("districts prep: removing all districts but %s",
+                                 str_flatten(profiles$DISTRICTS[[1]],
+                                             collapse = ", "))
+            }
             write_dir_rds(districts, file = path_to_districts)
             logging::loginfo("districts prep: districts table has been updated")
         },

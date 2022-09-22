@@ -10,11 +10,11 @@
 # -------------------------------------
 
 # necessary packages
-require(dplyr)
-require(readr)
-require(stringr)
-require(memuse)
-require(logging)
+require(dplyr, quietly = TRUE, warn.conflicts = FALSE)
+require(readr, quietly = TRUE, warn.conflicts = FALSE)
+require(stringr, quietly = TRUE, warn.conflicts = FALSE)
+require(memuse, quietly = TRUE, warn.conflicts = FALSE)
+require(logging, quietly = TRUE, warn.conflicts = FALSE)
 
 
 
@@ -69,10 +69,7 @@ process_command_line_arguments <- function(rdir) {
 
 # path to raw data
 raw_data_dir <- function() {
-    if (exists("RAW_DATA_DIR"))
-        RAW_DATA_DIR
-    else
-        file.path(DIR_ORIGIN, "rawdata")
+    file.path(DIR_ORIGIN, "rawdata")
 }
 
 # path to districts shape file folder
@@ -100,10 +97,7 @@ path_to_raw_accidents <- function() {
 
 # path to created data folder
 data_dir <- function() {
-    if (exists("DATA_DIR"))
-        DATA_DIR
-    else
-        file.path(DIR_ORIGIN, "data")
+    file.path(DIR_ORIGIN, "data")
 }
 
 # path to districts
@@ -134,15 +128,22 @@ path_to_densities_dir <- function() {
 
 # outputs
 output_dir <- function() {
-    if (exists("OUTPUT_DIR"))
-        OUTPUT_DIR
-    else
-        file.path(DIR_ORIGIN, "output")
+    file.path(DIR_ORIGIN, "output")
+}
+
+# path to districts for shiny
+path_to_shiny_districts <- function() {
+    file.path(output_dir(), "districts", "districts.rds")
+}
+
+# path to folder where accidents in individual districts for shiny are stored
+path_to_shiny_accidents_dir <- function() {
+    file.path(output_dir(), "accidents")
 }
 
 # path to folder where the final product used in shiny in stored
 shiny_dir <- function() {
-    file.path(output_dir(), "shiny")
+    file.path(output_dir(), "clusters")
 }
 
 # path to folder where finald product for GIS (shape file) is stored
@@ -153,10 +154,18 @@ gis_dir <- function() {
 
 # logging
 log_dir <- function() {
-    if (exists("LOG_DIR"))
-        LOG_DIR
-    else
-        file.path(DIR_ORIGIN, "log")
+    file.path(DIR_ORIGIN, "log")
+}
+
+
+# path to source profiles and config
+path_to_source_configs <- function() {
+    file.path(DIR_ORIGIN, "config")
+}
+
+# path to file where profiles are stored
+path_to_configs <- function() {
+    file.path(path_to_source_configs(), "profiles.rds")
 }
 
 
@@ -255,7 +264,7 @@ shiny_file_name <- function(districts, folder = NULL, ...) {
     pars <- list(...)
     stopifnot(all(c("from_date", "to_date") %in% names(pars)))
     txt <- stringr::str_c(
-        "shiny_{id}_",
+        "clusters_{id}_",
         if ("profile_name" %in% names(pars) && !is.null(pars$profile_name))
             "{profile_name}_"
         else
@@ -263,6 +272,38 @@ shiny_file_name <- function(districts, folder = NULL, ...) {
         "{as.character(from_date)}_{as.character(to_date)}.rds")
     basic_file_name(folder, districts, txt, ...)
 }
+
+
+
+# accidents files regexes ------------------------------------------------------
+
+# regex for major accident-data file
+accidents_file_name_pattern <- function() {
+    "\\d{4}_databaze_nehody.csv"
+}
+
+# regex for major gps file of accident data
+accidents_gps_name_pattern <- function() {
+    "\\d{4}_databaze_GPS.csv"
+}
+
+# regex for outcomes file of accident data
+accidents_outcomes_name_pattern <- function() {
+    "\\d{4}_databaze_nasledky.csv"
+}
+
+# regex for pedestrians file of accident data
+accidents_pedestrians_name_pattern <- function() {
+    "\\d{4}_databaze_chodci.csv"
+}
+
+# regex for vehicles file of accident data
+accidents_vehicles_name_pattern <- function() {
+    "\\d{4}_databaze_vozidla.csv"
+}
+
+# how many first rows should be skipped in each CSV file
+ACCIDENTS_FILES_SKIP <- 6L
 
 
 
@@ -476,9 +517,7 @@ districts_behind <- function(districts, target_fun, source_fun,
 # WARNINGS:
 # - if any other process allocates memory after get_number_of_workers() done its
 #   magic, memory may be insufficient for this system
-get_number_of_workers <- function(workers, ram_needed = RAM_PER_CORE_GENERAL) {
-    if (is.null(workers))
-        workers <- ifelse(exists("NO_OF_WORKERS"), NO_OF_WORKERS, 1)
+get_number_of_workers <- function(workers, ram_needed) {
     if (workers == "auto") {
         ram <- as.numeric(memuse::Sys.meminfo()$freeram) / 1024 ^ 3
         no_of_cores <- future::availableCores()
@@ -531,9 +570,9 @@ silently <- function(.f) {
 # }
 #
 # TODO: když to spadne, mělo by to throw error via stop()
-PWALK <- function(.l, .f, workers = 1, ...) {
+PWALK <- function(.l, .f, workers = 1, ram_needed = NULL, ...) {
     if (nrow(.l) > 0) {
-        workers <- get_number_of_workers(workers)
+        workers <- get_number_of_workers(workers, ram_needed)
         .f <- silently(.f)
         if (workers == 1) {
             success <- purrr::pmap_lgl(.l, .f, ...)
@@ -571,14 +610,19 @@ PWALK <- function(.l, .f, workers = 1, ...) {
 #   one file; therefore, I have to start logging into the newest existing file;
 #   therefore, there must be a way to create a new log file
 create_log_file <- function(log_folder) {
-    dir.create(log_folder, showWarnings = FALSE, recursive = TRUE)
-    time <- as.character(Sys.time())
-    log_file <- stringr::str_c(
-        stringr::str_replace_all(time, "[\\s:]", "-"),
-        ".log")
-    readr::write_lines(
-        stringr::str_c(time, " CREATED log file"),
-        file.path(log_folder, log_file)
+    tryCatch({
+        dir.create(log_folder, showWarnings = FALSE, recursive = TRUE)
+        time <- as.character(Sys.time())
+        log_file <- file.path(
+            log_folder,
+            stringr::str_c(stringr::str_replace_all(time, "[\\s:]", "-"),".log")
+        )
+        logging::addHandler(writeToFile, file = log_file)
+        logging::loginfo("log file created")
+    },
+    error = function(e) {
+        stop("creating new log file failed---stopping evaluation---see the log",
+             call. = NA)}
     )
 }
 
@@ -587,16 +631,16 @@ create_log_file <- function(log_folder) {
 # log_folder
 #
 # inputs:
-# - log_folder (character scalar) path to a folder where logs arestored
+# - log_folder (character scalar) path to a folder where logs are stored
 #
 # value:
 #   none; it starts logging into the newest .log file in log_folder
 #
 # notes:
 # - for reason why it is done this way, see notes to create_log_file()
-start_logging <- function(log_folder, console = FALSE) {
-    if (is.null(log_folder))
-        return(invisible(NULL))
+start_logging <- function(log_folder) {
+    # if (is.null(log_folder))
+    #     return(invisible(NULL))
     logging::basicConfig()
     log_file <- list.files(log_folder, pattern = "\\.log", full.names = TRUE) |>
         file.info() |>
@@ -604,8 +648,63 @@ start_logging <- function(log_folder, console = FALSE) {
         dplyr::slice(1) |>
         rownames()
     logging::addHandler(writeToFile, file = log_file)
-    if (console)
-        logging::removeHandler("basic.stdout")
 }
 
 
+
+# reading various files --------------------------------------------------------
+
+# read_profiles() returns list of profiles
+read_profiles <- function() {
+    readr::read_rds(path_to_configs())
+}
+
+
+# read_districts returns districts table
+read_districts <- function() {
+    readr::read_rds(path_to_districts())
+}
+
+
+
+# damage cost ------------------------------------------------------------------
+
+# add_damage_cost(accidents) takes a tibble of accidents and adds a new column,
+# accident_cost
+#
+# inputs:
+# - accidents ... (tibble) accidents table
+# - accident_dead ... (integer) number of the dead in the accident
+# - accident_serious_injury ... (integer) number of the seriously injured
+# - accident_light_injury ... (integer) number of the light injured
+# - accident_material_cost ... (double) material cost in mil. CZK
+# - na_zero ... (logical scalar) if TRUE (default), NAs in costs are replaced
+#   with 0s; if FALSE, all rows in accidents that have any NA cost are removed
+#
+# value:
+#   the same tibble as accidents but new column, accident cost, is added
+add_damage_cost <- function(accidents,
+                            unit_cost_dead,
+                            unit_cost_serious_injury,
+                            unit_cost_light_injury,
+                            unit_cost_material,
+                            unit_cost_const, na_zero = TRUE) {
+    zero_na <- function(x, na_zero)
+        ifelse(is.na(x) & na_zero, 0, x)
+
+    accidents <- accidents |>
+        mutate(accident_cost =
+                   zero_na(accident_dead, na_zero) * unit_cost_dead +
+                   zero_na(accident_serious_injury, na_zero) *
+                   unit_cost_serious_injury +
+                   zero_na(accident_light_injury, na_zero) *
+                   unit_cost_light_injury +
+                   zero_na(accident_material_cost, na_zero) *
+                   unit_cost_material +
+                   unit_cost_const
+        )
+
+    if (!na_zero)
+        accidents <- accidents |> filter(!is.na(accident_cost))
+    accidents
+}

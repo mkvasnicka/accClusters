@@ -1,10 +1,10 @@
 # -------------------------------------
-# Script:   start_logging.R
+# Script:   prepare_profiles.R
 # Author:   Michal Kvasnička
-# Purpose:  This script create a new log file which is used by the following
-#           scripts for logging.
-# Inputs:   none
-# Outputs:  it creates the log file.
+# Purpose:  This scripts reads user config and/or profiles, checks them, and
+#           stores them in a file.
+# Inputs:   At least config.R; profile_xxx.R, too, if present. Log file, too.
+# Outputs:  profiles.rds file
 # Notes:
 #
 # Copyright(c) Michal Kvasnička
@@ -19,7 +19,9 @@ if (!exists("DIR_ORIGIN")) DIR_ORIGIN <- "guts_data"
 
 # source necessary scripts
 source(file.path(RSCRIPTDIR, "functions_auxiliary.R"))
+source(file.path(RSCRIPTDIR, "functions_profiles_preparation.R"))
 
 
-# create a log file
-create_log_file(log_dir())
+# create profiles
+create_profiles(path_to_configs = path_to_configs(),
+                path_to_source_configs = path_to_source_configs())

@@ -9,21 +9,26 @@
 # Copyright(c) Michal Kvasnička
 # -------------------------------------
 
-require(tibble)
-require(dplyr)
-require(purrr)
-require(glue)
-require(sf)
-require(tidygraph)
-require(sfnetworks)
-require(spNetwork)
-require(geojsonio)
-require(jsonlite)
-require(spdep)
-require(igraph)
-require(osmar)
-require(spatstat)
+# packages
+require(tibble, quietly = TRUE, warn.conflicts = FALSE)
+require(dplyr, quietly = TRUE, warn.conflicts = FALSE)
+require(purrr, quietly = TRUE, warn.conflicts = FALSE)
+require(glue, quietly = TRUE, warn.conflicts = FALSE)
+require(sf, quietly = TRUE, warn.conflicts = FALSE)
+require(tidygraph, quietly = TRUE, warn.conflicts = FALSE)
+require(sfnetworks, quietly = TRUE, warn.conflicts = FALSE)
+require(spNetwork, quietly = TRUE, warn.conflicts = FALSE)
+require(geojsonio, quietly = TRUE, warn.conflicts = FALSE)
+require(jsonlite, quietly = TRUE, warn.conflicts = FALSE)
+require(spdep, quietly = TRUE, warn.conflicts = FALSE)
+require(igraph, quietly = TRUE, warn.conflicts = FALSE)
+require(osmar, quietly = TRUE, warn.conflicts = FALSE)
+require(spatstat, quietly = TRUE, warn.conflicts = FALSE)
 
+
+# projections
+PLANARY_PROJECTION <- 5514  # Křovák
+WGS84 <- 4326  # WGS84
 
 
 
@@ -225,12 +230,13 @@ filter_all_osm_district_roads <- function(districts, input_path, folder,
 # - districts ... (sf) table of districts; must include at least district_id and
 #   geometry (multi-polygon)
 # - path_to_osm_maps ... (character scalar) a path to OSM map
+# - path_to_geojsons ... (character scalar) a path where geojsons, the
+#   intermediate and resulting OSM maps are written
+# - profiles ... (list of lists of named variables) list of all profiles
 # - road_types ... (character scalar or vector or NULL) if NULL, all roads are
 #   kept; if character scalar then it road types must be separated with commas;
 #   if vector, it is reformated automatically
 # - buffer_size ... (numeric scalar) the buffer size in meters for geojson
-# - path_to_geojsons ... (character scalar) a path where geojsons, the
-#   intermediate and resulting OSM maps are written
 # - districts_in_one_go ... (integer scalar) how many districts should be
 #   processed in one go; if too high, the process would failed due to lack of
 #   memory; 10 is ok if you have 32 GB of RAM
@@ -239,13 +245,14 @@ filter_all_osm_district_roads <- function(districts, input_path, folder,
 create_osm_district_roads <- function(districts,
                                       path_to_osm_maps,
                                       path_to_geojsons,
-                                      road_types = NULL,
-                                      buffer_size,
-                                      districts_in_one_go = 10,
-                                      other_dependencies = NULL) {
+                                      profiles,
+                                      road_types = profiles$SUPPORTED_ROAD_CLASSES[[1]],
+                                      buffer_size = profiles$DISTRICT_BUFFER_SIZE[[1]],
+                                      districts_in_one_go = 10) {
+    start_logging(log_dir())
     logging::loginfo("osm maps prep: checking for updates")
     if (is_behind(osm_file_name(districts, path_to_geojsons),
-                  c(path_to_osm_maps, other_dependencies))) {
+                  c(path_to_osm_maps, path_to_districts(), path_to_configs()))) {
         logging::loginfo(
             "osm maps prep: osm maps are behind and will be updated")
         tryCatch({
@@ -632,6 +639,7 @@ simplify_sfnetwork <- function(net, max_distance = 0.5, dTolerance = 5) {
 #   files live
 # - path_to_sf_maps ... (character scalar) folder where district-filtered SF
 #   files should be stored
+# - profiles ... (list of lists of named variables) list of all profiles
 # - crs ... (numeric scalar) planary projection
 # - max_distance ... (numeric scalar) maximal distance of connected points
 #   which should be replace a new point (see step 2)
@@ -648,10 +656,10 @@ simplify_sfnetwork <- function(net, max_distance = 0.5, dTolerance = 5) {
 create_sf_district_roads <- function(districts,
                                      path_to_osm_maps,
                                      path_to_sf_maps,
-                                     crs,
+                                     profiles,
+                                     crs = PLANARY_PROJECTION,
                                      max_distance = 0.5, dTolerance = 5,
-                                     workers = 1,
-                                     other_dependencies = NULL) {
+                                     workers = profiles$NO_OF_WORKERS[[1]]) {
     one_file <- function(input_file, output_file) {
         start_logging(log_dir())
         logging::loginfo("road sfnetwork prep: creating %s", output_file)
@@ -664,13 +672,15 @@ create_sf_district_roads <- function(districts,
                          output_file)
     }
 
+    start_logging(log_dir())
     logging::loginfo("road sfnetwork prep: checking for updates")
     districts <- districts_behind(districts,
                                   target_fun = sf_file_name,
                                   source_fun = osm_file_name,
                                   target_folder = path_to_sf_maps,
                                   source_folder = path_to_osm_maps,
-                                  other_files = other_dependencies)
+                                  other_files = c(path_to_districts(),
+                                                  path_to_configs()))
     txt <- dplyr::if_else(nrow(districts) == 0, "---skipping", " in parallel")
     logging::loginfo("road sfnetwork prep: %d districts will be updated%s",
                      nrow(districts), txt)
@@ -679,7 +689,9 @@ create_sf_district_roads <- function(districts,
             input_file = osm_file_name(districts, path_to_osm_maps),
             output_file = sf_file_name(districts, path_to_sf_maps)
         )
-        PWALK(tab, one_file, workers = workers)
+        PWALK(tab, one_file,
+              workers = profiles$NO_OF_WORKERS[[1]],
+              ram_needed = profiles$RAM_PER_CORE_GENERAL[[1]])
         if (nrow(tab) > 0)
             logging::loginfo("road sfnetwork: road sfnetworks have been updated")
     },
@@ -712,9 +724,7 @@ create_sf_district_roads <- function(districts,
 # value:
 #   none; files are writen to disk
 create_lixelized_roads <- function(districts, input_folder, output_folder,
-                                   lx_length, mindist = NULL,
-                                   workers = NULL,
-                                   other_dependencies = NULL) {
+                                   profiles) {
     one_file <- function(input_file, output_file, lx_length, mindist) {
         start_logging(log_dir())
         logging::loginfo("lixel prep: creating %s", output_file)
@@ -729,14 +739,15 @@ create_lixelized_roads <- function(districts, input_folder, output_folder,
         logging::loginfo("lixel prep: %s has been created", output_file)
     }
 
+    start_logging(log_dir())
     logging::loginfo("lixel prep: checking for updates")
-    workers <- get_number_of_workers(workers)
     districts <- districts_behind(districts,
                                   target_fun = lixel_file_name,
                                   source_fun = sf_file_name,
                                   target_folder = output_folder,
                                   source_folder = input_folder,
-                                  other_files = other_dependencies)
+                                  other_files = c(path_to_districts(),
+                                                  path_to_configs()))
     txt <- dplyr::if_else(nrow(districts) == 0, "--skipping", " in parallel")
     logging::loginfo("lixel prep: %d districts will be updated%s",
                      nrow(districts), txt)
@@ -745,8 +756,11 @@ create_lixelized_roads <- function(districts, input_folder, output_folder,
             input_file = sf_file_name(districts, input_folder),
             output_file = lixel_file_name(districts, output_folder)
         )
-        PWALK(tab, one_file, workers = workers,
-              lx_length = lx_length, mindist = mindist)
+        PWALK(tab, one_file,
+              workers = profiles$NO_OF_WORKERS[[1]],
+              ram_needed = profiles$RAM_PER_CORE_GENERAL[[1]],
+              lx_length = profiles$LIXEL_SIZE[[1]],
+              mindist = profiles$LIXEL_MIN_DIST[[1]])
         if (nrow(tab) > 0)
             logging::loginfo("lixel prep: lixels have been updated")
     },
@@ -768,8 +782,7 @@ create_lixelized_roads <- function(districts, input_folder, output_folder,
 #   none, data are written to disk
 create_lixel_samples_for_roads <- function(districts,
                                            input_folder, output_folder,
-                                           workers = NULL,
-                                           other_dependencies = NULL) {
+                                           profiles) {
     one_file <- function(input_file, output_file) {
         start_logging(log_dir())
         logging::loginfo("lixel samples prep: creating %s", output_file)
@@ -779,14 +792,15 @@ create_lixel_samples_for_roads <- function(districts,
         logging::loginfo("lixel samples prep: %s has been created", output_file)
     }
 
+    start_logging(log_dir())
     logging::loginfo("lixel samples prep: checking for updates")
-    workers <- get_number_of_workers(workers)
     districts <- districts_behind(districts,
                                   target_fun = lixel_sample_file_name,
                                   source_fun = lixel_file_name,
                                   target_folder = output_folder,
                                   source_folder = input_folder,
-                                  other_files = other_dependencies)
+                                  other_files = c(path_to_districts(),
+                                                  path_to_configs()))
     txt <- dplyr::if_else(nrow(districts) == 0, "---skipping", " in parallel")
     logging::loginfo("lixel samples prep: %d districts will be uppdated%s",
                      nrow(districts), txt)
@@ -795,7 +809,9 @@ create_lixel_samples_for_roads <- function(districts,
             input_file = lixel_file_name(districts, input_folder),
             output_file = lixel_sample_file_name(districts, output_folder)
         )
-        PWALK(tab, one_file, workers = workers)
+        PWALK(tab, one_file,
+              workers = profiles$NO_OF_WORKERS[[1]],
+              ram_needed = profiles$RAM_PER_CORE_GENERAL[[1]])
         if (nrow(districts) > 0)
             logging::loginfo(
                 "lixel samples prep: lixel samples have been updated")
@@ -856,8 +872,7 @@ create_sf_nb <- function(sf) {
 # value:
 #   none, data are written to disk
 create_lixel_nbs <- function(districts, input_folder, output_folder,
-                             workers = NULL,
-                             other_dependencies = NULL) {
+                             profiles) {
     one_district <- function(input_file, output_file) {
         start_logging(log_dir())
         logging::loginfo("lixel nbs prep: creating %s", output_file)
@@ -867,14 +882,15 @@ create_lixel_nbs <- function(districts, input_folder, output_folder,
         logging::loginfo("lixel nbs prep: %s has been created", output_file)
     }
 
+    start_logging(log_dir())
     logging::loginfo("lixel nbs prep: checking for updates")
-    workers <- get_number_of_workers(workers)
     districts <- districts_behind(districts,
                                   target_fun = lixel_nb_file_name,
                                   source_fun = lixel_file_name,
                                   target_folder = output_folder,
                                   source_folder = input_folder,
-                                  other_files = other_dependencies)
+                                  other_files = c(path_to_districts(),
+                                                  path_to_configs()))
     txt <- if_else(nrow(districts) == 0, "---skipping", " in parallel")
     logging::loginfo("lixel nbs prep: %d will be updated%s",
                      nrow(districts), txt)
@@ -883,7 +899,9 @@ create_lixel_nbs <- function(districts, input_folder, output_folder,
             input_file = lixel_file_name(districts, input_folder),
             output_file = lixel_nb_file_name(districts, output_folder)
         )
-        PWALK(tab, one_district, workers = workers)
+        PWALK(tab, one_district,
+              workers = profiles$NO_OF_WORKERS[[1]],
+              ram_needed = profiles$RAM_PER_CORE_GENERAL[[1]])
         if (nrow(districts) > 0)
             logging::loginfo("lixel nbs  have been updated")
     },

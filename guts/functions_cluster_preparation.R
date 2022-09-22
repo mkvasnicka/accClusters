@@ -9,11 +9,19 @@
 # Copyright(c) Michal Kvasnička
 # -------------------------------------
 
-require(sf)
-require(sfnetworks)
-require(spdep)
-require(dplyr)
-source(file.path(RSCRIPTDIR, "functions_damage_cost.R"))
+# load packages
+library(sf, verbose = FALSE, warn.conflicts = FALSE)
+library(sfnetworks, verbose = FALSE, warn.conflicts = FALSE)
+library(spdep, verbose = FALSE, warn.conflicts = FALSE)
+library(dplyr, verbose = FALSE, warn.conflicts = FALSE)
+library(tidyr, verbose = FALSE, warn.conflicts = FALSE)
+library(purrr, verbose = FALSE, warn.conflicts = FALSE)
+
+
+# projections
+PLANARY_PROJECTION <- 5514  # Křovák
+WGS84 <- 4326  # WGS84
+
 
 
 # one district cluster tibble --------------------------------------------------
@@ -233,13 +241,41 @@ make_clusters <- function(lixels, nb, threshold, steps) {
 #     }
 #     clusters
 # }
-join_clusters <- function(clusters) {
+# join_clusters <- function(clusters) {
+#     i <- 1L
+#     while (i <= length(clusters)) {
+#         joined <- FALSE
+#         j <- i + 1L
+#         while (j <= length(clusters)) {
+#             if (length(base::intersect(clusters[[i]], clusters[[j]])) > 0) {
+#                 clusters[[i]] <- unique(c(clusters[[i]], clusters[[j]]))
+#                 clusters[[j]] <- NULL
+#                 joined <- TRUE
+#             } else {
+#                 j <- j + 1L
+#             }
+#         }
+#         if (!joined)
+#             i <- i + 1L
+#     }
+#     clusters
+# }
+join_clusters <- function(clusters, nbs) {
+    neighbors <- function(c1, c2, nbs) {
+        next_to <- function(x, y, nbs) {
+            length(base::intersect(unique(unlist(nbs[x])), y)) > 0
+        }
+        # the clusters share at least one lixel
+        length(base::intersect(c1, c2)) > 0 ||
+            # or their are neighbors
+            next_to(c1, c2, nbs) || next_to(c2, c1, nbs)
+    }
     i <- 1L
-    while (i <= length(clusters)) {
+    while (i < length(clusters)) {
         joined <- FALSE
         j <- i + 1L
         while (j <= length(clusters)) {
-            if (length(base::intersect(clusters[[i]], clusters[[j]])) > 0) {
+            if (neighbors(clusters[[i]], clusters[[j]], nbs)) {
                 clusters[[i]] <- unique(c(clusters[[i]], clusters[[j]]))
                 clusters[[j]] <- NULL
                 joined <- TRUE
@@ -288,7 +324,7 @@ join_clusters <- function(clusters) {
 # }
 compute_cluster_tibble <- function(lixels, nb, threshold, steps) {
     lst <- make_clusters(lixels, nb, threshold, steps) |>
-        join_clusters()
+        join_clusters(nb)
     if (length(lst) == 0)
         return(tibble::tibble(cluster = integer(0), lixel_id = integer(0)))
     lid <- lixels |> st_drop_geometry() |> pull(lixel_id)
@@ -452,6 +488,64 @@ optimize_cluster_parameters <- function(lixels, nb, accidents,
 
 
 # cluster preparation ----------------------------------------------------------
+
+#
+compute_clusters_for_parameters <- function(quantile, threshold,
+                                            cluster_steps,
+                                            lixels, accidents, nb, geometry) {
+    cls <- compute_cluster_tibble(lixels, nb, threshold, cluster_steps)
+    clss <- cluster_statistics(lixels, accidents, cls)
+
+    lixels <- lixels |>
+        add_clusters_to_lixels(cls) |>
+        dplyr::select(lixel_id, density, cluster)
+    accidents <- accidents |>
+        add_clusters_to_accidents(cls) |>
+        sf::st_drop_geometry() |>
+        dplyr::filter(!is.na(cluster)) |>
+        dplyr::select(accident_id, cluster, accident_cost)
+    join_network <- function(geo) {
+        geo |>
+            sfnetworks::as_sfnetwork(directed = FALSE) |>
+            tidygraph::convert(sfnetworks::to_spatial_smooth) |>
+            sfnetworks::activate("edges") |>
+            sf::st_as_sf() |>
+            sf::st_union()
+    }
+    cluster_statistics <- lixels |>
+        dplyr::filter(!is.na(cluster)) |>
+        dplyr::group_by(cluster) |>
+        dplyr::summarise(geometry = join_network(geometry),
+                         .groups = "drop") |>
+        dplyr::left_join(clss, by = "cluster")
+    # crop all to true district boarder
+    crop_to_district <- function(x, district) {
+        x[sf::st_intersects(x, district, sparse = FALSE), ]
+    }
+    # lixels <- lixels |>
+    #     crop_to_district(geometry) |>
+    #     sf::st_transform(crs = WGS84)
+    cluster_statistics <- cluster_statistics |>
+        filter(!is.na(cost)) |>  # removes clusters that include no accident
+        crop_to_district(geometry)
+    # cluster centroids
+    centroids <- cluster_statistics |>
+        sf::st_geometry() |>
+        sf::st_centroid() |>
+        sf::st_transform(WGS84) |>
+        sf::st_coordinates()
+    cluster_statistics <- dplyr::bind_cols(
+        cluster_statistics |> sf::st_transform(crs = WGS84),
+        centroids)
+    accidents <- accidents |>
+        filter(cluster %in% unique(cluster_statistics$cluster))
+    tibble::tibble(severity = as.integer(round((1 - quantile) * 1000)),
+                   # quantile = quantile,
+                   # threshold = threshold,
+                   additional_lixels = cluster_steps,
+                   accidents = list(accidents),
+                   clusters = list(cluster_statistics))
+}
 
 # # compute_one_time_clusters() computes hotspot clusters for one time period
 # # given by parameters from_date and to_date
@@ -631,21 +725,8 @@ optimize_cluster_parameters <- function(lixels, nb, accidents,
 #   lixelized roads in individual districts are stored
 # - accidents_dir ... (character scalar) path to folder where accidents snapped
 #   to roads in individual districts are stored
-# - time_window ... (either character scalar or tibble with two columns)
-#   - if time_window is character scalar, it is a path to TSV file where time
-#       window is stored; see help for read_time_window_file()
-#   - if time_window is tibble, it must have two columns (from_date and to_date)
-#       which includes Dates or character vectors in YYYY-MM-DD format
-#       convertible to Dates
-# - cluster_min_quantile ... (numeric scalar in (0, 1)) threshold for lixels to
-#   constitute clusters in step 1, see notes
-# - cluster_steps ... (non-negative integer scalar) how many lixels are
-#   recursively added to clusters
-# - visual_min_quantile ... (numeric scalar in (0, 1)) threshold for lixel
-#   density for lixels that will be stored in lixel table
-# - workers ... (NULL or integer scalar) number of cores used in parallel
-# - other_files ... (character vector) paths to other files that can determine
-#   whether existing files are up-to-date
+# - cluster_dir  # TODO: doplnit nápovědu
+# - profiles  # TODO: doplnit nápovědu
 #
 # value:
 #   none; data are written to disk
@@ -660,107 +741,123 @@ compute_clusters <- function(districts,
                              lixel_maps_dir,
                              accidents_dir,
                              cluster_dir,
-                             time_window,
-                             cluster_min_quantile, cluster_steps,
-                             visual_min_quantile,
-                             workers = NULL,
-                             other_files) {
-    one_district <- function(densities_file, lixel_nb_file, accident_file,
+                             profiles) {
+    one_district <- function(geometry,
+                             densities_file,
+                             lixel_nb_file,
+                             accident_file,
                              output_file,
-                             cluster_min_quantile, cluster_steps,
+                             from_date, to_date,
+                             cluster_min_quantile,
+                             cluster_steps,
                              visual_min_quantile,
-                             from_date, to_date) {
+                             unit_cost_dead,
+                             unit_cost_serious_injury,
+                             unit_cost_light_injury,
+                             unit_cost_material,
+                             unit_cost_const,
+                             cluster_severity_limit,
+                             cluster_severity_step,
+                             cluster_step_limit) {
         start_logging(log_dir())
         logging::loginfo("clusters prep: creating %s", output_file)
         lixels <- readr::read_rds(densities_file)
         nb <- readr::read_rds(lixel_nb_file)
         accidents <- readr::read_rds(accident_file) |>
-            filter(accident_date >= from_date, accident_date <= to_date) |>
-            add_damage_cost()
-        threshold <- quantile(lixels$density, cluster_min_quantile)
-        visual_threshold <- quantile(lixels$density, visual_min_quantile)
+            dplyr::filter(accident_date >= from_date,
+                          accident_date <= to_date) |>
+            add_damage_cost(unit_cost_dead, unit_cost_serious_injury,
+                            unit_cost_light_injury, unit_cost_material,
+                            unit_cost_const)
 
-        cls <- compute_cluster_tibble(lixels, nb, threshold, cluster_steps)
-        clss <- cluster_statistics(lixels, accidents, cls)
+        severity <- seq(from = cluster_severity_limit, to = 1,
+                        by = -cluster_severity_step) / 1000
+        pars <- tidyr::expand_grid(
+            quantile = 1 - severity,
+            cluster_steps = 1:cluster_step_limit
+        ) |>
+            dplyr::mutate(threshold = quantile(lixels$density, quantile)) |>
+            dplyr::select(quantile, threshold, cluster_steps)
+        output <- purrr::pmap_dfr(pars, compute_clusters_for_parameters,
+                                  lixels = lixels, accidents = accidents,
+                                  nb = nb, geometry = geometry)
 
-        lixels <- lixels |>
-            add_clusters_to_lixels(cls) |>
-            dplyr::filter(density >= visual_threshold | !is.na(cluster)) |>
-            dplyr::select(lixel_id, density, cluster)
-        accidents <- accidents |>
-            add_clusters_to_accidents(cls) |>
-            sf::st_drop_geometry() |>
-            dplyr::filter(!is.na(cluster)) |>
-            dplyr::select(accident_id, cluster, accident_cost)
-        join_network <- function(geo) {
-            geo |>
-                sfnetworks::as_sfnetwork(directed = FALSE) |>
-                tidygraph::convert(sfnetworks::to_spatial_smooth) |>
-                sfnetworks::activate("edges") |>
-                sf::st_as_sf() |>
-                sf::st_union()
-        }
-        cluster_statistics <- lixels |>
-            dplyr::filter(!is.na(cluster)) |>
-            dplyr::group_by(cluster) |>
-            dplyr::summarise(geometry = join_network(geometry),
-                             .groups = "drop") |>
-            dplyr::left_join(clss, by = "cluster")
-        write_dir_rds(
-            list(lixels = lixels, accidents = accidents,
-                 cluster_statistics = cluster_statistics),
-            file = output_file)
+        # write to file
+        write_dir_rds(output, file = output_file)
         logging::loginfo("clusters prep: %s has been created", output_file)
     }
 
+    start_logging(log_dir())
     logging::loginfo("clusters prep: checking for updates")
     tryCatch({
-        profile_name <- NULL
-        if (exists("PROFILE_NAME"))
-            profile_name <- PROFILE_NAME
-
-        workers <- get_number_of_workers(workers)
-
-        time_window <- handle_time_window(time_window)
-
-        districts <- purrr::map2(
-            time_window$from_date, time_window$to_date,
-            ~districts_behind(districts |>
-                                  mutate(from_date = .x, to_date = .y),
-                              target_fun = shiny_file_name,
-                              source_fun = list(lixel_nb_file_name,
-                                                accidents_file_name),
-                              target_folder = cluster_dir,
-                              source_folder = list(lixel_maps_dir,
-                                                   accidents_dir),
-                              other_files = other_files,
-                              from_date = .x, to_date = .y,
-                              profile_name = profile_name)
-        ) |>
-            dplyr::bind_rows()
+        districts <- districts |>
+            bind_cols(profiles |>
+                          dplyr::select(PROFILE_NAME, TIME_WINDOW,
+                                        CLUSTER_SEVERITY_LIMIT,
+                                        CLUSTER_SEVERITY_STEP,
+                                        CLUSTER_STEP_LIMIT,
+                                        starts_with("UNIT_COST_")) |>
+                          tidyr::unnest(TIME_WINDOW) |>
+                          tidyr::nest(data = everything())
+            ) |>
+            tidyr::unnest(data)
+        districts <- districts |>
+            districts_behind(target_fun = shiny_file_name,
+                             source_fun = list(lixel_nb_file_name,
+                                               accidents_file_name),
+                             target_folder = cluster_dir,
+                             source_folder = list(lixel_maps_dir,
+                                                  accidents_dir),
+                             other_files = path_to_districts(),from_date = districts$from_date,
+                             to_date = districts$to_date,
+                             profile_name = districts$PROFILE_NAME)
+        # districts <- purrr::map2(
+        #     time_window$from_date, time_window$to_date,
+        #     ~districts_behind(districts |>
+        #                           mutate(from_date = .x, to_date = .y),
+        #                       target_fun = shiny_file_name,
+        #                       source_fun = list(lixel_nb_file_name,
+        #                                         accidents_file_name),
+        #                       target_folder = cluster_dir,
+        #                       source_folder = list(lixel_maps_dir,
+        #                                            accidents_dir),
+        #                       other_files = path_to_districts(),
+        #                       from_date = .x, to_date = .y,
+        #                       profile_name = profile_name)
+        # ) |>
+        #     dplyr::bind_rows()
         txt <- dplyr::if_else(nrow(districts) == 0,
                               "---skipping", " in parallel")
         logging::loginfo(
             "clusters prep: %d districts x times will be uppdated%s",
             nrow(districts), txt)
-        tab <- tibble::tibble(
-            densities_file = densities_file_name(districts, densities_dir,
-                                                 from_date = districts$from_date,
-                                                 to_date = districts$to_date,
-                                                 profile_name = profile_name),
-            lixel_nb_file = lixel_nb_file_name(districts, lixel_maps_dir),
-            accident_file = accidents_file_name(districts, accidents_dir),
-            output_file = shiny_file_name(districts, cluster_dir,
-                                          from_date = districts$from_date,
-                                          to_date = districts$to_date,
-                                          profile_name = profile_name),
-            from_date = districts$from_date,
-            to_date = districts$to_date
-        )
-        PWALK(tab, one_district, workers = workers,
-              cluster_min_quantile = cluster_min_quantile,
-              cluster_steps = cluster_steps,
-              visual_min_quantile = visual_min_quantile)
+        tab <- districts |>
+            dplyr::select() |>
+            dplyr::mutate(
+                densities_file = densities_file_name(districts, densities_dir,
+                                                     from_date = districts$from_date,
+                                                     to_date = districts$to_date,
+                                                     profile_name = districts$PROFILE_NAME),
+                lixel_nb_file = lixel_nb_file_name(districts, lixel_maps_dir),
+                accident_file = accidents_file_name(districts, accidents_dir),
+                output_file = shiny_file_name(districts, cluster_dir,
+                                              from_date = districts$from_date,
+                                              to_date = districts$to_date,
+                                              profile_name = districts$PROFILE_NAME),
+                from_date = districts$from_date,
+                to_date = districts$to_date,
+                cluster_severity_limit = districts$CLUSTER_SEVERITY_LIMIT,
+                cluster_severity_step = districts$CLUSTER_SEVERITY_STEP,
+                cluster_step_limit = districts$CLUSTER_STEP_LIMIT,
+                unit_cost_dead = districts$UNIT_COST_DEAD,
+                unit_cost_serious_injury = districts$UNIT_COST_SERIOUS_INJURY,
+                unit_cost_light_injury = districts$UNIT_COST_LIGHT_INJURY,
+                unit_cost_material = districts$UNIT_COST_MATERIAL,
+                unit_cost_const = districts$UNIT_COST_CONST
+            )
+        PWALK(tab, one_district,
+              workers = profiles$NO_OF_WORKERS[1],
+              ram_needed = profiles$RAM_PER_CORE_GENERAL[1])
         logging::loginfo("clusters prep: clusters have been updated")
     },
     error = function(e) {
