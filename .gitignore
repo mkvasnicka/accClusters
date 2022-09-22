@@ -7,3 +7,4 @@ shiny
 output
 rawdata.old
 config/*rds
+.Rproj.user
