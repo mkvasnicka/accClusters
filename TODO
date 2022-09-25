@@ -1,6 +1,20 @@
 TODO
 ====
 
+Big Picture
+-----------
+- fixovat parametry tvorby klastrů -- shiny je musí mít fixní, takže je uživatel
+  nemůže měnit
+- napsat nápovědu pro parametry tvorby klastrů + profily
+- zkontrolovat kód
+- napsat dokumentaci
+- docker
+- otázky docker:
+    - jak vidím z vnitřku paměť + cpu?
+    - co se stane, když sáhnu na víc paměti / cpu?
+
+
+
 Tvorba klastrů
 --------------
 
