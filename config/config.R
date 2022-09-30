@@ -25,7 +25,7 @@ RAM_PER_CORE_ACCIDENTS <- 10
 # maps preparation -------------------------------------------------------------
 
 # buffer sizer around districts in meters---necessary for NKDE
-DISTRICT_BUFFER_SIZE <- 1e3
+DISTRICT_BUFFER_SIZE <- 3e3
 
 # road lixelization in meters
 LIXEL_SIZE <- 5

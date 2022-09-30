@@ -532,7 +532,7 @@ compute_clusters_for_parameters <- function(quantile, threshold,
     centroids <- cluster_statistics |>
         sf::st_geometry() |>
         sf::st_centroid() |>
-        sf::st_transform(WGS84) |>
+        sf::st_transform(crs = WGS84) |>
         sf::st_coordinates()
     cluster_statistics <- dplyr::bind_cols(
         cluster_statistics |> sf::st_transform(crs = WGS84),

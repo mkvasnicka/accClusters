@@ -2,3 +2,4 @@ data
 tmp
 config/*rds
 .Rproj.user
+.Rhistory
