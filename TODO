@@ -3,6 +3,12 @@ TODO
 
 Big Picture
 -----------
+- proč spadly výpočty hustot?
+    - data/tmp/densities/densities_CZ0532_default_2019-01-01_2021-12-31.rds,
+    - data/tmp/densities/densities_CZ0532_default_2016-01-01_2018-12-31.rds,
+    - data/tmp/densities/densities_CZ0643_default_2019-01-01_2021-12-31.rds,
+    - data/tmp/densities/densities_CZ0643_default_2016-01-01_2018-12-31.rds
+- PWALK() musí umřít, když něco selže + logovat ty chyby
 - fixovat parametry tvorby klastrů -- shiny je musí mít fixní, takže je uživatel
   nemůže měnit
 - napsat nápovědu pro parametry tvorby klastrů + profily
