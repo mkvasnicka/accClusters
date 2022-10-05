@@ -607,6 +607,16 @@ PWALK <- function(.l, .f, workers = 1, ram_needed = NULL, ...) {
         }
     }
 }
+# PWALK() is the same as purrr::walk() with these differences:
+# - if workers > 1, furrr::future_walk() is run
+# - function .f is protected, i.e., it doesn't fail, and the all paralleled
+#   computations are carried out; PWALK() fails only then
+# - .l must be a tibble, i.e., it cannot be a list
+# - when run in parallel, it uses "dynamic" scheduling to balance the load;
+#   this assumes that the data .l sent to individual processes are small while
+#   the computation itself takes a lot of time; see
+#   https://furrr.futureverse.org/articles/chunking.html
+#
 PWALK <- function(.l, .f, workers = 1, ram_needed = NULL, ...) {
     if (nrow(.l) > 0) {
         workers <- get_number_of_workers(workers, ram_needed)
@@ -617,22 +627,25 @@ PWALK <- function(.l, .f, workers = 1, ram_needed = NULL, ...) {
             oplan <- future::plan()
             on.exit(future::plan(oplan))
             future::plan("multisession", workers = workers)
-            success <- furrr::future_pmap(.l, .f, ...,
-                                          .options = furrr::furrr_options(seed = TRUE))
+            success <- furrr::future_pmap(
+                .l, .f, ...,
+                .options = furrr::furrr_options(seed = TRUE,
+                                                scheduling = Inf)
+            )
         }
         failed <- seq_len(nrow(.l))[!purrr::map_lgl(success, isTRUE)]
         if (length(failed) > 0) {
-            logging::logerror(
-                "production failed in the following output files: %s",
-                str_c(.l$output_file[failed], collapse = ", ")
-            )
+            # logging::logerror(
+            #     "production failed in the following output files: %s",
+            #     str_c(.l$output_file[failed], collapse = ", ")
+            # )
             purrr::walk(failed,
                         ~logging::logerror("output file %s throws error %s",
                                            .l$output_file[.],
                                            as.character(success[[.]])))
             stop("production failed in the following output files: ",
                  str_c(.l$output_file[failed], collapse = ", "),
-                 "\nsee the log")
+                 "; see the log")
         }
     }
 }
