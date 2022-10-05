@@ -548,6 +548,23 @@ silently <- function(.f) {
         val
     }
 }
+# silently(.f) wrappes function .f in such a way that runs and returns TRUE when
+# it succeeds and simpleError when it fails; it should be used with functions
+# that return no value but are run for their side effects; it is used in PWALK()
+#
+# inputs:
+# - .f ... (clusure) a function that returns nothing and is run for its side
+#   effects
+#
+# value:
+#   simpleError when .f fails and TRUE otherwise
+silently <- function(.f) {
+    .f <- purrr::as_mapper(.f)
+    function(...) {
+        tryCatch({.f(...); TRUE},
+                 error = function(e) {e})
+    }
+}
 
 
 # PWALK() is the same as purrr::walk() with these differences:
@@ -587,6 +604,35 @@ PWALK <- function(.l, .f, workers = 1, ram_needed = NULL, ...) {
         if (nrow(tab) > 0) {
             logging::logerror("production failed in the following output files: %s",
                               str_c(tab$output_file, collapse = ", "))
+        }
+    }
+}
+PWALK <- function(.l, .f, workers = 1, ram_needed = NULL, ...) {
+    if (nrow(.l) > 0) {
+        workers <- get_number_of_workers(workers, ram_needed)
+        .f <- silently(.f)
+        if (workers == 1) {
+            success <- purrr::pmap(.l, .f, ...)
+        } else {
+            oplan <- future::plan()
+            on.exit(future::plan(oplan))
+            future::plan("multisession", workers = workers)
+            success <- furrr::future_pmap(.l, .f, ...,
+                                          .options = furrr::furrr_options(seed = TRUE))
+        }
+        failed <- seq_len(nrow(.l))[!purrr::map_lgl(success, isTRUE)]
+        if (length(failed) > 0) {
+            logging::logerror(
+                "production failed in the following output files: %s",
+                str_c(.l$output_file[failed], collapse = ", ")
+            )
+            purrr::walk(failed,
+                        ~logging::logerror("output file %s throws error %s",
+                                           .l$output_file[.],
+                                           as.character(success[[.]])))
+            stop("production failed in the following output files: ",
+                 str_c(.l$output_file[failed], collapse = ", "),
+                 "\nsee the log")
         }
     }
 }
