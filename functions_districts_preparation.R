@@ -68,6 +68,24 @@ read_districts_cuzk <- function(path_to_districts, layer = "SPH_OKRES") {
 }
 
 
+# add_greater_brno(districts) adds one more district into the district tibble:
+# joined Brno město and Brno venkov
+#
+# warning: this function is country and coding dependent!
+add_greater_brno <- function(districts) {
+    bm <- dplyr::filter(districts, district_id == "CZ0642") |>
+        dplyr::select(-everything())
+    bv <- dplyr::filter(districts, district_id == "CZ0643") |>
+        dplyr::select(-everything())
+    greater_brno <- st_union(bm, bv) |>
+        nngeo::st_remove_holes() |>
+        mutate(district_id = "CZ06423",
+               district_name = "Brno-město+venkov")
+    dplyr::bind_rows(districts,
+                     greater_brno)
+}
+
+
 # create_districts() creates/updates districts table
 #
 # inputs:
@@ -81,9 +99,12 @@ read_districts_cuzk <- function(path_to_districts, layer = "SPH_OKRES") {
 # value:
 #   none; data are written to disk
 #
-# WARNING: it may be necessary to implement a new reader function whenever
+# WARNINGS:
+# - it may be necessary to implement a new reader function whenever
 #   a new/updated districts shapefile is used; it is because the providers
 #   change the variable names, coding, etc., between versions
+# - it add a district that joins Brno-město and Brno-venkov; this is country and
+#   coding specific; see add_greater_brno() function
 create_districts <- function(path_to_districts, path_to_raw_districts,
                              reader = read_districts_cuzk,
                              profiles) {
@@ -95,6 +116,9 @@ create_districts <- function(path_to_districts, path_to_raw_districts,
             "districts prep: districts table is behind and will be updated")
         tryCatch({
             districts <- suppressMessages(reader(path_to_raw_districts))
+            # this line is country and coding specific; remove if used for any
+            # other country
+            districts <- add_greater_brno(districts)
             if ("DISTRICTS" %in% names(profiles)) {
                 districts <- districts |>
                     dplyr::filter(district_id %in% profiles$DISTRICTS[[1]])
