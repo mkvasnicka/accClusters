@@ -224,18 +224,25 @@ compute_densities <- function(districts,
         start_logging(log_dir())
 
         # grid_shape() is a heuristics that guesses how to split districts for
-        # the density computation; districts with a hole (such as okres Brno
+        # the density computation; districts with holes (such as okres Brno
         # venkov might not work optimally); this may be useful for performance
         # reasons but it is necessary because the NKDE computation fails for
         # some districts otherwise
         grid_shape <- function(map) {
+            # x and y size of the area in kms
             box <- sf::st_bbox(map)
             x <- as.numeric(box$xmax - box$xmin) / 1e3
             y <- as.numeric(box$ymax - box$ymin) / 1e3
-            s <- x * y
-            n <- nrow(map) / 5e5 * 10
-            xn <- max(c(1, round(x / y * n)))
-            yn <- max(c(1, round(y / x * n)))
+            # assuming Brno-město should have 100 blocks (suggested by the
+            # author of the NKDE package), how many block the district should
+            # have
+            n <- nrow(map) / 5e5 * 100
+            # assuming (roughly) square block, we set the side-size of the block
+            # in such a way there are n block altogether
+            b <- sqrt(x * y / n)
+            xn <- max(c(1, round(x / b)))
+            yn <- max(c(1, round(y / b)))
+            # return
             c(x = xn, y = yn)
         }
 
