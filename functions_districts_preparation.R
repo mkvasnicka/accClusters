@@ -14,6 +14,7 @@
 library(dplyr, verbose = FALSE, warn.conflicts = FALSE)
 library(glue, verbose = FALSE, warn.conflicts = FALSE)
 library(sf, verbose = FALSE, warn.conflicts = FALSE)
+library(nngeo, verbose = FALSE, warn.conflicts = FALSE)
 
 
 # projections
