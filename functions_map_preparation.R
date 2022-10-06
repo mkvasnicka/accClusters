@@ -233,21 +233,21 @@ filter_all_osm_district_roads <- function(districts, input_path, folder,
 # - path_to_geojsons ... (character scalar) a path where geojsons, the
 #   intermediate and resulting OSM maps are written
 # - profiles ... (list of lists of named variables) list of all profiles
-# - road_types ... (character scalar or vector or NULL) if NULL, all roads are
-#   kept; if character scalar then it road types must be separated with commas;
-#   if vector, it is reformated automatically
-# - buffer_size ... (numeric scalar) the buffer size in meters for geojson
 # - districts_in_one_go ... (integer scalar) how many districts should be
 #   processed in one go; if too high, the process would failed due to lack of
 #   memory; 10 is ok if you have 32 GB of RAM
 #
 # TODO: cleaning: odstranit roads.osm a různé .json a .geojson soubory
+#
+# notes:
+# - road_types ... (character scalar or vector or NULL) if NULL, all roads are
+#   kept; if character scalar then it road types must be separated with commas;
+#   if vector, it is reformated automatically
+# - buffer_size ... (numeric scalar) the buffer size in meters for geojson
 create_osm_district_roads <- function(districts,
                                       path_to_osm_maps,
                                       path_to_geojsons,
                                       profiles,
-                                      road_types = profiles$SUPPORTED_ROAD_CLASSES[[1]],
-                                      buffer_size = profiles$DISTRICT_BUFFER_SIZE[[1]],
                                       districts_in_one_go = 10) {
     start_logging(log_dir())
     logging::loginfo("osm maps prep: checking for updates")
@@ -259,8 +259,13 @@ create_osm_district_roads <- function(districts,
             if (!dir.exists(path_to_geojsons))
                 dir.create(path_to_geojsons)
             road_map <- file.path(path_to_geojsons, "roads.osm")
-            filter_osm_roads(path_to_osm_maps, road_map, road_types)
-            write_districts_geojson(districts, buffer_size, path_to_geojsons)
+            filter_osm_roads(path_to_osm_maps, road_map,
+                             road_types = profiles$SUPPORTED_ROAD_CLASSES[[1]])
+            write_districts_geojson(
+                districts,
+                buffer_size = profiles$DISTRICT_BUFFER_SIZE[[1]],
+                path_to_geojsons
+            )
             filter_all_osm_district_roads(districts, road_map, path_to_geojsons,
                                           districts_in_one_go = districts_in_one_go)
         },
