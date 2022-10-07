@@ -1,5 +1,5 @@
 ---
-title: "Dokumentace systému pro vizualizaci dopravních nehod"
+title: "Dokumentace softwaru pro přípravu dat pro vizualizaci dopravních nehod v\ ČR"
 output: 
   pdf_document: 
     toc: yes
@@ -20,7 +20,7 @@ header-includes:
    - \renewcaptionname{czech}{\contentsname}{Obsah}
    - \addtokomafont{section}{\clearpage}
    - \let\OriMakeTitle\maketitle
-   - \def\maketitle{\OriMakeTitle\vskip1\baselineskip\includegraphics[width=\linewidth]{fuze.pdf}\vskip11\baselineskip Software byl vytvořen týmem Masarykovy univerzity s~podporou grantu TAČR TL02000122 {\em Systém pro podporu rozhodování při posuzování fúzí na trzích s\ homogenním produktem a prostorovou diferenciací}.\thispagestyle{empty}}
+   - \def\maketitle{\OriMakeTitle\vskip1\baselineskip\includegraphics[width=\linewidth]{title_fig.pdf}\vskip11\baselineskip Software byl vytvořen týmem Masarykovy univerzity s~podporou grantu TAČR TL02000122 {\em Systém pro podporu rozhodování při posuzování fúzí na trzích s\ homogenním produktem a prostorovou diferenciací}.\thispagestyle{empty}}
    - \pagestyle{empty}
    - \tolerance=4500
    - \emergencystretch=11pt
@@ -62,35 +62,39 @@ library(knitr)
 
 # Úvod
 
-Tento text popisuje instalaci a použití softwaru
+Tento text popisuje instalaci a použití softwaru pro přípravu dat pro vizualizaci dopravních nehod v\ ČR.
 
-sw má dvě části:
+Software pro vizualizaci dopravních nehod tak má dvě části:
 
-- přípravu dat
-- interaktivní shiny aplikaci
+- tento offline neinteraktivní software, který vezme vstupní data, spočítá potřebné metriky, identifikuje místa častých nebo nebezpečných nehod a přípraví vstupy potřebné pro jejich interaktivní vizualizaci a
+- interaktivní webovou aplikaci, která data vizualizuje; použití této aplikace je popsané v\ separátním dokumentu.
 
-
-
-
-
-# Příprava dat
-
-Tato kapitola popisuje, jaké hardwarové a softwarové vybavení je potřeba, jak software **XYZ** nainstalovat a jakou adresářovou strukturu software předpokládá.
+Rozdělení softwaru do dvou částí je způsobeno výpočetní náročností přípravy dat, kterou není možné provádět "on-the-fly".
 
 
 
-## Potřebná konfigurace hardwaru a softwaru {#sec:hw-sw-config}
+
+
+# Systémové nároky {#sec:hw-sw-config}
 
 Výpočty jsou poměrně hardwarově náročné. Proto se předpokládá následující konfigurace hardwaru a softwaru:
 
-- minimálně procesor třídy i5 (vyšší je lepší), minimálně 8\ jader (větší počet jader je výhodou),
-- minimálně 32\ GB operační paměti (více jader vyžaduje více operační paměti),
+- procesor minimálně třídy i5 (vyšší je lepší), minimálně 4\ jádra (větší počet jader je výhodou),
+- minimálně 16\ GB operační paměti dedikované pro tento software (více jader vyžaduje více operační paměti),
 - operační systém **TODO**,
 - **TODO**
 
+Drtivá většina výpočtů běží paralelně na více jádrech. Čím větší počet jader má systém dedikovaný, tím rychleji příprava dat proběhne. Odhadovaný čas při prvním spuštění softwaru je při procesoru třídy i5 se čtyřmi jádry a 32 GB operační paměti celkem zhruba 2--3\ dny. Zvýšení počtu jader tento čas proporcionálně zkrátí.
+
+Výpočet běžící na jednom jádru vyžaduje typicky cca 4\ GB operační paměti (v\ některých krocích je však vyžadováno 10\ GB). Větší počet jader se tedy použije pouze v\ případě, že je k\ dispozici dostatečné množství operační paměti.
+
+Jako "dedikovaná operační paměť" se chápe paměť, která je softwaru k\ dispozici, tj.\ není okupovaná operačním systémem ani jinými procesy. V\ případě virtualizace se jedná o\ operační paměť, která je vyhrazena danému kontejneru.
 
 
-## Instalace softwaru
+
+
+
+# Instalace softwaru
 
 
 konfigurace
@@ -98,7 +102,7 @@ konfigurace
 
 
 
-## Struktura vstupních dat {#kap:input-data}
+# Struktura vstupních dat {#kap:input-data}
 
 Adresářová struktura je pevná. Všechna data (vstupní, výstupní, mezivýpočty, konfigurace, logy) jsou umístěny v jednom adresáři (`DIRORIGIN`). V\ tomto adresáři jsou následující podadresáře:
 
@@ -116,7 +120,7 @@ Software **XYZ** vyžaduje tři datové vstupy:
 - data k\ jednotlivým dopravním nehodám ve formátu CSV.
 
 
-### Administrativní členění ČR
+## Administrativní členění ČR
 
 Jako mapový podklad pro administrativní členění se používají data ČÚZK.
 
@@ -130,7 +134,7 @@ Stažený soubor rozzipujte a kompletní obsah adresáře `JTSK` překopírujte 
 Mapový podklad administrativního členění ČR je nutné aktualizovat vždy, když se změní hranice okresů ČR. Po aktualizace mapy okresů je třeba aktualizovat všechna data, viz oddíl\ \ref{sec:aktutalizace-dat}.
 
 
-### Silniční síť ČR
+## Silniční síť ČR
 
 Jako mapový podklad pro silniční síť se používají data OpenStreetMaps ve formátu jednoho souboru typu `.osm.pbf`. Předpokládá se využití mapového podkladu sbaleného firmou GEOFABRIC (https://www.geofabrik.de/), který obsahuje nejnovější podobu silniční sítě v\ ČR.
 
@@ -142,7 +146,7 @@ Soubor vložte do adresáře `DIRORIGIN/rawdata/osm`.
 Mapu silniční sítě je v\ systému třeba jednou za několik let akutalizovat. Po aktualizace mapy silniční sítě je třeba aktualizovat všechna data, viz oddíl\  \ref{sec:aktutalizace-dat}.
 
 
-### Data o nehodách
+## Data o nehodách
 
 Zdrojem dat o\ nehodách je PČR. Předpokládá se, že data pro každý rok se skládají z\ pěti souborů typu CSV:
 
@@ -158,7 +162,7 @@ Data o\ nehodách je třeba umístit do adresáře `DIRORIGIN/rawdata/accidents`
 
 
 
-## Konfigurace systému
+# Konfigurace systému
 
 Přípravu dat pro vizualizaci míst s\ vysokou nehodovostí je možné do jisté míry nastavit. K\ tomu slouží především soubor `DIRORIGIN/config/config.R`. Jedná se o\ R\ skript, který musí dodržet platná syntaktická pravidla jazyka\ R. V\ nejjednodušším případě stačí modifikovat hodnoty proměnných, které skript definuje. Je ovšem také možné používat platné výrazy a dokonce vytvářet vlastní proměnné. Tyto proměnné je však nutné na konci skriptu smazat (mohou tedy sloužit pouze pro zpřehlednění konfigurace).
 
@@ -170,16 +174,16 @@ Ve skriptu `config.R` platí následující pravidla:
 - tyto proměnné musejí mít přiřazenou platnou hodnotu
 
 
-### Vlastní konfigurace (config.R)
+## Vlastní konfigurace (config.R)
 
 Skript `config.R` může obsahovat následující proměnné, rozdělené do několik sekcí:
 
 
-#### Nastavení paralelních výpočtů
+### Nastavení paralelních výpočtů
 Většina přípravy dat probíhá paralelně na větším počtu jader. V\ této sekci se nastavuje, kolik jader může být využito. Jsou zde dvě možnosti: Buď uživatel nastaví počet jader sám, nebo dovolí systému, aby počet jader sám odhadl. V\ prvním případě uživatel nastaví proměnné `NO_OF_WORKERS` a `NO_OF_WORKERS_ACCIDENTS` na počet jader, který se má použít, ve druhém nechá obě proměnné nastavené na `"auto"` a zároveň nastaví proměnné `RAM_PER_CORE_GENERAL` a `RAM_PER_CORE_ACCIDENTS` na počet GB paměti RAM, který musí být dostupný na výpočet na jedno jádro. V\ současné době jsou tyto proměnné nastavené na konzervativní úrovni 3 a 10\ GB respektive. Při zvětšení objemu zpracovávaných dat však může být nezbytné tyto proměnné zvětšit.
 
 
-#### Příprava mapových podkladů
+### Příprava mapových podkladů
 U\ vlastních mapových podkladů je třeba nastavit čtyři parametry.
 
 1. Všechny výpočty probíhají po jednotlivých okresech. Aby nedocházelo ke zkreslením na hranicích okresu, je po dobu výpočtu třeba zahrnout i\ silnice nehody, které leží nedaleko za hranicí okresu (na konci výpočtu budou údaje ležící za hranicí okresu opět odříznuty). Proměnná `DISTRICT_BUFFER_SIZE` určuje o\ kolik metrů se má pro potřeby výpočtu posunout hranice okresu. Hodnota této proměnné musí být dostatečně větší než hodnota proměnných `NKDE_BW` (a `NKDE_TRIM_BW`, pokud je  hodnota `NKDE_ADAPTIVE` nastavena na `TRUE`).
@@ -204,7 +208,7 @@ Tyto koeficienty je možné nastavit pomocí proměnných `UNIT_COST_DEAD` ($d$)
 Hodnota nehod se při výpočtu rizikových oblastí používá pouze v\ případě, kdy je proměnná `NKDE_WEIGHTS` nastavena na hodnotu `"cost"`, viz dále.
 
 
-#### Parametry výpočtu hustot
+### Parametry výpočtu hustot
 
 `NKDE_WEIGHTS` <- "cost" "equal"
 
@@ -227,7 +231,7 @@ computation\
 `NKDE_AGG` <- 1
 
 
-##### Parametry pro hledání klastrů
+#### Parametry pro hledání klastrů
 Mechanismus hledání klastrů je poměrně jednoduchý. Nejdříve se najdou všechny souvislé lixely s\ hustotou pravděpodobnosti vyšší než zadaný práh\ $h$. Tak vzniknou prvotní klastry. Následně se tyto klastry rozšíří na všechny strany o\ $v$\ lixelů. V\ posledním kroku spojí ty klastry, které mají vzájemný průnik.
 
 Práh\ $h$ je stanoven dynamicky jako určitý vysoký kvantil. Tento kvantil je určen proměnnou `CLUSTER_MIN_QUANTILE`, která musí nabývat hodnotu z\ intervalu $[0,1]$, typicky však velmi blízkou jedné. Počet dodatečných lixelů\ $v$ je určen proměnnou `CLUSTER_ADDITIONAL_STEPS` (minimální hodnota je\ 1).
@@ -235,7 +239,7 @@ Práh\ $h$ je stanoven dynamicky jako určitý vysoký kvantil. Tento kvantil je
 Do interaktivní aplikace jsou exportovány i\ lixely, které mají vysokou hodnotu pravděpodobnosti nehody. Minimální kvantil lixelů, které jsou takto exportovány, určuje proměnná `VISUAL_MIN_QUANTILE`. Tato proměnná musí mít vždy menší hodnotu než `CLUSTER_MIN_QUANTILE`.
 
 
-#### Časová okna
+### Časová okna
 
 from- and to-dates when densities and clusters are computed
 format: YYYY-MM-DD\
@@ -247,37 +251,33 @@ TIME_WINDOW <- tibble::tribble(
 
 
 
-#### Vybrané okresy
+### Vybrané okresy
 Pokud z\ nějakého důvodu hledat rizikové oblasti ve všech okresech, je možné vypočet spustit pouze pro vybrané okresy. Nepovinná proměnná `DISTRICTS` v\ takovém případě vyjmenuje CZ\ NUT3 vybraných okresů.
 
 Pokud mají výpočty proběhnout pro všechny okresy, pak proměnná `DISTRICTS` nesmí být v\ konfiguračním souboru vytvořena.
 
 
-### Profily
+## Profily
 
 
-### Zpracovaná konfigurace a profily
+## Zpracovaná konfigurace a profily
 
 Software pro přípravu dat nejdříve načte konfiguraci a všechny profily, zkontroluje je a uloží do souboru `profiles.rds`. Tento soubor proto vymažte pouze v\ případě, kdy je třeba zajistit kompletní přepočítání konfigurace a profilů, např.\ v\ případě, kdy byl některý profil smazán.
 
 
 
-## Průběžně vytvářená data
+# Průběžně vytvářená data
 
 
 
-## Výstupy systému
+# Výstupy systému
 
 
 
-## Spuštění systému {#sec:aktutalizace-dat}
+# Spuštění systému {#sec:aktutalizace-dat}
 
 
 
-## Aktualizace dat
+# Aktualizace dat
 
 pro změně vstupních dat a konfigurace/profilů -- ala Makefile
-
-
-
-# Shiny applikace
