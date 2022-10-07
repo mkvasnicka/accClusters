@@ -268,7 +268,7 @@ Software pro přípravu dat nejdříve načte konfiguraci a všechny profily, zk
 
 
 
-# Fungování systému
+# Běh systému
 
 Po svém spuštění systém provádí postupně následující kroky:
 
@@ -285,7 +285,7 @@ Po svém spuštění systém provádí postupně následující kroky:
 
 Kroky 4--7 jsou paralelizované tak, že výpočet pro každý okres nebo kombinaci okresu, času a profilu je spuštěna na separátním jádře.
 
-Následující krok je spuštěn až ve chvíli, kdy doběhne celý předchozí krok. Je tomu tak proto, kdyby došlo z\ jakéhokoli důvodů k\ pádu nebo uživatelskému přerušení výpočtu pro některý okres.
+Následující krok je spuštěn až ve chvíli, kdy doběhne celý předchozí krok. Pokud výpočet z\ jakéhokoli důvodu selže pro jeden okres, data pro ostatní okresy budou aktualizována. Na konci kroku se však běh zastaví. Informace o\ problémech jsou uložena v\ logu.
 
 Pokud data vytvořená v\ daném kroku neexistují, jsou vytvořena. Pokud existují, jsou aktualizována pouze v\ případě, že čas poslední modifikace souboru je starší, než čas modifikace souborů, které jsou použity při jeho výpočtu. Aktualizace tedy respektují jednoduché závislosti způsobem podobným `make`.
 
