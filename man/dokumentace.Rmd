@@ -20,7 +20,7 @@ header-includes:
    - \renewcaptionname{czech}{\contentsname}{Obsah}
    - \addtokomafont{section}{\clearpage}
    - \let\OriMakeTitle\maketitle
-   - \def\maketitle{\OriMakeTitle\vskip1\baselineskip\includegraphics[width=\linewidth]{title_fig.pdf}\vskip11\baselineskip Software byl vytvořen týmem Masarykovy univerzity s~podporou grantu TAČR TL02000122 {\em Systém pro podporu rozhodování při posuzování fúzí na trzích s\ homogenním produktem a prostorovou diferenciací}.\thispagestyle{empty}}
+   - \def\maketitle{\OriMakeTitle\vskip1\baselineskip\includegraphics[width=\linewidth]{title_fig.pdf}\vskip11\baselineskip Software byl vytvořen týmem Masarykovy univerzity s~podporou grantu TAČR CK01000049 {\em Tvorba pokročilých nástrojů pro analýzu dopravních nehod pro Policii ČR}.\thispagestyle{empty}}
    - \pagestyle{empty}
    - \tolerance=4500
    - \emergencystretch=11pt
@@ -64,12 +64,12 @@ library(knitr)
 
 Tento text popisuje instalaci a použití softwaru pro přípravu dat pro vizualizaci dopravních nehod v\ ČR.
 
-Software pro vizualizaci dopravních nehod tak má dvě části:
+Software pro vizualizaci dopravních nehod má dvě části:
 
 - tento offline neinteraktivní software, který vezme vstupní data, spočítá potřebné metriky, identifikuje místa častých nebo nebezpečných nehod a přípraví vstupy potřebné pro jejich interaktivní vizualizaci a
-- interaktivní webovou aplikaci, která data vizualizuje; použití této aplikace je popsané v\ separátním dokumentu.
+- interaktivní webovou aplikaci, která data vizualizuje; použití webové aplikace je popsané v\ separátním dokumentu.
 
-Rozdělení softwaru do dvou částí je způsobeno výpočetní náročností přípravy dat, kterou není možné provádět "on-the-fly".
+Rozdělení softwaru do dvou částí je nutné kvůli výpočetní náročnosti přípravy dat, kterou není možné provádět "on-the-fly". Nejdříve se tedy pomocí této aplikace všechna data předpočítají, a\ pak se vizualizují pomocí webové aplikace.
 
 
 
@@ -84,9 +84,9 @@ Výpočty jsou poměrně hardwarově náročné. Proto se předpokládá násled
 - operační systém **TODO**,
 - **TODO**
 
-Drtivá většina výpočtů běží paralelně na více jádrech. Čím větší počet jader má systém dedikovaný, tím rychleji příprava dat proběhne. Odhadovaný čas při prvním spuštění softwaru je při procesoru třídy i5 se čtyřmi jádry a 32 GB operační paměti celkem zhruba 2--3\ dny. Zvýšení počtu jader tento čas proporcionálně zkrátí.
+Drtivá většina výpočtů běží paralelně na více jádrech. Čím větší počet jader má systém dedikovaný, tím rychleji příprava dat proběhne. Odhadovaný čas při prvním spuštění softwaru je při procesoru třídy i5 se čtyřmi jádry a 32 GB operační paměti zhruba 2--3\ dny. Zvýšení počtu jader tento čas proporcionálně zkrátí.
 
-Výpočet běžící na jednom jádru vyžaduje typicky cca 4\ GB operační paměti (v\ některých krocích je však vyžadováno 10\ GB). Větší počet jader se tedy použije pouze v\ případě, že je k\ dispozici dostatečné množství operační paměti.
+Výpočet běžící na jednom jádru vyžaduje typicky cca 4\ GB operační paměti (v\ některých krocích však 10\ GB). Větší počet jader se tedy použije pouze v\ případě, že je k\ dispozici dostatečné množství dedikované operační paměti.
 
 Jako "dedikovaná operační paměť" se chápe paměť, která je softwaru k\ dispozici, tj.\ není okupovaná operačním systémem ani jinými procesy. V\ případě virtualizace se jedná o\ operační paměť, která je vyhrazena danému kontejneru.
 
@@ -108,7 +108,7 @@ Adresářová struktura je pevná. Všechna data (vstupní, výstupní, mezivýp
 
 - `config` ... adresář s\ konfigurací (`config.R`) a profily (`profile_XXX.R`)
 - `rawdata` ... adresář se vstupními daty
-- `data` ... adresář s\ mezivýpočty
+- `tmp` ... adresář s\ mezivýpočty
 - `output` ... adresář s\ výslednými/výstupními daty
 - `log` ... adresář s\ logy
 
@@ -266,6 +266,35 @@ Software pro přípravu dat nejdříve načte konfiguraci a všechny profily, zk
 
 
 
+
+
+# Fungování systému
+
+Po svém spuštění systém provádí postupně následující kroky:
+
+1. vytvoří nový log-file v\ adresáři `DIRORIGIN/log`
+2. aktualizuje konfiguraci systému (soubor `DIRORIGIN/config/profiles.rds`)
+3. aktualizuje tabulku okresů
+4. aktualizuje mapové podklady silniční sítě
+    - vyfiltruje dopravní komunikace, které mají být zahrnuty, v\ jednotlivých okresech
+    - zjednoduší takto vzniklou silniční síť tak, že se pokusí sloučit extrémně krátké úseky sítě
+    - rozdělí silnice do krátkých úseků (*lixely*; doporučená délka je 5\ m) a najde středy těchto úseků
+5. aktualizuje data o\ dopravních nehodách
+6. spočítá síťové hustoty pravděpodobnosti nehodové škody na jednotlivých *lixelech*
+7. najde souvislé shluky lixelů, kde je pravděpodobnost výskytu nebo výše nehod extrémně vysoká
+
+Kroky 4--7 jsou paralelizované tak, že výpočet pro každý okres nebo kombinaci okresu, času a profilu je spuštěna na separátním jádře.
+
+Následující krok je spuštěn až ve chvíli, kdy doběhne celý předchozí krok. Je tomu tak proto, kdyby došlo z\ jakéhokoli důvodů k\ pádu nebo uživatelskému přerušení výpočtu pro některý okres.
+
+Pokud data vytvořená v\ daném kroku neexistují, jsou vytvořena. Pokud existují, jsou aktualizována pouze v\ případě, že čas poslední modifikace souboru je starší, než čas modifikace souborů, které jsou použity při jeho výpočtu. Aktualizace tedy respektují jednoduché závislosti způsobem podobným `make`.
+
+Při prvním spuštění tedy proběhnou všechny kroky. Následně je třeba data připravovat vždy, když jsou aktualizována data o\ dopravních nehodách. V\ takovém případě proběhnou pouze kroky\ 1 a 5--7, takže příprava dat bude podstatně rychlejší než při prvním spuštění. Pokud uživatel aktualizuje data o\ tvaru okresů nebo data o\ silniční síti, bude aktualizován jak daný krok, tak všechny následující. Pokud uživatel změní konfigurační soubor nebo profily, budou aktualizována všechna data.
+
+
+
+
+
 # Průběžně vytvářená data
 
 
@@ -281,3 +310,9 @@ Software pro přípravu dat nejdříve načte konfiguraci a všechny profily, zk
 # Aktualizace dat
 
 pro změně vstupních dat a konfigurace/profilů -- ala Makefile
+
+
+
+
+
+# Interpretace klastrů
