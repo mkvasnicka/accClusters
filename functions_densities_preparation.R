@@ -274,11 +274,14 @@ compute_densities <- function(districts,
         gs <- rbind(grid_shape,
                     grid_shape + 1,
                     grid_shape - 1,
+                    grid_shape + 2,
+                    grid_shape - 2,
                     c(grid_shape[1], grid_shape[1]),
                     c(grid_shape[2], grid_shape[2]),
                     c(10, 10)) |>
             tibble::as_tibble(.name_repair = "universal") |>
             dplyr::distinct() |>
+            dplyr::filter(if_any(everything(), ~. > 0)) |>
             as.matrix()
         densities <- NULL
         for (k in seq_len(nrow(gs))) {
