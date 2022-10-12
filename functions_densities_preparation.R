@@ -302,7 +302,8 @@ compute_densities <- function(districts,
                                              sparse = TRUE,
                                              verbose = TRUE),
                 error = function(e)
-                    logging::logwarn("nkde failed with grid shape %s", gs[k, ])
+                    logging::logwarn("densities prep: nkde failed with grid shape %s in file %s",
+                                     gs[k, ], output_file)
             )
             if (!is.null(densities))
                 break
@@ -314,6 +315,7 @@ compute_densities <- function(districts,
         logging::loginfo("densities prep: %s has been created", output_file)
     }
 
+    start_logging(log_dir())
     logging::loginfo("densities prep: checking for updates")
 
     tryCatch({

@@ -21,10 +21,8 @@ Big Picture
 - napsat nápovědu pro parametry tvorby klastrů + profily
 - zkontrolovat kód
 - napsat dokumentaci
-- docker
-- otázky docker:
-    - jak vidím z vnitřku paměť + cpu?
-    - co se stane, když sáhnu na víc paměti / cpu?
+- docker + integrovat detekci paměti + cpu uvnitř dockeru
+    - mám kód, ale zatím ho nepoužívám
 
 
 
