@@ -1,6 +1,21 @@
 TODO
 ====
 
+Now
+---
+
+- grid_shape v NKDE dořešit s autorem balíku
+    - teď to má provizorní řešení -- tinkering s gridem
+- accidents pro Shiny musí obsahova i nehody v bufferu, ale ty musí mít příznak, že jsou v bufferu
+    - musí tam být proto, že jinak tam budou chybět nehody hraničních klastrů
+    - musí mít příznak proto, že se nesmí zahrnout do statistik nehod
+    - možná díky tomu půjde spojit tvorbu nehod pro výpočty hustot a pro shiny (= zrychlení)
+- create_osm_districts používá na tvrdo konstantu districs_in_one_one=10
+    - zjisit, co to dělá
+    - přidat do uživatelského configu
+
+
+
 Big Picture
 -----------
 - proč spadly výpočty hustot?
