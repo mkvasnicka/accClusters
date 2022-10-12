@@ -269,22 +269,43 @@ compute_densities <- function(districts,
             weights <- accidents$accident_cost
         }
 
+        # nkde fails with some grids; several grid are tested for this reason
         grid_shape <- grid_shape(lixels)
-        densities <- spNetwork::nkde(map,
-                                     events = accidents,
-                                     w = weights,
-                                     samples = samples,
-                                     kernel_name = "quartic",
-                                     bw = bw, div = "bw",
-                                     adaptive = adaptive,
-                                     trim_bw = trim_bw,
-                                     method = method, digits = 1,
-                                     tol = 1,
-                                     grid_shape = grid_shape,
-                                     max_depth = 10,
-                                     agg = agg,
-                                     sparse = TRUE,
-                                     verbose = TRUE)
+        gs <- rbind(grid_shape,
+                    grid_shape + 1,
+                    grid_shape - 1,
+                    c(grid_shape[1], grid_shape[1]),
+                    c(grid_shape[2], grid_shape[2]),
+                    c(10, 10)) |>
+            tibble::as_tibble(.name_repair = "universal") |>
+            dplyr::distinct() |>
+            as.matrix()
+        densities <- NULL
+        for (k in seq_len(nrow(gs))) {
+            tryCatch(
+                densities <- spNetwork::nkde(map,
+                                             events = accidents,
+                                             w = weights,
+                                             samples = samples,
+                                             kernel_name = "quartic",
+                                             bw = bw, div = "bw",
+                                             adaptive = adaptive,
+                                             trim_bw = trim_bw,
+                                             method = method, digits = 1,
+                                             tol = 1,
+                                             grid_shape = gs[k, ],
+                                             max_depth = 10,
+                                             agg = agg,
+                                             sparse = TRUE,
+                                             verbose = TRUE),
+                error = function(e)
+                    logging::logwarn("nkde failed with grid shape %s", gs[k, ])
+            )
+            if (!is.null(densities))
+                break
+        }
+        if (is.null(densities))
+            stop("nkde failed with all grid shapes")
         lixels$density <- densities
         write_dir_rds(lixels, output_file)
         logging::loginfo("densities prep: %s has been created", output_file)
