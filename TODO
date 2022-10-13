@@ -6,19 +6,16 @@ Now
 
 - grid_shape v NKDE dořešit s autorem balíku
     - teď to má provizorní řešení -- tinkering s gridem
-- accidents pro Shiny musí obsahova i nehody v bufferu, ale ty musí mít příznak, že jsou v bufferu
-    - musí tam být proto, že jinak tam budou chybět nehody hraničních klastrů
-    - musí mít příznak proto, že se nesmí zahrnout do statistik nehod
-    - možná díky tomu půjde spojit tvorbu nehod pro výpočty hustot a pro shiny (= zrychlení)
 - create_osm_districts používá na tvrdo konstantu districs_in_one_one=10
-    - zjisit, co to dělá
+    - zjisit, co to dělá ~ jak osmium-extract používá paměť
     - přidat do uživatelského configu
-- tvorba klastrů někdy spadne:
-    2022-10-13 04:55:26 ERROR::output file data/output/clusters/clusters_CZ0805_default_2016-01-01_2018-12-31.rds throws error Error in `dplyr::summarise()`:
-    ! Problem while computing `geometry = join_network(geometry)`.
-    ℹ The error occurred in group 207: cluster = 207.
-    Caused by error in `[[<-.data.frame`:
-    ! replacement has 20 rows, data has 18
+- available_memory() -- doplnit pro docker
+- available_cores() -- doplnit pro docker
+- PWALK() zůstane někdy (při accidents?) viset -- proč?
+    - ukončí otevřené soubory, přejde na 1 jádro, tam běží na 100 %, ale nic se
+        neděje (tedy nic očividného)
+    - opravil by to schedulling?
+    - vyzkoušet na notebooku -- tam se to imho nedělo (je to možné?)
 
 
 
