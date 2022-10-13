@@ -13,6 +13,12 @@ Now
 - create_osm_districts používá na tvrdo konstantu districs_in_one_one=10
     - zjisit, co to dělá
     - přidat do uživatelského configu
+- tvorba klastrů někdy spadne:
+    2022-10-13 04:55:26 ERROR::output file data/output/clusters/clusters_CZ0805_default_2016-01-01_2018-12-31.rds throws error Error in `dplyr::summarise()`:
+    ! Problem while computing `geometry = join_network(geometry)`.
+    ℹ The error occurred in group 207: cluster = 207.
+    Caused by error in `[[<-.data.frame`:
+    ! replacement has 20 rows, data has 18
 
 
 
