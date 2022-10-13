@@ -498,6 +498,21 @@ districts_behind <- function(districts, target_fun, source_fun,
 
 # parallel processing ----------------------------------------------------------
 
+# available_memory() returns memory available to the process at the moment in
+# GBs
+# TODO: add memory management inside a container
+available_memory <- function() {
+    as.numeric(memuse::Sys.meminfo()$freeram) / 1024 ^ 3
+}
+
+
+# available_cores() returns the number of cores available at the moment
+# TODO: add memory management inside a container
+available_cores <- function() {
+    future::availableCores()
+}
+
+
 # get_number_of_workers() returns the number of workers/cores that should be
 # used in parallel
 #
@@ -519,8 +534,8 @@ districts_behind <- function(districts, target_fun, source_fun,
 #   magic, memory may be insufficient for this system
 get_number_of_workers <- function(workers, ram_needed) {
     if (workers == "auto") {
-        ram <- as.numeric(memuse::Sys.meminfo()$freeram) / 1024 ^ 3
-        no_of_cores <- future::availableCores()
+        ram <- available_memory()
+        no_of_cores <- available_cores()
         workers <- min(no_of_cores, floor(ram / ram_needed))}
     workers
 }
