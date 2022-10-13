@@ -505,12 +505,25 @@ compute_clusters_for_parameters <- function(quantile, threshold,
         dplyr::filter(!is.na(cluster)) |>
         dplyr::select(accident_id, cluster, accident_cost)
     join_network <- function(geo) {
-        geo |>
-            sfnetworks::as_sfnetwork(directed = FALSE) |>
-            tidygraph::convert(sfnetworks::to_spatial_smooth) |>
-            sfnetworks::activate("edges") |>
-            sf::st_as_sf() |>
-            sf::st_union()
+        # this function visually simplifies the clusters (so that they are
+        # rendered faster); the simplifications fails in rare cases, probably
+        # due to a bug in to_spatial_smooth(); the cluster isn't simplified in
+        # such a case, i.e., it still consists of individual lixels
+        tryCatch({
+            geo <- geo |>
+                sfnetworks::as_sfnetwork(directed = FALSE) |>
+                tidygraph::convert(sfnetworks::to_spatial_smooth) |>
+                sfnetworks::activate("edges") |>
+                sf::st_as_sf() |>
+                sf::st_union()
+        },
+        error = function(e)
+            logging::logwarn(
+                stringr::str_c(
+                    "clusters prep: cluster visual simplification failed; ",
+                    "I'm leaving this cluster not simplified"))
+        )
+        geo
     }
     cluster_statistics <- lixels |>
         dplyr::filter(!is.na(cluster)) |>
@@ -791,14 +804,14 @@ compute_clusters <- function(districts,
     logging::loginfo("clusters prep: checking for updates")
     tryCatch({
         districts <- districts |>
-            bind_cols(profiles |>
-                          dplyr::select(PROFILE_NAME, TIME_WINDOW,
-                                        CLUSTER_SEVERITY_LIMIT,
-                                        CLUSTER_SEVERITY_STEP,
-                                        CLUSTER_STEP_LIMIT,
-                                        starts_with("UNIT_COST_")) |>
-                          tidyr::unnest(TIME_WINDOW) |>
-                          tidyr::nest(data = everything())
+            dplyr::bind_cols(profiles |>
+                                 dplyr::select(PROFILE_NAME, TIME_WINDOW,
+                                               CLUSTER_SEVERITY_LIMIT,
+                                               CLUSTER_SEVERITY_STEP,
+                                               CLUSTER_STEP_LIMIT,
+                                               starts_with("UNIT_COST_")) |>
+                                 tidyr::unnest(TIME_WINDOW) |>
+                                 tidyr::nest(data = everything())
             ) |>
             tidyr::unnest(data)
         districts <- districts |>
