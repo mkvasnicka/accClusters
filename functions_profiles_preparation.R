@@ -22,19 +22,44 @@ library(rlang, verbose = FALSE, warn.conflicts = FALSE)
 # These functions are used to define/check that variables supplied by the user
 # in config.R/profiles have (in principle) valid values.
 
+# the vector has lenght equal to one
+is_scalar <- function(x) {
+    is.atomic(x) && length(x) == 1
+}
+
+is_not_empty <- function(x) {
+    is.atomic(x) && length(x) >= 1
+}
+
 # all slots in vector are known
 is_known <- function(x) {
     !all(is.na(x))
 }
 
-# is known character scalar
-check_slot_word <- function(x) {
-    is.character(x) && length(x) == 1 && is_known(x)
+# all slots in vector are known and are numeric
+is_known_numeric <- function(x) {
+    is.numeric(x) && is_known(x)
 }
+
+# all slots in vector x are known round numbers
+is_known_round_numeric <- function(x) {
+    is_known_numeric(x) && all(round(x) == x)
+}
+
+# all slots in vector x are known characters
+is_known_character <- function(x) {
+    is.character(x) && is_known(x)
+}
+
 
 # is known numeric scalar
 check_slot_number <- function(x) {
-    is.numeric(x) && length(x) == 1 && is_known(x)
+    is_known_numeric(x) && is_scalar(x)
+}
+
+# is known character scalar
+check_slot_word <- function(x) {
+    is_known_character(x) && is_scalar(x)
 }
 
 # is valid path
@@ -45,17 +70,17 @@ check_slot_path <- function(x) {
 
 # is not-empty known character vector
 check_slot_character_vector <- function(x) {
-    is.character(x) && length(x) > 0 && is_known(x)
+    is_known_character(x) && is_not_empty(x)
 }
 
 # is known positive integer scalar
 check_slot_positive_integer <- function(x) {
-    check_slot_number(x) && x > 0 && round(x) == x
+    is_known_round_numeric(x) && is_scalar(x) && x > 0
 }
 
 # is known postive numeric scalar
 check_slot_positive_number <- function(x) {
-    check_slot_number(x) == 1 && x > 0
+    check_slot_number(x) && x > 0
 }
 
 # is known non-negative numeric scalar
@@ -64,11 +89,11 @@ check_slot_nonnegative_number <- function(x) {
 }
 
 check_slot_quantile_vector <- function(x) {
-    is.numeric(x) && length(x) > 0 && all(x >= 0) && all(x <= 1)
+    is_known_numeric(x) && is_not_empty(x) && all(x >= 0) && all(x <= 1)
 }
 
 check_slot_positive_integer_vector <- function(x) {
-    is.integer(x) && length(x) > 0 && all(x > 0)
+    is_known_round_numeric(x) && is_not_empty(x) && all(x > 0)
 }
 
 # is known numeric scalar in interval [0, 1]
@@ -78,7 +103,7 @@ check_slot_quantile <- function(x) {
 
 # is known logical scalar
 check_slot_true_false <- function(x) {
-    is.logical(x) && length(x) == 1 && is_known(x)
+    is.logical(x) && is_scalar(x) && is_known(x)
 }
 
 # number of workers: either "autor" or known positive integer
@@ -184,8 +209,8 @@ config_necessary_slots <- function() {
         CLUSTER_STEP_LIMIT = check_slot_positive_integer,
         # time windows
         TIME_WINDOW_AUTO = check_slot_true_false,
-        TIME_WINDOW_LENGHT = check_slot_positive_integer,
-        TIME_WINDOW_NUMBER = check_slot_positive_integer
+        TIME_WINDOW_LENGHT = check_slot_positive_integer_vector,
+        TIME_WINDOW_NUMBER = check_slot_positive_integer_vector
     )
 }
 
@@ -246,6 +271,24 @@ profile_supported_slots <- function() {
 
 # automatic time windows -------------------------------------------------------
 
+# auto_time_window(length, number) produces an automatic time window for one
+# period length and one period number
+#
+# inputs:
+# - length ... (integer scalar) length of a time window in years
+# - number ... (integer scalar) how many windows of length length should be
+#   created
+#
+# value:
+#   tibble with two columns:
+#   - from_date ... (character in format YYYY-MM-DD) beginning of the period
+#   - to_date ... (character in format YYYY-MM-DD) end of the period
+#   the first period end in December 31 of the last finished year; it starts on
+#   January 1 of the year length years before that; i.e., the length of the
+#   period is length
+#
+# usage:
+#   auto_time_window(3, 2)  # two periods of 3 years
 auto_time_window <- function(length, number) {
     last_complete_year <- lubridate::year(lubridate::today()) - 1
     f <- function(end_year, length, shift) {
@@ -261,13 +304,41 @@ auto_time_window <- function(length, number) {
 }
 
 
+# auto_time_windows(lengths, numbers) produces an automatic time window for many
+# period lengths and possibly many period numbers
+#
+# inputs:
+# - lengths ... (integer vector) length of a time window in years
+# - number ... (integer scalar or integer vector of the same length as lengths)
+#   how many windows of length length should be created
+#
+# value:
+#   tibble with two columns:
+#   - from_date ... (character in format YYYY-MM-DD) beginning of the period
+#   - to_date ... (character in format YYYY-MM-DD) end of the period
+#   the first period end in December 31 of the last finished year; it starts on
+#   January 1 of the year length years before that; i.e., the length of the
+#   period is length
+#
+# usage:
+#   auto_time_windows(3, 2)  # two periods of 3 years
+#   auto_time_windows(c(1, 3), 2)  # two periods of 1 year and two of 3 years
+#   auto_time_windows(c(1, 3), 1:2)  # one 1-year long period and two
+#                                    # 3-years-long periods
+auto_time_windows <- function(lengths, numbers) {
+    if (length(numbers) == 1)
+        numbers <- rlang::rep_along(lengths, numbers)
+    purrr::pmap_dfr(list(lengths, numbers), auto_time_window)
+}
+
+
 compact_time_window <- function(profile) {
     empty_date <- character(0)
     empty_window <- tibble::tibble(from_date = empty_date, to_date = empty_date)
     auto_window <- manual_window <- empty_window
     if (profile$TIME_WINDOW_AUTO)
-        auto_window <- auto_time_window(profile$TIME_WINDOW_LENGHT,
-                                        profile$TIME_WINDOW_NUMBER)
+        auto_window <- auto_time_windows(profile$TIME_WINDOW_LENGHT,
+                                         profile$TIME_WINDOW_NUMBER)
     if ("TIME_WINDOW" %in% names(profile))
         manual_window <- profile$TIME_WINDOW
     time_window <- dplyr::bind_rows(auto_window, manual_window) |>

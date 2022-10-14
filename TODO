@@ -5,15 +5,15 @@ Now
 ---
 
 - tvorba profilů
-    - automatic time windows ne nesmí do profilu zapsat natvrdo, protože pak by
+    - automatic time windows se nesmí do profilu zapsat natvrdo, protože pak by
         to bez změny profilů pokaždé generovalo pro stejné roky
-    - to znamená změnu struktury profilů
-    - automatická tvorba časových oken -- zobecnění -- chtějí 3 roky + 3 roky i
-        1 rok  + 1 rok
+        - to znamená změnu struktury profilů
     - funkce pro automatická časová okna se musejí zobecnit + musí se přesunout
         do auxiliary_function
     - každý skript, který pracuje s časovými okny si musí časová okna znovu
         poskládat
+    - vyhodit nepoužívané testovací funkce?
+    - vyhodit zakomentovaný kód
 - grid_shape v NKDE dořešit s autorem balíku
     - teď to má provizorní řešení -- tinkering s gridem
 - create_osm_districts používá na tvrdo konstantu districs_in_one_one=10
