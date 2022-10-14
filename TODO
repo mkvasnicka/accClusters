@@ -16,6 +16,13 @@ Now
         neděje (tedy nic očividného)
     - opravil by to schedulling?
     - vyzkoušet na notebooku -- tam se to imho nedělo (je to možné?)
+- aktualizovat export do GISu
+- profily
+    - přidat komentář, který se zobrazí v shiny
+    - exportovat do shiny
+- automatická tvorba časových oken -- zobecnění
+    - chtějí 3 roky + 3 roky, i 1 rok  + 1 rok
+- tvorba nehod -- kontrola, že obsahuje sloupce P44 a asi i P6
 
 
 
