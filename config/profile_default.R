@@ -1,6 +1,6 @@
 # mandatory profile name
 PROFILE_NAME <- "default"
-
+PROFILE_COMMENT <- "some string shown in shiny app"
 
 
 # damage costs -----------------------------------------------------------------
@@ -45,15 +45,13 @@ NKDE_AGG = 1
 
 # cluster parameters -----------------------------------------------------------
 
-# lixels with at least this density quantile (0, 1) constitute cluster cores
-CLUSTER_MIN_QUANTILE <- 0.995
+# clusters are computed for severity quantiles
+# seq(from = CLUSTER_SEVERITY_LIMIT, to = 1, by = -CLUSTER_SEVERITY_STEP) / 1000
+CLUSTER_SEVERITY_LIMIT <- 25
+CLUSTER_SEVERITY_STEP <- 2
 
-# this many lixels are added to each cluster
-CLUSTER_ADDITIONAL_STEPS <- 5
-
-# lixels with at least this density quantile (0, 1) are stored for density
-# visualization
-VISUAL_MIN_QUANTILE <- 0.95
+# several lixels are added to clusters; 1:CLUSTER_STEP_LIMIT are added
+CLUSTER_STEP_LIMIT <- 10
 
 
 
@@ -63,10 +61,10 @@ VISUAL_MIN_QUANTILE <- 0.95
 TIME_WINDOW_AUTO <- TRUE
 
 # if so, how long should each window be (in years)
-TIME_WINDOW_LENGHT <- 3
+TIME_WINDOW_LENGHT <- c(1, 3)
 
 # and how many such windows should be created
-TIME_WINDOW_NUMBER <- 2
+TIME_WINDOW_NUMBER <- c(2, 2)
 
 # possible additional time windows; format: YYYY-MM-DD
 # TIME_WINDOW <- tibble::tribble(
