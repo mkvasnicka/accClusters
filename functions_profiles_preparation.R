@@ -241,7 +241,8 @@ config_supported_slots <- function() {
 #
 # see help for config_necessary_slots()
 profile_necessary_slots <- function() {
-    list(PROFILE_NAME = check_slot_profile_name)
+    list(PROFILE_NAME = check_slot_profile_name,
+         PROFILE_COMMENT = check_slot_word)
 }
 
 
@@ -372,8 +373,15 @@ read_all_profiles <- function(folder) {
                                       collapse = ", "),
                  call. = NA)
         names(profiles) <- profile_names
+        profile_comments <- purrr::map_chr(profiles, "PROFILE_COMMENT")
+        if (any(duplicated(profile_comments)))
+            stop("There are duplicities in profile comments: ",
+                 stringr::str_flatten(profile_comments[duplicated(profile_comments)],
+                                      collapse = ", "),
+                 call. = NA)
     } else {
         config$PROFILE_NAME <- "default"
+        config$PROFILE_COMMENT <- "default"
         profiles <- list(default = config)
     }
     profiles
