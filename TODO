@@ -4,16 +4,11 @@ TODO
 Now
 ---
 
-- tvorba profilů
-    - automatic time windows se nesmí do profilu zapsat natvrdo, protože pak by
-        to bez změny profilů pokaždé generovalo pro stejné roky
-        - to znamená změnu struktury profilů
-    - funkce pro automatická časová okna se musejí zobecnit + musí se přesunout
-        do auxiliary_function
-    - každý skript, který pracuje s časovými okny si musí časová okna znovu
-        poskládat
-    - vyhodit nepoužívané testovací funkce?
-    - vyhodit zakomentovaný kód
+- exportovat profily pro shiny
+    - problém:
+        - když se vše načte z profilů, bude to rychlé, čisté a bezpečné, ale
+        - nepůjde použít data, která se předpočítala při předchozím běhu mého sw
+    - jak vyřešit?
 - grid_shape v NKDE dořešit s autorem balíku
     - teď to má provizorní řešení -- tinkering s gridem
 - create_osm_districts používá na tvrdo konstantu districs_in_one_one=10
@@ -31,6 +26,9 @@ Now
     - přidat komentář, který se zobrazí v shiny
     - exportovat do shiny
 - tvorba nehod -- kontrola, že obsahuje sloupce P44 a asi i P6
+- tvorba profilů
+    - vyhodit nepoužívané testovací funkce?
+    - vyhodit zakomentovaný kód
 
 
 
