@@ -782,6 +782,8 @@ auto_time_window <- function(length, number) {
 #   auto_time_windows(c(1, 3), 1:2)  # one 1-year long period and two
 #                                    # 3-years-long periods
 auto_time_windows <- function(lengths, numbers) {
+    lengths <- unlist(lengths)
+    numbers <- unlist(numbers)
     if (length(numbers) == 1)
         numbers <- rlang::rep_along(lengths, numbers)
     purrr::pmap_dfr(list(lengths, numbers), auto_time_window)
