@@ -403,6 +403,19 @@ profiles_to_tibble <- function(p) {
 }
 
 
+# check_auto_time_windows(profiles)
+check_auto_time_windows <- function(profiles) {
+    lens <- map_int(profiles$TIME_WINDOW_LENGHT, length)
+    nums <- map_int(profiles$TIME_WINDOW_NUMBER, length)
+    ids <- !(nums == lens | nums == 1)
+    if (any(ids)) {
+        stop("config prep: TIME_WINDOW_NUMBER must either be a scalar or must ",
+             "have the same length as TIME_WINDOW_LENGHT: it's violated in ",
+             "profiles with names ",
+             str_c(profiles$PROFILE_NAME[ids], collapse = ", "))
+    }
+}
+
 
 # create_profiles() reads config and all profiles from path_to_source_configs
 # folder and writes it to path_to_configs RDS file
@@ -448,6 +461,7 @@ create_profiles <- function(path_to_configs = path_to_configs(),
             logging::loginfo("config prep: configuration is behind---updating")
             profiles <- read_all_profiles(path_to_source_configs) |>
                 profiles_to_tibble()
+            check_auto_time_windows(profiles)
             readr::write_rds(profiles, path_to_configs)
             logging::loginfo("config prep: profiles created")
         } else {
