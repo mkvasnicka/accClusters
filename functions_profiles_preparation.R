@@ -269,97 +269,6 @@ profile_supported_slots <- function() {
 
 
 
-# automatic time windows -------------------------------------------------------
-
-# auto_time_window(length, number) produces an automatic time window for one
-# period length and one period number
-#
-# inputs:
-# - length ... (integer scalar) length of a time window in years
-# - number ... (integer scalar) how many windows of length length should be
-#   created
-#
-# value:
-#   tibble with two columns:
-#   - from_date ... (character in format YYYY-MM-DD) beginning of the period
-#   - to_date ... (character in format YYYY-MM-DD) end of the period
-#   the first period end in December 31 of the last finished year; it starts on
-#   January 1 of the year length years before that; i.e., the length of the
-#   period is length
-#
-# usage:
-#   auto_time_window(3, 2)  # two periods of 3 years
-auto_time_window <- function(length, number) {
-    last_complete_year <- lubridate::year(lubridate::today()) - 1
-    f <- function(end_year, length, shift) {
-        tibble::tibble(
-            from_date = stringr::str_c(end_year - (shift + 1) * length + 1,
-                                       "-01-01"),
-            to_date = stringr::str_c(end_year - shift * length, "-12-31")
-        )
-    }
-    purrr::map_dfr(seq_len(number) - 1,
-                   ~f(last_complete_year, length, .)) #|>
-        # dplyr::mutate(across(everything(), as.Date))
-}
-
-
-# auto_time_windows(lengths, numbers) produces an automatic time window for many
-# period lengths and possibly many period numbers
-#
-# inputs:
-# - lengths ... (integer vector) length of a time window in years
-# - number ... (integer scalar or integer vector of the same length as lengths)
-#   how many windows of length length should be created
-#
-# value:
-#   tibble with two columns:
-#   - from_date ... (character in format YYYY-MM-DD) beginning of the period
-#   - to_date ... (character in format YYYY-MM-DD) end of the period
-#   the first period end in December 31 of the last finished year; it starts on
-#   January 1 of the year length years before that; i.e., the length of the
-#   period is length
-#
-# usage:
-#   auto_time_windows(3, 2)  # two periods of 3 years
-#   auto_time_windows(c(1, 3), 2)  # two periods of 1 year and two of 3 years
-#   auto_time_windows(c(1, 3), 1:2)  # one 1-year long period and two
-#                                    # 3-years-long periods
-auto_time_windows <- function(lengths, numbers) {
-    if (length(numbers) == 1)
-        numbers <- rlang::rep_along(lengths, numbers)
-    purrr::pmap_dfr(list(lengths, numbers), auto_time_window)
-}
-
-
-compact_time_window <- function(profile) {
-    empty_date <- character(0)
-    empty_window <- tibble::tibble(from_date = empty_date, to_date = empty_date)
-    auto_window <- manual_window <- empty_window
-    if (profile$TIME_WINDOW_AUTO)
-        auto_window <- auto_time_windows(profile$TIME_WINDOW_LENGHT,
-                                         profile$TIME_WINDOW_NUMBER)
-    if ("TIME_WINDOW" %in% names(profile))
-        manual_window <- profile$TIME_WINDOW
-    time_window <- dplyr::bind_rows(auto_window, manual_window) |>
-        dplyr::distinct()
-    if (nrow(time_window) == 0) {
-        logging::logerror("config prep: profile %s has empty time windows",
-                          profile$PROFILE_NAME)
-        stop("config prep: profile has empty time windows")
-    }
-    profile$TIME_WINDOW <- time_window
-    rm(TIME_WINDOW_AUTO, TIME_WINDOW_LENGHT, TIME_WINDOW_NUMBER,
-       envir = profile)
-    profile
-}
-
-
-compact_all_time_windows <- function(profiles) {
-    purrr::map(profiles, compact_time_window)
-}
-
-
 # reading profiles -------------------------------------------------------------
 
 # check_profile() checks that all necessary variables are present in a profile,
@@ -473,7 +382,8 @@ read_all_profiles <- function(folder) {
 
 # profiles_to_tibble() converts list of profiles into a tibble
 profiles_to_tibble <- function(p) {
-    list_vars <- c("TIME_WINDOW", "DISTRICTS", "SUPPORTED_ROAD_CLASSES")
+    list_vars <- c("DISTRICTS", "SUPPORTED_ROAD_CLASSES",
+                   "TIME_WINDOW_LENGHT", "TIME_WINDOW_NUMBER")
     p <- p |>
         purrr::map(as.list) |>
         purrr::transpose()
@@ -481,7 +391,6 @@ profiles_to_tibble <- function(p) {
     p <- purrr::map_at(p, -list_idx, unlist) |>
         tibble::as_tibble() |>
         dplyr::select(PROFILE_NAME, everything())
-    p$TIME_WINDOW <- map(p$TIME_WINDOW, ~map_dfc(., as.Date))
     p
 }
 
@@ -531,7 +440,6 @@ create_profiles <- function(path_to_configs = path_to_configs(),
         if (is_behind(path_to_configs(), source_files)) {
             logging::loginfo("config prep: configuration is behind---updating")
             profiles <- read_all_profiles(path_to_source_configs) |>
-                compact_all_time_windows() |>
                 profiles_to_tibble()
             readr::write_rds(profiles, path_to_configs)
             logging::loginfo("config prep: profiles created")
