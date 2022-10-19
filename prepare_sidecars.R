@@ -29,5 +29,5 @@ profiles <- read_profiles()
 districts <- read_districts()
 
 
-#
+# create sidecars for cluster files
 create_sidecars(districts, profiles)
