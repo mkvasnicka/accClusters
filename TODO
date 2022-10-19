@@ -4,11 +4,6 @@ TODO
 Now
 ---
 
-- exportovat profily pro shiny
-    - problém:
-        - když se vše načte z profilů, bude to rychlé, čisté a bezpečné, ale
-        - nepůjde použít data, která se předpočítala při předchozím běhu mého sw
-    - jak vyřešit?
 - grid_shape v NKDE dořešit s autorem balíku
     - teď to má provizorní řešení -- tinkering s gridem
 - create_osm_districts používá na tvrdo konstantu districs_in_one_one=10
@@ -22,9 +17,6 @@ Now
     - opravil by to schedulling?
     - vyzkoušet na notebooku -- tam se to imho nedělo (je to možné?)
 - aktualizovat export do GISu
-- profily
-    - přidat komentář, který se zobrazí v shiny
-    - exportovat do shiny
 - tvorba nehod -- kontrola, že obsahuje sloupce P44 a asi i P6
 - tvorba profilů
     - vyhodit nepoužívané testovací funkce?
