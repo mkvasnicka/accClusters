@@ -174,6 +174,7 @@ config_necessary_slots <- function() {
         NO_OF_WORKERS_ACCIDENTS = check_slot_worker,
         RAM_PER_CORE_GENERAL = check_slot_positive_number,
         RAM_PER_CORE_ACCIDENTS = check_slot_positive_number,
+        OSMIUM_DISTRICTS_IN_ONE_GO = check_slot_positive_integer,
         # map preparation
         DISTRICT_BUFFER_SIZE = check_slot_positive_number,
         LIXEL_SIZE = check_slot_positive_integer,
