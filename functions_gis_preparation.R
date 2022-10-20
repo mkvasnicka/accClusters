@@ -9,11 +9,37 @@
 # Copyright(c) Michal Kvasnička
 # -------------------------------------
 
-require(dplyr)
-require(purrr)
-require(stringr)
-require(readr)
-require(sf)
+# load packages
+library(dplyr, verbose = FALSE, warn.conflicts = FALSE)
+library(tidyr, verbose = FALSE, warn.conflicts = FALSE)
+library(purrr, verbose = FALSE, warn.conflicts = FALSE)
+library(stringr, verbose = FALSE, warn.conflicts = FALSE)
+library(readr, verbose = FALSE, warn.conflicts = FALSE)
+library(sf, verbose = FALSE, warn.conflicts = FALSE)
+library(foreign, verbose = FALSE, warn.conflicts = FALSE)
+
+
+gis_dbf_profiles_filename <- function(folder = gis_dir()) {
+    file.path(folder, "profiles.dbf")
+}
+gis_csv_profiles_filename <- function(folder = gis_dir()) {
+    file.path(folder, "profiles.csv")
+}
+
+gis_suffix <- function(tab) {
+    tab |>
+        dplyr::distinct(profile_name, from_date, to_date) |>
+        dplyr::mutate(file_name = stringr::str_c(profile_name,
+                                                 from_date, to_date,
+                                                 sep = "_")) |>
+        dplyr::pull(file_name)
+}
+gis_clusters_filename <- function(tab) {
+    stringr::str_c("clusters_", gis_suffix(tab))
+}
+gis_clustered_accidents_filename <- function(tab) {
+    stringr::str_c("clustered_accidents_", gis_suffix(tab))
+}
 
 
 # write_to_shapefile(tbl, folder, layer) writes (geolocated) table into ESRI
@@ -39,10 +65,39 @@ write_to_shapefile <- function(tbl, folder, layer) {
                                     ~iconv(.,
                                            from = "UTF-8",
                                            to = "ASCII//TRANSLIT")))
-    sf::st_write(tbl, file.path(folder, stringr::str_c(layer, ".shp")),
+    sf::st_write(tbl,
+                 folder,  # file.path(folder, stringr::str_c(layer, ".shp")),
                  layer = layer,
                  driver = "ESRI Shapefile",
                  delete_layer = TRUE)
+}
+
+
+# write_profiles(profiles, folder) writes profile descriptions into the gis
+# shapefile folder
+#
+# inputs:
+# - profiles ... (tibble) profiles tibble created by prepare_profiles script
+# - folder ... (character scalar) path to the gis folder
+#
+# output:
+#   none; it only writes data on the disk
+#
+# notes:
+# - the data are in CSV nad .dbf presently
+write_profiles <- function(profiles, folder) {
+    profiles <- profiles |>
+        tidyr::unnest(TIME_WINDOW) |>
+        dplyr::mutate(
+            SUPPORTED_ROAD_CLASSES =
+                map_chr(SUPPORTED_ROAD_CLASSES,
+                        ~stringr::str_c(., collapse = " | "))
+        ) |>
+        dplyr::rename(FROM_DATE = from_date, TO_DATE = to_date) |>
+        dplyr::select(PROFILE_NAME, FROM_DATE, TO_DATE, everything()) |>
+        as.data.frame()
+    foreign::write.dbf(profiles, file = gis_dbf_profiles_filename(folder ))
+    readr::write_csv(profiles, file = gis_csv_profiles_filename(folder))
 }
 
 
@@ -87,6 +142,25 @@ write_gis_files <- function(districts, gis_dir, shiny_dir, profiles) {
         list(lixels = lixels, accidents = accidents, clusters = clusters)
     }
 
+    process_one_shiny_chunk <- function(tab, gis_dir) {
+        oo <- purrr::map(seq_len(nrow(tab)), ~process_one_shiny_file(tab[., ]))
+        lixels <- oo |> purrr::map("lixels") |>
+            dplyr::bind_rows() |>
+            dplyr::rename(lixel = lixel_id)
+        accidents <- oo |> purrr::map("accidents") |>
+            dplyr::bind_rows() |>
+            dplyr::rename(cost = accident_cost)
+        clusters <- oo |> purrr::map("clusters") |>
+            dplyr::bind_rows() |>
+            dplyr::rename(lenght = total_length,
+                          density = total_density,
+                          cpm = cost_per_meter)
+
+        write_to_shapefile(lixels, gis_dir, "high_densities")
+        write_to_shapefile(accidents, gis_dir, "clustered_accidents")
+        write_to_shapefile(clusters, gis_dir, "clusters")
+    }
+
     start_logging(log_dir())
     logging::loginfo("gis prep: checking for updates")
     tryCatch({
@@ -106,29 +180,25 @@ write_gis_files <- function(districts, gis_dir, shiny_dir, profiles) {
                                                            to_date = to_date)) |>
             dplyr::select(district_id, district_name, from_date, to_date,
                           profile_name, shiny_filename)
-
-        if (is_behind(target = c(file.path(gis_dir, "clustered_accidents.dbf"),
-                                 file.path(gis_dir, "clusters.dbf"),
-                                 file.path(gis_dir, "high_densities.dbf")),
-                      source = tab$shiny_filename)) {
+        if (is_behind(
+            target = c(
+                file.path(gis_dir,
+                          stringr::str_c(gis_clusters_filename(tab), ".shp")),
+                file.path(gis_dir,
+                          stringr::str_c(gis_clustered_accidents_filename(tab),
+                                         ".shp")),
+                gis_dbf_profiles_filename(gis_dir),
+                gis_csv_profiles_filename(gis_dir)
+            ),
+            source = tab$shiny_filename)) {
             logging::loginfo("gis prep: gis files are behind; processing %i shiny files",
                              nrow(tab))
-            oo <- purrr::map(seq_len(nrow(tab)), ~process_one_shiny_file(tab[., ]))
-            lixels <- oo |> purrr::map("lixels") |>
-                dplyr::bind_rows() |>
-                dplyr::rename(lixel = lixel_id)
-            accidents <- oo |> purrr::map("accidents") |>
-                dplyr::bind_rows() |>
-                dplyr::rename(cost = accident_cost)
-            clusters <- oo |> purrr::map("clusters") |>
-                dplyr::bind_rows() |>
-                dplyr::rename(lenght = total_length,
-                              density = total_density,
-                              cpm = cost_per_meter)
-
-            write_to_shapefile(lixels, gis_dir, "high_densities")
-            write_to_shapefile(accidents, gis_dir, "clustered_accidents")
-            write_to_shapefile(clusters, gis_dir, "clusters")
+            create_dir_for_file(gis_csv_profiles_filename(gis_dir))
+            write_profiles(profiles, gis_dir)
+            tab <- tab |>
+                dplyr::group_by(profile_name, from_date, to_date) |>
+                dplyr::group_split()
+            purrr::walk(tab, process_one_shiny_chunk, gis_dir)
             logging::loginfo("gis prep: gis files are created")
         } else {
             logging::loginfo("gis prep: everything is up-to-date---skipping")
