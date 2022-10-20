@@ -17,7 +17,7 @@ NO_OF_WORKERS_ACCIDENTS <- "auto"   # or positive number
 
 # how much ram in GB should be available per core in parallel processing when
 # the number of cores used is detected automatically
-RAM_PER_CORE_GENERAL <- 3
+RAM_PER_CORE_GENERAL <- 4.5
 RAM_PER_CORE_ACCIDENTS <- 10
 
 
