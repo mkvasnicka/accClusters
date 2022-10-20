@@ -247,10 +247,10 @@ filter_all_osm_district_roads <- function(districts, input_path, folder,
 create_osm_district_roads <- function(districts,
                                       path_to_osm_maps,
                                       path_to_geojsons,
-                                      profiles,
-                                      districts_in_one_go = 10) {
+                                      profiles) {
     start_logging(log_dir())
     logging::loginfo("osm maps prep: checking for updates")
+    districts_in_one_go <- profiles$OSMIUM_DISTRICTS_IN_ONE_GO[[1]]
     if (is_behind(osm_file_name(districts, path_to_geojsons),
                   c(path_to_osm_maps, path_to_districts(), path_to_configs()))) {
         logging::loginfo(

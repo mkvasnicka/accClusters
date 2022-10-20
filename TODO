@@ -6,9 +6,6 @@ Now
 
 - grid_shape v NKDE dořešit s autorem balíku
     - teď to má provizorní řešení -- tinkering s gridem
-- create_osm_districts používá na tvrdo konstantu districs_in_one_one=10
-    - zjisit, co to dělá ~ jak osmium-extract používá paměť
-    - přidat do uživatelského configu
 - available_memory() -- doplnit pro docker
 - available_cores() -- doplnit pro docker
 - PWALK() zůstane někdy (při accidents?) viset -- proč?

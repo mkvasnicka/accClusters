@@ -20,6 +20,12 @@ NO_OF_WORKERS_ACCIDENTS <- "auto"   # or positive number
 RAM_PER_CORE_GENERAL <- 4.5
 RAM_PER_CORE_ACCIDENTS <- 10
 
+# how many districts should be extracted by osmium from the geofabric map shape
+# file at once; if the amount of available memory is 32 GB, 10 seems to be safe;
+# if the amount of available memory is lower, you should lower the constant; if
+# it is higher, you can raise it
+OSMIUM_DISTRICTS_IN_ONE_GO <- 10
+
 
 
 # maps preparation -------------------------------------------------------------
