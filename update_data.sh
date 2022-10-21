@@ -67,6 +67,6 @@ runRscript "prepare_accidents"
 runRscript "prepare_densities"
 runRscript "prepare_clusters"
 runRscript "prepare_sidecars"
-# runRscript "prepare_gis"
+runRscript "prepare_gis"
 
 # runRscript "test"
