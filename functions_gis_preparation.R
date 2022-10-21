@@ -19,13 +19,23 @@ library(sf, verbose = FALSE, warn.conflicts = FALSE)
 library(foreign, verbose = FALSE, warn.conflicts = FALSE)
 
 
+
+# file names -------------------------------------------------------------------
+
+# name of the file where profiles are listed
+# - in dBASE format
 gis_dbf_profiles_filename <- function(folder = gis_dir()) {
     file.path(folder, "profiles.dbf")
 }
+# - in CSV
 gis_csv_profiles_filename <- function(folder = gis_dir()) {
     file.path(folder, "profiles.csv")
 }
 
+
+# gis_suffix(tab) returns for each unique combination of district, profile, and
+# time window a string that can serve as a basis of gis file names; the
+# individual variable values are separated with undersore
 gis_suffix <- function(tab) {
     tab |>
         dplyr::distinct(district_id, profile_name, from_date, to_date) |>
@@ -35,6 +45,10 @@ gis_suffix <- function(tab) {
                                                  sep = "_")) |>
         dplyr::pull(file_name)
 }
+
+
+# gis_add_folder_and_suffix() take a base part of a file name and possibly adds
+# a folder name and a suffix
 gis_add_folder_and_suffix <- function(base, folder, suffix) {
     if (!is.null(suffix))
         base <- stringr::str_c(base, ".shp")
@@ -42,6 +56,18 @@ gis_add_folder_and_suffix <- function(base, folder, suffix) {
         base <- file.path(folder, base)
     base
 }
+
+
+# gis_append_folder(folder, tab) adds to a folder name subfolder taken from tab:
+# it adds district descriptor for each distinct combination of district,
+# profile, and time window
+#
+# inputs:
+# - folder ... (character scalar) a path to a folder
+# - tab ... (tibble) description of one cluster file
+#
+# output:
+#   character scalar/vector of folder paths
 gis_append_folder <- function(folder, tab) {
     if (is.null(folder))
         return(folder)
@@ -50,6 +76,16 @@ gis_append_folder <- function(folder, tab) {
         dplyr::pull(district_id)
     file.path(folder, add)
 }
+
+
+# gis_clusters_filename() and gis_clustered_accidents_filename() return file
+# names of cluster shape file and accidents table respectively
+#
+# inputs:
+# - tab ... (tibble) table describing all cluster files created given the
+#   districts and profiles
+# - folder ... (character scalar) if given, it is appended to the path
+# - suffix ... (caracter scalar) if given, it is appended to the file name
 gis_clusters_filename <- function(tab, folder = NULL, suffix = NULL) {
     folder <- gis_append_folder(folder, tab)
     gis_add_folder_and_suffix(stringr::str_c("clusters_", gis_suffix(tab)),
@@ -64,17 +100,20 @@ gis_clustered_accidents_filename <- function(tab, folder = NULL,
 }
 
 
+
+# writing functions ------------------------------------------------------------
+
 # write_to_shapefile(tbl, folder, layer) writes (geolocated) table into ESRI
 # shapefile layer in folder folder
 #
 # inputs:
-# - tbl ... (sf or tibble) (geolocated) table
+# - tbl ... (sf) (geolocated) table
 # - folder ... (characater scalar) path to folder where the tbl should be
 #   written
 # - layer ... (characater scalar) file/layer name
 #
 # value:
-#   none; data are writtent to disk
+#   none; data are written to disk
 #
 # WARNINGS:
 # - this function saves to .shp; it seems that characters cannot include
@@ -95,6 +134,16 @@ write_to_shapefile <- function(tbl, folder, layer) {
 }
 
 
+# write_gis_data(tbl, folder, layer) writes (non-geolocated) data in dBASE table
+#
+# inputs:
+# - tbl ... (tibble) (non-geolocated) table
+# - folder ... (characater scalar) path to folder where the tbl should be
+#   written
+# - layer ... (characater scalar) file/layer name
+#
+# value:
+#   none; data are written to disk
 write_gis_data <- function(tbl, folder, layer) {
     create_dir_for_file(file.path(folder, layer))
     foreign::write.dbf(as.data.frame(tbl),
@@ -103,8 +152,8 @@ write_gis_data <- function(tbl, folder, layer) {
 }
 
 
-# write_profiles(profiles, folder) writes profile descriptions into the gis
-# shapefile folder
+# write_profiles(profiles, folder) writes profile descriptions into the major
+# gis folder
 #
 # inputs:
 # - profiles ... (tibble) profiles tibble created by prepare_profiles script
@@ -131,11 +180,13 @@ write_profiles <- function(profiles, folder) {
 }
 
 
+
+# gis export -------------------------------------------------------------------
+
 # write_gis_files() writes all cluster information into GIS shapefiles
 #
 # inputs:
 # - districts ... (sf tibble) districts table
-# - time_window ...
 # - gis_dir ... (character scalar) path to folder where GIS shapefiles will be
 #   stored
 # - shiny_dir ... (character scalar) path to folder where cluster (shiny) data
@@ -145,13 +196,19 @@ write_profiles <- function(profiles, folder) {
 #   none; data are written to disk
 #
 # notes:
-# - the result includes three layers:
-#   - lixels ... table of lixels with high densities
+# - one folder (database) is created for each district within gis_dir
+# - for each district, the database include separate shapes for each combination
+#   of profile and folder
+# - there are two types of files for each combination of district, profile, and
+#   time window
 #   - accidents ... (non-spatial) table of accidents that constitute clusters
-#   - clusters ... table of clusters and their cost
-# - all layers include all districts and all periods of time which clusters are
-#   computed; in GIS, you shoud filter the data and/or differentiate using
-#   symbols
+#   - clusters ... (spatial) shapefile of clusters and their cost
+# - each of these files includes data for many combinations of cluster severity
+#   and additional lixels; the analyst should filter one of these before she
+#   starts her work
+# - cluster ids are unique only within each combination of district, profile,
+#   time window, cluster severity, and additional lixels; the same cluster id in
+#   two different combinations of factors stated above have nothing in common
 #
 # WARNINGS:
 # - this function saves to .shp; it seems that this format cannot have attribute
