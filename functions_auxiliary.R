@@ -10,11 +10,11 @@
 # -------------------------------------
 
 # necessary packages
-require(dplyr, quietly = TRUE, warn.conflicts = FALSE)
-require(readr, quietly = TRUE, warn.conflicts = FALSE)
-require(stringr, quietly = TRUE, warn.conflicts = FALSE)
-require(memuse, quietly = TRUE, warn.conflicts = FALSE)
-require(logging, quietly = TRUE, warn.conflicts = FALSE)
+library(dplyr, verbose = FALSE, warn.conflicts = FALSE)
+library(readr, verbose = FALSE, warn.conflicts = FALSE)
+library(stringr, verbose = FALSE, warn.conflicts = FALSE)
+library(memuse, verbose = FALSE, warn.conflicts = FALSE)
+library(logging, verbose = FALSE, warn.conflicts = FALSE)
 
 
 

@@ -10,9 +10,9 @@
 # -------------------------------------
 
 # necessary packages
-require(spNetwork, quietly = TRUE, warn.conflicts = FALSE)
-require(readr, quietly = TRUE, warn.conflicts = FALSE)
-require(tibble, quietly = TRUE, warn.conflicts = FALSE)
+library(spNetwork, verbose = FALSE, warn.conflicts = FALSE)
+library(readr, verbose = FALSE, warn.conflicts = FALSE)
+library(tibble, verbose = FALSE, warn.conflicts = FALSE)
 
 
 

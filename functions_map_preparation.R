@@ -10,20 +10,20 @@
 # -------------------------------------
 
 # packages
-require(tibble, quietly = TRUE, warn.conflicts = FALSE)
-require(dplyr, quietly = TRUE, warn.conflicts = FALSE)
-require(purrr, quietly = TRUE, warn.conflicts = FALSE)
-require(glue, quietly = TRUE, warn.conflicts = FALSE)
-require(sf, quietly = TRUE, warn.conflicts = FALSE)
-require(tidygraph, quietly = TRUE, warn.conflicts = FALSE)
-require(sfnetworks, quietly = TRUE, warn.conflicts = FALSE)
-require(spNetwork, quietly = TRUE, warn.conflicts = FALSE)
-require(geojsonio, quietly = TRUE, warn.conflicts = FALSE)
-require(jsonlite, quietly = TRUE, warn.conflicts = FALSE)
-require(spdep, quietly = TRUE, warn.conflicts = FALSE)
-require(igraph, quietly = TRUE, warn.conflicts = FALSE)
-require(osmar, quietly = TRUE, warn.conflicts = FALSE)
-require(spatstat, quietly = TRUE, warn.conflicts = FALSE)
+library(tibble, verbose = FALSE, warn.conflicts = FALSE)
+library(dplyr, verbose = FALSE, warn.conflicts = FALSE)
+library(purrr, verbose = FALSE, warn.conflicts = FALSE)
+library(glue, verbose = FALSE, warn.conflicts = FALSE)
+library(sf, verbose = FALSE, warn.conflicts = FALSE)
+library(tidygraph, verbose = FALSE, warn.conflicts = FALSE)
+library(sfnetworks, verbose = FALSE, warn.conflicts = FALSE)
+library(spNetwork, verbose = FALSE, warn.conflicts = FALSE)
+library(geojsonio, verbose = FALSE, warn.conflicts = FALSE)
+library(jsonlite, verbose = FALSE, warn.conflicts = FALSE)
+library(spdep, verbose = FALSE, warn.conflicts = FALSE)
+library(igraph, verbose = FALSE, warn.conflicts = FALSE)
+library(osmar, verbose = FALSE, warn.conflicts = FALSE)
+library(spatstat, verbose = FALSE, warn.conflicts = FALSE)
 
 
 # projections
@@ -527,7 +527,7 @@ simplify_network_intersections <- function(sfnet, max_distance = 0.5) {
             cmbs <- t(combn(ii, 2))
             cc <- purrr::map_lgl(seq_len(nrow(cmbs)),
                                  ~connected(cons, cmbs[., 1], cmbs[., 2]))
-            cmbs <- cmbs[cc, , drop = FALSE]
+            cmbs <- cmbs[cc, drop = FALSE]
             # add the nodes that have been dropped---connect them to themselves
             out <- setdiff(ii, unique(as.numeric(cmbs)))
             out <- rep(out, each = 2) |> matrix(ncol = 2, byrow = TRUE)
