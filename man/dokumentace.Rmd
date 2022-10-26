@@ -64,12 +64,14 @@ library(knitr)
 
 Tento text popisuje instalaci a použití softwaru pro přípravu dat pro vizualizaci dopravních nehod v\ ČR.
 
-Software pro vizualizaci dopravních nehod má dvě části:
+Software pro vizualizaci dopravních nehod vytvořený s\ podporou grantu TAČR CK01000049 *Tvorba pokročilých nástrojů pro analýzu dopravních nehod pro Policii ČR* má dvě části:
 
-- tento offline neinteraktivní software, který vezme vstupní data, spočítá potřebné metriky, identifikuje místa častých nebo nebezpečných nehod a přípraví vstupy potřebné pro jejich interaktivní vizualizaci a
-- interaktivní webovou aplikaci, která data vizualizuje; použití webové aplikace je popsané v\ separátním dokumentu.
+- offline neinteraktivní software, který ze vstupních dat spočítá potřebné metriky, identifikuje místa častých nebo nebezpečných nehod a přípraví podklady potřebné pro jejich interaktivní vizualizaci a
+- interaktivní webovou aplikaci, která data vizualizuje.
 
-Rozdělení softwaru do dvou částí je nutné kvůli výpočetní náročnosti přípravy dat, kterou není možné provádět "on-the-fly". Nejdříve se tedy pomocí této aplikace všechna data předpočítají, a\ pak se vizualizují pomocí webové aplikace.
+Tento dokument popisuje použití první části softwaru, která připravuje data; použití webové aplikace je popsané v\ separátním dokumentu.
+
+Rozdělení softwaru do dvou částí je nutné kvůli výpočetní náročnosti přípravy dat, kterou není možné provádět za běhu. Nejdříve se tedy pomocí přípravné aplikace všechna data předpočítají, a\ pak se vizualizují ve webové aplikaci.
 
 
 
@@ -84,9 +86,9 @@ Výpočty jsou poměrně hardwarově náročné. Proto se předpokládá násled
 - operační systém **TODO**,
 - **TODO**
 
-Drtivá většina výpočtů běží paralelně na více jádrech. Čím větší počet jader má systém dedikovaný, tím rychleji příprava dat proběhne. Odhadovaný čas při prvním spuštění softwaru je při procesoru třídy i5 se čtyřmi jádry a 32 GB operační paměti zhruba 2--3\ dny. Zvýšení počtu jader tento čas proporcionálně zkrátí.
+Drtivá většina výpočtů běží paralelně na více jádrech. Čím větší počet jader má systém dedikovaný, tím rychleji příprava dat proběhne. Odhadovaný čas při prvním spuštění softwaru je při procesoru třídy\ i5 se čtyřmi jádry a 32\ GB operační paměti kolem tří dny v\ případě práce s\ nespojitými hustotami pravděpodobnosti. V\ případě práce se spojitými hustotami pravděpodobnosti lze očekávat několikanásobně delší přípravu dat. Zvýšení počtu jader tento čas proporcionálně zkrátí.
 
-Výpočet běžící na jednom jádru vyžaduje typicky cca 4\ GB operační paměti (v\ některých krocích však 10\ GB). Větší počet jader se tedy použije pouze v\ případě, že je k\ dispozici dostatečné množství dedikované operační paměti.
+Výpočet běžící na každém jádru vyžaduje typicky cca 4\ GB operační paměti (v\ některých krocích však 10\ GB). Větší počet jader se tedy použije pouze v\ případě, že je k\ dispozici dostatečné množství dedikované operační paměti.
 
 Jako "dedikovaná operační paměť" se chápe paměť, která je softwaru k\ dispozici, tj.\ není okupovaná operačním systémem ani jinými procesy. V\ případě virtualizace se jedná o\ operační paměť, která je vyhrazena danému kontejneru.
 
@@ -104,26 +106,24 @@ konfigurace
 
 # Struktura vstupních dat {#kap:input-data}
 
-Adresářová struktura je pevná. Všechna data (vstupní, výstupní, mezivýpočty, konfigurace, logy) jsou umístěny v jednom adresáři (`DIRORIGIN`). V\ tomto adresáři jsou následující podadresáře:
+Software pracuje s\ pevnou adresářovou strukturou, kterou jsou umístněna všechna vstupní data, výstupní data, mezivýpočety, konfigurace a logy. Všechna tato data musí být umístěna v\ příslušních složkách v\ jednom adresáři (dále označovaném jako `DIRORIGIN`). Tento adresář musí obsahovat následující složky:
 
-- `config` ... adresář s\ konfigurací (`config.R`) a profily (`profile_XXX.R`)
-- `rawdata` ... adresář se vstupními daty
-- `tmp` ... adresář s\ mezivýpočty
-- `output` ... adresář s\ výslednými/výstupními daty
+- `config` ... složka s\ konfigurací softwaru
+- `rawdata` ... složka se vstupními daty
+- `tmp` ... složka s\ mezivýpočty
+- `output` ... složka, kam budou umístěny výstupní soubory určené k\ následné vizualizaci
 - `log` ... adresář s\ logy
 
+V\ této kapitole popíšeme blíže zdroje a strukturu vstupních dat. Software **XYZ** vyžaduje tři datové vstupy:
 
-Software **XYZ** vyžaduje tři datové vstupy:
-
-- mapový podklad o administrativním členění ČR -- používají se data ČÚZK,
+- mapový podklad o\ administrativním členění ČR\ -- používají se data ČÚZK,
 - mapový podklad silniční sítě\ -- používá se OpenStreetMap (`czech-republic-latest.osm.pbf`) a
 - data k\ jednotlivým dopravním nehodám ve formátu CSV.
 
 
 ## Administrativní členění ČR
 
-Jako mapový podklad pro administrativní členění se používají data ČÚZK.
-
+Jako mapový podklad pro administrativní členění se používají data ČÚZK. 
 Mapový podklad je k\ dispozici na Geoportalu ČUZK. Jedná se o\ Soubor správních hranic a hranic katastrálních území ČR.
 
 - zdroj: https://geoportal.cuzk.cz/(S(uufahw3bishqszcklzne0nex))/Default.aspx?mode=TextMeta&side=dSady_hranice10&metadataID=CZ-CUZK-SH-V&mapid=5&head_tab=sekce-02-gp&menu=2521
@@ -136,10 +136,10 @@ Mapový podklad administrativního členění ČR je nutné aktualizovat vždy, 
 
 ## Silniční síť ČR
 
-Jako mapový podklad pro silniční síť se používají data OpenStreetMaps ve formátu jednoho souboru typu `.osm.pbf`. Předpokládá se využití mapového podkladu sbaleného firmou GEOFABRIC (https://www.geofabrik.de/), který obsahuje nejnovější podobu silniční sítě v\ ČR.
+Jako mapový podklad pro silniční síť se používají data OpenStreetMaps ve formátu jednoho souboru typu `.osm.pbf` sbaleného firmou GEOFABRIC (https://www.geofabrik.de/), který obsahuje nejnovější podobu silniční sítě v\ ČR.
 
-- zdroj: https://download.geofabrik.de/europe/czech-republic.html; stahujte první odkaz
-- přímý odkaz: https://download.geofabrik.de/europe/czech-republic-latest.osm.pbf, "suitable for Osmium, Osmosis, imposm, osm2pgsql, mkgmap, and others"
+- zdroj: https://download.geofabrik.de/europe/czech-republic.html; první odkaz
+- přímý odkaz: https://download.geofabrik.de/europe/czech-republic-latest.osm.pbf
 
 Soubor vložte do adresáře `DIRORIGIN/rawdata/osm`.
 
@@ -148,7 +148,7 @@ Mapu silniční sítě je v\ systému třeba jednou za několik let akutalizovat
 
 ## Data o nehodách
 
-Zdrojem dat o\ nehodách je PČR. Předpokládá se, že data pro každý rok se skládají z\ pěti souborů typu CSV:
+Zdrojem dat o\ nehodách je PČR. Předpokládá se, že data jsou exportována pro každý rok zvlášť. Data pro jeden rok se skládají z\ pěti souborů typu CSV:
 
 - `####_databaze_nehody.csv`,
 - `####_databaze_GPS.csv`,
@@ -160,9 +160,23 @@ kde `####` představuje daný rok (např.\ 2021).
 
 Data o\ nehodách je třeba umístit do adresáře `DIRORIGIN/rawdata/accidents` ve formátu CSV.
 
+Formátem CSV se pro naše účely rozumí textový soubor, ve kterém každému záznamu odpovídá jeden řádek. První řádek představuje názvy jednotlivých sloupců psaná malými písmeny. Sloupce jsou odděleny čárkami. Desetinná místa v\ číslech jsou oddělena čárkou. Záznamy, které obsahují čáku, jsou uzavřena do uvozovek.
+
+Jednotlivé soubory musejí obsahovat následující sloupce:
+
+- `####_databaze_nehody.csv`\ -- sloupce `p1`, `p2a`, `p2b`, `p3`, `p4a`, `p4b`, `p4c`, `p5a`, `p5b`, `p6`, `p7`, `p8`, `p9`, `p10`, `p11`, `p12`, `p13a`, `p13b`, `p13c`, `p14`, `p34`, `p35`, `p36`, `p15`,  `p16`, `p17`, `p18`, `p19`, `p20`, `p21`, `p22`, `p23`, `p24`, `p27`, `p28`, `p37`, `p38`, `p39`, `p40`, `p41`, `krok`, `typ`,
+- `####_databaze_GPS.csv`\ -- sloupce `p1`, `a`, `b`, `c`, `d`, `e`, `f`, `g`, `h`, `i`, `j`, `k`, `l`, `m`, `n`, `o`, `p`, `q`, `r`, `s`, `t`,
+- `####_databaze_nasledky.csv`\ -- sloupce `p1`, `id_vozidla`, `p59a`, `p59b`, `p59c`, `p59d`, `p59e`, `p59f`, `p59g`, `p59h`,
+- `####_databaze_vozidla.csv`\ -- sloupce `p1`, `id_vozidla`, `p44`, `p45a`, `p45b`, `p47`, `p48a`, `p48b`, `p49`, `p50a`, `p50b`, `p51`, `p52`, `p53`, `rok`, `pohlavi`, `p55a`, `p55b`, `p56`, `p57`, `p58` a
+- `####_databaze_chodci.csv`\ -- sloupce `p1`, `p29`, `p30`, `p31`, `p32`, `p33c`, `p33d`, `p33e`, `p33f`, `p33g`, `p33h`,
+
+kde sloupce `p1` představuje klíčový sloupec identifikující dopravní nehodu.
 
 
-# Konfigurace systému
+
+
+
+# Konfigurace systému {#kap:konfigurace}
 
 Přípravu dat pro vizualizaci míst s\ vysokou nehodovostí je možné do jisté míry nastavit. K\ tomu slouží především soubor `DIRORIGIN/config/config.R`. Jedná se o\ R\ skript, který musí dodržet platná syntaktická pravidla jazyka\ R. V\ nejjednodušším případě stačí modifikovat hodnoty proměnných, které skript definuje. Je ovšem také možné používat platné výrazy a dokonce vytvářet vlastní proměnné. Tyto proměnné je však nutné na konci skriptu smazat (mohou tedy sloužit pouze pro zpřehlednění konfigurace).
 
