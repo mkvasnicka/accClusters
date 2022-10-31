@@ -330,3 +330,64 @@ pro změně vstupních dat a konfigurace/profilů -- ala Makefile
 
 
 # Interpretace klastrů
+
+
+
+
+
+# Výstup pro GIS
+
+Složka `DIRORIGIN/data/output/gis` obsahuje identifikovaná nebezpečná místa exportovaná ve formátu pro GIS. Data jsou rozdělena po jednotlivých okresech. Nebezpečné úseky pro každý okres jsou umístěny do zvláštního podadresáře, jehož jméno je NUTS3 kód daného okresu. Kromě těchto adresářů obsahuje složka ještě soubory `profiles.csv` a `profiles.dbf`, které popisují profily, které byly použity při generování nebezpečných míst.
+
+
+
+## Shapefily nebezpečných míst
+
+Adresář pro každý okres obsahuje všechny typy nebezpečných míst spočítaných v\ průběhu přípravy dat pro webovou aplikaci. Jednotlivé shapefily mají vždy jméno `clusters_NUTS3_PROFILENAME_YYYY-MM-DD_YYYY-MM-DD`, kde `NUTS3` je kódové jméno okresu, `PROFILENAME` je jméno profilu a `YYYY-MM-DD` označuje den počátku a konce období, pro které byly nebezpečné úseky idenfitikovány.
+
+Atributová tabulka těchto shapefilů obsahuje následující proměnné:
+
+- `dst_id` ... NUTS3 kód daného okresu,
+- `dst_name` ... jméno daného okresu,
+- `start` ... datum počátku období, pro které byly nehodové úseky počítány,
+- `end` ... datum konce období, pro které byly nehodové úseky počítány,
+- `profile` ... jméno profilu, který byl použit,
+- `severity` ... kolik promile nejnebezpečnějších úseků tvoří klastr (hodnota\ 5 znamená, že se klastry skládají z\ 5\ promile nejhorších úseků),
+- `add_lix` ... o\ kolik lixelů se klastry zvětší,
+- `cluster` ... identifikační číslo daného klastru pro dané hodnoty `dst_id`, `dst_name`, `start`, `end`, `profile`, `severity` a `add_lix`
+- `length` ... délka identifikovaného klastru v\ metrech,
+- `density` ... součet hustoty idenfikovaného klastru a
+- `cost` ... celkové náklady všech nehod v\ klastru v\ milionech Kč.
+
+Každý shapefile obsahuje nehodové úseky spočítané pro daný okres, profil a časové okno a mnoho různých nastavení hodnot `severity` a `add_lixel`. To má několik důsledků:
+
+1. Při analytické práci je třeba v\ GISu vyfiltrovat zvolené hodnoty `severity` a `add_lixel`.
+2. Identifikace klastru pomocí jeho čísla `cluster` není jednoznačná. Úplný klíč k\ identifikaci klastru tvoří kombinace sloupců `dst_id`, `dst_name`, `start`, `end`, `profile`, `severity`, `add_lix` a `cluster`.
+    - Stejné číslo klastru může existovat pro různé kombinace hodnot `dst_id`, `dst_name`, `start`, `end`, `profile`, `severity` a `add_lix`.
+    - Mezi těmito klastry neexistuje žádný vztah.
+
+
+
+## Údaje o\ nehodách na klastrech
+
+Ke každému shapefilu se jménem `clusters_NUTS3_PROFILENAME_YYYY-MM-DD_YYYY-MM-DD` existuje tabulka `clustered_accidents_NUTS3_PROFILENAME_YYYY-MM-DD_YYYY-MM-DD`, která uvádí informace o\ nehodách, které "tvoří" daný klastr. Z\ těchto nehod je spočítaná i\ celková nebezpečnost klastru `cost`.
+
+Atributová tabulka zde obsahuje jen nejnutnější údaje:
+
+- `dst_id` ... NUTS3 kód daného okresu,
+- `dst_name` ... jméno daného okresu,
+- `start` ... datum počátku období, pro které byly nehodové úseky počítány,
+- `end` ... datum konce období, pro které byly nehodové úseky počítány,
+- `profile` ... jméno profilu, který byl použit,
+- `severity` ... kolik promile nejnebezpečnějších úseků tvoří klastr (hodnota\ 5 znamená, že se klastry skládají z\ 5\ promile nejhorších úseků),
+- `add_lix` ... o\ kolik lixelů se klastry zvětší,
+- `acc_id` ...
+- `cluster` ... identifikační číslo daného klastru a
+- `cost` ... celkové náklady všech nehod v\ klastru v\ milionech Kč.
+
+Sloupce `dst_id`, `start`, `end`, `profile`, `severity`,  `add_lix` a `cluster` tvoří klíč ke spárování nehody s\ klastry v\ shapefilech. Sloupec `acc_id` tvoří klíč pro spárování nehody v\ policejní databázi. Proměnná `cost` obsahuje cenu nehody v\ milionech Kč spočítanou podle daného profilu.
+
+
+
+## Informace o\ nastavení profilů
+
