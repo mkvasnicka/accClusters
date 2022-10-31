@@ -423,8 +423,8 @@ Předpokládá se, že při potřebě analyzovat jednotlivé nehody, budou tyto 
 Informace o\ nastavení použitých profilů jsou uloženy v\ adresáři `DIRORIGIN/data/output/gis` v\ souborech `profiles.dbf` a `profiles.csv`. Oba soubory mají shodnou strukturu. Jedná se o\ tabulku, jejíž jednotlivé řádky odpovídají jednotlivým profilům a použitým časovým oknům. Každý profil je identifikován třemi sloupci:
 
 - `PROFILE_NAME` ... jméno profilu,
-- `FROM_DATE` ... počáteční datum období, pro které byly nebezpečné úseky idenfikovány, a
-- `TO_DATE` ... koncové datum období, pro které byly nebezpečné úseky idenfikovány.
+- `FROM_DATE` ... počáteční datum období, pro které byly nebezpečné úseky identifikovány, a
+- `TO_DATE` ... koncové datum období, pro které byly nebezpečné úseky identifikovány.
 
 Ostatní sloupce  odpovídají jednotlivým parametrům zadaným v\ konfiguračních profilech. 
 
