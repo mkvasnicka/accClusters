@@ -174,6 +174,7 @@ write_profiles <- function(profiles, folder) {
         ) |>
         dplyr::rename(FROM_DATE = from_date, TO_DATE = to_date) |>
         dplyr::select(PROFILE_NAME, FROM_DATE, TO_DATE, everything()) |>
+        dplyr::select(-DISTRICTS) |>
         as.data.frame()
     foreign::write.dbf(profiles, file = gis_dbf_profiles_filename(folder ))
     readr::write_csv(profiles, file = gis_csv_profiles_filename(folder))
