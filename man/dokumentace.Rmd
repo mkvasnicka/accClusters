@@ -105,6 +105,12 @@ konfigurace
 
 
 
+
+# Jak systém funguje (přehled)
+
+
+
+
 # Struktura vstupních dat {#kap:input-data}
 
 Software pracuje s\ pevnou adresářovou strukturou, kterou jsou umístěna všechna vstupní data, výstupní data, mezivýpočty, konfigurace a logy. Všechna tato data musí být umístěna v\ příslušných složkách v\ jednom adresáři (dále označovaném jako `DIRORIGIN`). Tento adresář musí obsahovat následující složky:
@@ -306,43 +312,82 @@ Hodnota nehod se při výpočtu rizikových oblastí používá pouze v\ přípa
 **Když moc vysoká hodnota stat. života, ostatní se ignoruje. Ale nehody náhodné. Možná nastavit níže.**
 
 
-### Nastavení paralelních výpočtů
-Většina přípravy dat probíhá paralelně na větším počtu jader. V\ této sekci se nastavuje, kolik jader může být využito. Jsou zde dvě možnosti: Buď uživatel nastaví počet jader sám, nebo dovolí systému, aby počet jader sám odhadl. V\ prvním případě uživatel nastaví proměnné `NO_OF_WORKERS` a `NO_OF_WORKERS_ACCIDENTS` na počet jader, který se má použít, ve druhém nechá obě proměnné nastavené na `"auto"` a zároveň nastaví proměnné `RAM_PER_CORE_GENERAL` a `RAM_PER_CORE_ACCIDENTS` na počet GB paměti RAM, který musí být dostupný na výpočet na jedno jádro. V\ současné době jsou tyto proměnné nastavené na konzervativní úrovni 3 a 10\ GB respektive. Při zvětšení objemu zpracovávaných dat však může být nezbytné tyto proměnné zvětšit.
+### Parametry výpočtu hustot
+Další skupina parametrů ovlivňuje, jak se počítají hustoty pravděpodobností nehod, ze kterých se pak hledají problémová místa. Patří sem následující parametry:
+
+- `NKDE_WEIGHTS` ... buď `"cost"` nebo `"equal"`, jaké váhy se přikládají jednotlivým nehodám
+- `NKDE_METHOD` ... buď `"continuous"` nebo `"discontinuous"`, jak se počítají hustoty pravděpodobností: buď spojitě (`"continuous"`) nebo nespojitě (`"discontinuous"`); spojitý výpočet je poněkud přesnější, ale je také podstatně pomalejší
+- `NKDE_ADAPTIVE` ... logická hodnota; zda je použito adaptivní vyhlazovací okno (`TRUE`), nebo ne (`FALSE`); při použijí adaptivního vyhlazovacího okna může být výpočet poněkud přesnější, ale je také podstatně pomalejší
+- `NKDE_BW` ... kladné číslo, délka vyhlazovacího okna v\ metrech při použití neadaptivního vyhlazovacího okna (při `NKDE_ADAPTIVE = FALSE`)
+- `NKDE_TRIM_BW` ... kladné číslo, maximální délka vyhlazovacího okna v\ metrech při použití adaptivního okna (když je `NKDE_ADAPTIVE = TRUE`)
+- `NKDE_AGG` ... kladné číslo, vzdálenost v\ metrech: nehody, které jsou vzájemně blíže než je tato hodnota jsou při výpočtu zagregovány pro zrychlení výpočtu
+
+Příklad nastavení, při kterém se při výpočtu hustot pravděpodobností bere v\ úvahu závažnost nehod (`NKDE_WEIGHTS = "cost"`) a používá se nespojitá NKDE metoda s\ neadaptivním vyhlazovacím oknem o\ délce 300\ metrů:
+
+```{r, eval=FALSE}
+NKDE_WEIGHTS = "cost"
+NKDE_METHOD = "discontinuous"
+NKDE_BW = 300
+NKDE_ADAPTIVE = FALSE
+NKDE_TRIM_BW = 600
+NKDE_AGG = 1
+```
+
+V\ tomto případě se parametr `NKDE_TRIM_BW` ignoruje (musí však být přítomen). Agregují se pouze nehody do vzájemné vzdálenosti 1\ metr (po silnici).
+
+Pokud by bylo cílem sestavit klastry nehod tak, že by všechny nehody měly stejnou váhu, stačilo by změnit první parametr na `NKDE_WEIGHTS = "equal"`. Podobně při změně metody na nespojitou by stačilo změnit na druhém řádku `NKDE_METHOD = "continuous"`. Adaptivní vyhlazovací okno by se zapnulo nastavením `NKDE_ADAPTIVE = TRUE`. V\ takovém případě by se vyhlazovací okno našlo automaticky tak, že jeho největší délka by byla 600\ metrů. Parametr `NKDE_BW` by se v\ takovém případě ignoroval (ale musí být přítomen).
 
 
 ### Příprava mapových podkladů
+Hustoty pravděpodobnosti se počítají na zjednodušené silniční síti. Další skupina parametrů určuje, jak se tato síť zpracuje. Pokud k\ tomu nemáte velmi silný důvod, nechte tyto parametry v\ doporučeném (základním nastavení).
+
 U\ vlastních mapových podkladů je třeba nastavit čtyři parametry.
+Parametr `SUPPORTED_ROAD_CLASSES` určuje, které typy cest se zařadí do silniční použité sítě. Podkladová mapa OpenStreetMaps totiž obsahuje cesty mnoha typů, z\ nichž mnohé nejsou určeny pro motorová vozidla. Při výpočtu hustot je třeba tyto typy cest ignorovat. Do proměnné `SUPPORTED_ROAD_CLASSES` zadejte výčet všech typů cest (jako vektor řetězců), které se mají použít. Jména typů cest musejí odpovídat kódování OpenStreetMaps. V\ současné době je v\ základním nastavení skriptu `config.R` výčet všech typů cest, které OpenStreetMaps nyní používají, s\ tím, že nevhodné typy jsou odstraněny pomocí komentářů. Seznam podporavných typů je dostupný na adrese https://wiki.openstreetmap.org/wiki/Key:highway.
 
-1. Všechny výpočty probíhají po jednotlivých okresech. Aby nedocházelo ke zkreslením na hranicích okresu, je po dobu výpočtu třeba zahrnout i\ silnice nehody, které leží nedaleko za hranicí okresu (na konci výpočtu budou údaje ležící za hranicí okresu opět odříznuty). Proměnná `DISTRICT_BUFFER_SIZE` určuje o\ kolik metrů se má pro potřeby výpočtu posunout hranice okresu. Hodnota této proměnné musí být dostatečně větší než hodnota proměnných `NKDE_BW` (a `NKDE_TRIM_BW`, pokud je  hodnota `NKDE_ADAPTIVE` nastavena na `TRUE`).
+Všechny výpočty probíhají po jednotlivých okresech. Aby nedocházelo ke zkreslením na hranicích okresu, je po dobu výpočtu třeba zahrnout i\ silnice a nehody, které leží nedaleko za hranicí okresu (na konci výpočtu budou údaje ležící za hranicí okresu opět odříznuty). Proměnná `DISTRICT_BUFFER_SIZE` určuje o\ kolik metrů se má pro potřeby výpočtu posunout hranice okresu. Hodnota této proměnné musí být dostatečně větší než hodnota proměnných `NKDE_BW` (a\ `NKDE_TRIM_BW`, pokud je  hodnota `NKDE_ADAPTIVE` nastavena na `TRUE`).
 
-2. Pro účely výpočtů se silniční síť rozdělí do krátkých, relativně homogenních úseků (lixelů). Tyto lixely musejí být tak krátké, aby byly v\ rámci silniční sítě velmi podobně dlouhé; zároveň však platí, že čím jsou kratší, tím je jich více a výpočet běží pomaleji a vyžaduje vyšší zdroje. Současné nastavení je proto při současném stavu zdrojů a kvalitě mapových podkladů zřejmě optimální. Uživatel je však může změnit pomocí dvou proměnných: Proměnná `LIXEL_SIZE` nastavuje typickou délku lixelu v\ metrech (doporučené nastavení je 5\ metrů). Proměnná `LIXEL_MIN_DIST` určuje minimální délku lixelu v\ metrech; kratší lixely budou připojeny k\ sousednímu lixelu.
+Pro účely výpočtů hustot pravděpodobností nehody je třeba rozdělit silniční síť do krátkých (*lixelů*). Tyto lixely musejí být tak krátké, aby byly v\ rámci silniční sítě velmi podobně dlouhé; zároveň však platí, že čím jsou kratší, tím je jich více a výpočet běží pomaleji a vyžaduje vyšší zdroje. Typickou délku *lixelů* v\ metrech nastavuje parametr `LIXEL_SIZE`. Parametr `LIXEL_MIN_DIST` určuje minimální délku *lixelu* v\ metrech; kratší lixely budou připojeny k\ někerému sousednímu *lixelu*.
 
-3. OpenStreetMaps obsahují cesty mnoha typů, z\ nichž mnohé nejsou určeny pro motorová vozidla. Při práci s\ mapovými podklady se tyto typy cest ignorují. Proměnná `SUPPORTED_ROAD_CLASSES` obsahuje výčet všech typů cest, které se mají použít. V\ současné době je ve skriptu výčet všech typů cest, které OpenStreetMaps nyní používají, s\ tím, že nevhodné typy jsou odstraněny pomocí komentářů.
+Některé nehody mohou být zaměřeny velmi nepřesně\ -- daleko od silniční sítě. V\ takovém případě se při výpočtu rizikových míst ignorují. Parametr `ACCIDENT_TO_ROAD_MAX_DISTANCE` určuje maximální vzdálenost od silniční sítě v\ metrech, při které jsou nehody použitý při hledání rizikových oblastí.
 
-4. Některé nehody mohou být zaměřeny velmi nepřesně\ -- daleko od silniční sítě. V\ takovém případě se při výpočtu rizikových míst ignorují. Proměnná `ACCIDENT_TO_ROAD_MAX_DISTANCE` určuje maximální vzdálenost od silniční sítě v\ metrech, při které jsou nehody použitý při hledání rizikových oblastí.
+Doporučené nastavení těchto parametrů je následující:
+
+```{r, eval=FALSE}
+DISTRICT_BUFFER_SIZE = 3e3  # okres je zvětšen na všechny strany o 3 kilometry
+LIXEL_SIZE = 5  # typická délka lixelu je 5 metrů
+LIXEL_MIN_DIST = 2  # minimální délka lixelu je 2 metry
+ACCIDENT_TO_ROAD_MAX_DISTANCE = 30  # nehoda nesmí být dál než 30 metrů od silnice
+SUPPORTED_ROAD_CLASSES = c("motorway", "motorway_link",
+                           "trunk", "trunk_link",
+                           "primary", "primary_link",
+                           "secondary", "secondary_link",
+                           "tertiary", "tertiary_link",
+                           "residential", "living_street", "pedestrian",
+                           "service", "unclassified", "road",
+                           "construction"
+)
+```
+
+Doporučený výběr silnic (parametr `SUPPORTED_ROAD_CLASSES`) obsahuje i\ silnice v\ opravě (`"construction"`). Důvod je ten, že délka oprav silnic je typicky kratší než délka všech časových oken, pro které by měla být nalezeny nehodové úseky. Silnice také nemusí být zcela uzavřena a někteří řidiči mohou na takovou silnici vjet a havarovat.
 
 
-### Parametry výpočtu hustot
+### Nastavení paralelních výpočtů
+Většina přípravy dat probíhá paralelně na větším počtu jader. Parametry uvedné v\ tomto oddíle určují, kolik jader může být paralelně využito. Jsou zde dvě možnosti: Buď uživatel nastaví počet jader sám, nebo dovolí systému, aby počet jader sám odhadl. 
 
-`NKDE_WEIGHTS` <- "cost" "equal"
+Doporučené je použití automatického mechanismu. Ten zohlední jednak to, kolik jader je v\ systému k\ dispozici (nebo kolik jich má alokovaný dockerový kontejner), jednak to, kolik je k\ dispozici volné operační paměti (nebo kolik jí má k\ dispozici dockerový kontejner).
 
-NKDE bandwidth in meters\
-`NKDE_BW` <- 300
+V\ tomto případě uživatel nastaví parametry `NO_OF_WORKERS` a `NO_OF_WORKERS_ACCIDENTS` na hodnoty `"auto"` a současně nastaví proměnné `RAM_PER_CORE_GENERAL` a `RAM_PER_CORE_ACCIDENTS` na počet GB paměti RAM, který musí být dostupný na výpočet na jedno jádro. V\ současné době jsou tyto proměnné nastavené na konzervativní úrovni 4.5 a 10\ GB respektive. Při zvětšení objemu zpracovávaných dat však může být nezbytné tyto proměnné zvětšit.
 
-whether adaptive bandwidth is used---either TRUE or FALSE; TRUE may produce
-slightly more precise results but the computation would be much slower\
-`NKDE_ADAPTIVE` <- FALSE
+Doporučené nastavení je tedy:
 
-maximum bandwidth tried when NKDE_ADAPTIVE is TRUE---in meters\
-`NKDE_TRIM_BW` <- 600
+```{r, eval=FALSE}
+NO_OF_WORKERS = "auto"
+NO_OF_WORKERS_ACCIDENTS = "auto"
+RAM_PER_CORE_GENERAL = 4.5
+RAM_PER_CORE_ACCIDENTS = 10
+```
 
-NKDE method---either "continuous" or "discontinuous"; "discontinuous" is less
-precise but much faster\
-`NKDE_METHOD` <- "discontinuous"
-
-to which distance in meters are the accidents aggregated---for a faster
-computation\
-`NKDE_AGG` <- 1
+V\ případě potřeby může uživatel nastavit parametry `NO_OF_WORKERS` a `NO_OF_WORKERS_ACCIDENTS` přímo na počet jader, který se má použít. V\ tom případě je však zodpovědný za to, aby měl systém dost volné operační paměti. Pokud ji mít nebude, systém "spadne".
 
 
 #### Parametry pro hledání klastrů
@@ -351,13 +396,6 @@ Mechanismus hledání klastrů je poměrně jednoduchý. Nejdříve se najdou v�
 Práh\ $h$ je stanoven dynamicky jako určitý vysoký kvantil. Tento kvantil je určen proměnnou `CLUSTER_MIN_QUANTILE`, která musí nabývat hodnotu z\ intervalu $[0,1]$, typicky však velmi blízkou jedné. Počet dodatečných lixelů\ $v$ je určen proměnnou `CLUSTER_ADDITIONAL_STEPS` (minimální hodnota je\ 1).
 
 Do interaktivní aplikace jsou exportovány i\ lixely, které mají vysokou hodnotu pravděpodobnosti nehody. Minimální kvantil lixelů, které jsou takto exportovány, určuje proměnná `VISUAL_MIN_QUANTILE`. Tato proměnná musí mít vždy menší hodnotu než `CLUSTER_MIN_QUANTILE`.
-
-
-
-### Vybrané okresy
-Pokud z\ nějakého důvodu hledat rizikové oblasti ve všech okresech, je možné vypočet spustit pouze pro vybrané okresy. Nepovinná proměnná `DISTRICTS` v\ takovém případě vyjmenuje CZ\ NUT3 vybraných okresů.
-
-Pokud mají výpočty proběhnout pro všechny okresy, pak proměnná `DISTRICTS` nesmí být v\ konfiguračním souboru vytvořena.
 
 
 ## Profily

@@ -44,22 +44,28 @@ UNIT_COST_CONST = 0
 
 
 
-# parallel processing ----------------------------------------------------------
+# NKDE parameters --------------------------------------------------------------
 
-# how many cores should be used in parallel
-NO_OF_WORKERS = "auto"             # or positive number
-NO_OF_WORKERS_ACCIDENTS = "auto"   # or positive number
+# NKDE weights---either "cost" or "equal"
+NKDE_WEIGHTS = "cost"
 
-# how much ram in GB should be available per core in parallel processing when
-# the number of cores used is detected automatically
-RAM_PER_CORE_GENERAL = 4.5
-RAM_PER_CORE_ACCIDENTS = 10
+# NKDE method---either "continuous" or "discontinuous"; "discontinuous" is less
+# precise but much faster
+NKDE_METHOD = "discontinuous"
 
-# how many districts should be extracted by osmium from the geofabric map shape
-# file at once; if the amount of available memory is 32 GB, 10 seems to be safe;
-# if the amount of available memory is lower, you should lower the constant; if
-# it is higher, you can raise it
-OSMIUM_DISTRICTS_IN_ONE_GO = 10
+# NKDE bandwidth in meters
+NKDE_BW = 300
+
+# whether adaptive bandwidth is used---either TRUE or FALSE; TRUE may produce
+# slightly more precise results but the computation would be much slower
+NKDE_ADAPTIVE = FALSE
+
+# maximum bandwidth tried when NKDE_ADAPTIVE is TRUE---in meters
+NKDE_TRIM_BW = 600
+
+# to which distance in meters are the accidents aggregated---for a faster
+# computation
+NKDE_AGG = 1
 
 
 
@@ -94,28 +100,22 @@ SUPPORTED_ROAD_CLASSES = c("motorway", "motorway_link",
 
 
 
-# NKDE parameters --------------------------------------------------------------
+# parallel processing ----------------------------------------------------------
 
-# NKDE weights---either "cost" or "equal"
-NKDE_WEIGHTS = "cost"
+# how many cores should be used in parallel
+NO_OF_WORKERS = "auto"             # or positive number
+NO_OF_WORKERS_ACCIDENTS = "auto"   # or positive number
 
-# NKDE bandwidth in meters
-NKDE_BW = 300
+# how much ram in GB should be available per core in parallel processing when
+# the number of cores used is detected automatically
+RAM_PER_CORE_GENERAL = 4.5
+RAM_PER_CORE_ACCIDENTS = 10
 
-# whether adaptive bandwidth is used---either TRUE or FALSE; TRUE may produce
-# slightly more precise results but the computation would be much slower
-NKDE_ADAPTIVE = FALSE
-
-# maximum bandwidth tried when NKDE_ADAPTIVE is TRUE---in meters
-NKDE_TRIM_BW = 600
-
-# NKDE method---either "continuous" or "discontinuous"; "discontinuous" is less
-# precise but much faster
-NKDE_METHOD = "discontinuous"
-
-# to which distance in meters are the accidents aggregated---for a faster
-# computation
-NKDE_AGG = 1
+# how many districts should be extracted by osmium from the geofabric map shape
+# file at once; if the amount of available memory is 32 GB, 10 seems to be safe;
+# if the amount of available memory is lower, you should lower the constant; if
+# it is higher, you can raise it
+OSMIUM_DISTRICTS_IN_ONE_GO = 10
 
 
 
