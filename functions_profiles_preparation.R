@@ -125,7 +125,8 @@ check_slot_weight <- function(x) {
 check_slot_profile_name <- function(x) {
     check_slot_word(x) &&
         stringr::str_length(x) > 0 &&
-        stringr::str_length(str_remove_all(x, "[A-Za-z0-9]")) == 0
+        stringr::str_length(str_remove_all(x, "[A-Za-z0-9]")) == 0 &&
+        stringr::str_detect(x, "^[A-Za-z]")
 }
 
 # is valid time window tibble
