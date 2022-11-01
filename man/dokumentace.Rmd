@@ -79,14 +79,15 @@ Rozdělení softwaru do dvou částí je nutné kvůli výpočetní náročnosti
 
 # Systémové nároky {#sec:hw-sw-config}
 
-Výpočty jsou poměrně hardwarově náročné. Proto se předpokládá následující konfigurace hardwaru a softwaru:
+Výpočty jsou poměrně hardwarově náročné. Proto se předpokládá následující minimální konfigurace hardwaru a softwaru:
 
 - procesor minimálně třídy i5 (vyšší je lepší), minimálně 4\ jádra (větší počet jader je výhodou),
-- minimálně 16\ GB operační paměti dedikované pro tento software (více jader vyžaduje více operační paměti),
+- minimálně 32\ GB operační paměti dedikované pro tento software (více jader vyžaduje více operační paměti),
 - operační systém **TODO**,
+- docker **TODO**,
 - **TODO**
 
-Drtivá většina výpočtů běží paralelně na více jádrech. Čím větší počet jader má systém dedikovaný, tím rychleji příprava dat proběhne. Odhadovaný čas při prvním spuštění softwaru je při procesoru třídy\ i5 se čtyřmi jádry a 32\ GB operační paměti kolem tří dny v\ případě práce s\ nespojitými hustotami pravděpodobnosti. V\ případě práce se spojitými hustotami pravděpodobnosti lze očekávat několikanásobně delší přípravu dat. Zvýšení počtu jader tento čas proporcionálně zkrátí.
+Drtivá většina výpočtů běží paralelně na více jádrech. Čím větší počet jader má systém dedikovaný, tím rychleji příprava dat proběhne. Odhadovaný čas při prvním spuštění softwaru je při procesoru třídy\ i5 se čtyřmi jádry a 32\ GB operační paměti kolem tří dny v\ případě práce s\ nespojitými hustotami pravděpodobnosti. V\ případě práce se spojitými hustotami pravděpodobnosti lze očekávat několikanásobně delší přípravu dat. Zvýšení počtu jader spojené se zvětšením dostupné paměti tento čas proporcionálně zkrátí.
 
 Výpočet běžící na každém jádru vyžaduje typicky cca 4\ GB operační paměti (v\ některých krocích však 10\ GB). Větší počet jader se tedy použije pouze v\ případě, že je k\ dispozici dostatečné množství dedikované operační paměti.
 
@@ -106,30 +107,30 @@ konfigurace
 
 # Struktura vstupních dat {#kap:input-data}
 
-Software pracuje s\ pevnou adresářovou strukturou, kterou jsou umístněna všechna vstupní data, výstupní data, mezivýpočety, konfigurace a logy. Všechna tato data musí být umístěna v\ příslušních složkách v\ jednom adresáři (dále označovaném jako `DIRORIGIN`). Tento adresář musí obsahovat následující složky:
+Software pracuje s\ pevnou adresářovou strukturou, kterou jsou umístěna všechna vstupní data, výstupní data, mezivýpočty, konfigurace a logy. Všechna tato data musí být umístěna v\ příslušných složkách v\ jednom adresáři (dále označovaném jako `DIRORIGIN`). Tento adresář musí obsahovat následující složky:
 
-- `config` ... složka s\ konfigurací softwaru
-- `rawdata` ... složka se vstupními daty
-- `tmp` ... složka s\ mezivýpočty
-- `output` ... složka, kam budou umístěny výstupní soubory určené k\ následné vizualizaci
-- `log` ... adresář s\ logy
+- `config` ... složka s\ konfigurací softwaru,
+- `rawdata` ... složka se vstupními daty,
+- `tmp` ... složka s\ mezivýpočty,
+- `output` ... složka, kam budou umístěny výstupní soubory určené k\ následné vizualizaci, a
+- `log` ... adresář s\ logy.
 
-V\ této kapitole popíšeme blíže zdroje a strukturu vstupních dat. Software **XYZ** vyžaduje tři datové vstupy:
+V\ této kapitole popíšeme blíže zdroje a strukturu vstupních dat. Software vyžaduje tři datové vstupy:
 
 - mapový podklad o\ administrativním členění ČR\ -- používají se data ČÚZK,
-- mapový podklad silniční sítě\ -- používá se OpenStreetMap (`czech-republic-latest.osm.pbf`) a
+- mapový podklad silniční sítě\ -- používá se OpenStreetMap a
 - data k\ jednotlivým dopravním nehodám ve formátu CSV.
 
 
 ## Administrativní členění ČR
 
 Jako mapový podklad pro administrativní členění se používají data ČÚZK. 
-Mapový podklad je k\ dispozici na Geoportalu ČUZK. Jedná se o\ Soubor správních hranic a hranic katastrálních území ČR.
+Mapový podklad je k\ dispozici na Geoportálu ČÚZK. Jedná se o\ Soubor správních hranic a hranic katastrálních území ČR.
 
 - zdroj: https://geoportal.cuzk.cz/(S(uufahw3bishqszcklzne0nex))/Default.aspx?mode=TextMeta&side=dSady_hranice10&metadataID=CZ-CUZK-SH-V&mapid=5&head_tab=sekce-02-gp&menu=2521
 - přímý odkaz: https://geoportal.cuzk.cz/zakazky/SPH/SPH_SHP_JTSK.zip
 
-Stažený soubor rozzipujte a kompletní obsah adresáře `JTSK` překopírujte od adrsáře `DIRORIGIN/rawdata/cuzk`.
+Stažený soubor rozzipujte a kompletní obsah adresáře `JTSK` překopírujte do adresáře `DIRORIGIN/rawdata/cuzk`.
 
 Mapový podklad administrativního členění ČR je nutné aktualizovat vždy, když se změní hranice okresů ČR. Po aktualizace mapy okresů je třeba aktualizovat všechna data, viz oddíl\ \ref{sec:aktutalizace-dat}.
 
@@ -158,19 +159,19 @@ Zdrojem dat o\ nehodách je PČR. Předpokládá se, že data jsou exportována 
 
 kde `####` představuje daný rok (např.\ 2021).
 
-Data o\ nehodách je třeba umístit do adresáře `DIRORIGIN/rawdata/accidents` ve formátu CSV.
-
 Formátem CSV se pro naše účely rozumí textový soubor, ve kterém každému záznamu odpovídá jeden řádek. První řádek představuje názvy jednotlivých sloupců psaná malými písmeny. Sloupce jsou odděleny čárkami. Desetinná místa v\ číslech jsou oddělena čárkou. Záznamy, které obsahují čáku, jsou uzavřena do uvozovek.
 
 Jednotlivé soubory musejí obsahovat následující sloupce:
 
-- `####_databaze_nehody.csv`\ -- sloupce `p1`, `p2a`, `p2b`, `p3`, `p4a`, `p4b`, `p4c`, `p5a`, `p5b`, `p6`, `p7`, `p8`, `p9`, `p10`, `p11`, `p12`, `p13a`, `p13b`, `p13c`, `p14`, `p34`, `p35`, `p36`, `p15`,  `p16`, `p17`, `p18`, `p19`, `p20`, `p21`, `p22`, `p23`, `p24`, `p27`, `p28`, `p37`, `p38`, `p39`, `p40`, `p41`, `krok`, `typ`,
-- `####_databaze_GPS.csv`\ -- sloupce `p1`, `a`, `b`, `c`, `d`, `e`, `f`, `g`, `h`, `i`, `j`, `k`, `l`, `m`, `n`, `o`, `p`, `q`, `r`, `s`, `t`,
-- `####_databaze_nasledky.csv`\ -- sloupce `p1`, `id_vozidla`, `p59a`, `p59b`, `p59c`, `p59d`, `p59e`, `p59f`, `p59g`, `p59h`,
-- `####_databaze_vozidla.csv`\ -- sloupce `p1`, `id_vozidla`, `p44`, `p45a`, `p45b`, `p47`, `p48a`, `p48b`, `p49`, `p50a`, `p50b`, `p51`, `p52`, `p53`, `rok`, `pohlavi`, `p55a`, `p55b`, `p56`, `p57`, `p58` a
-- `####_databaze_chodci.csv`\ -- sloupce `p1`, `p29`, `p30`, `p31`, `p32`, `p33c`, `p33d`, `p33e`, `p33f`, `p33g`, `p33h`,
+- `####_databaze_nehody.csv`: sloupce `p1`, `p2a`, `p2b`, `p3`, `p4a`, `p4b`, `p4c`, `p5a`, `p5b`, `p6`, `p7`, `p8`, `p9`, `p10`, `p11`, `p12`, `p13a`, `p13b`, `p13c`, `p14`, `p34`, `p35`, `p36`, `p15`,  `p16`, `p17`, `p18`, `p19`, `p20`, `p21`, `p22`, `p23`, `p24`, `p27`, `p28`, `p37`, `p38`, `p39`, `p40`, `p41`, `krok`, `typ`,
+- `####_databaze_GPS.csv`: sloupce `p1`, `a`, `b`, `c`, `d`, `e`, `f`, `g`, `h`, `i`, `j`, `k`, `l`, `m`, `n`, `o`, `p`, `q`, `r`, `s`, `t`,
+- `####_databaze_nasledky.csv`: sloupce `p1`, `id_vozidla`, `p59a`, `p59b`, `p59c`, `p59d`, `p59e`, `p59f`, `p59g`, `p59h`,
+- `####_databaze_vozidla.csv`: sloupce `p1`, `id_vozidla`, `p44`, `p45a`, `p45b`, `p47`, `p48a`, `p48b`, `p49`, `p50a`, `p50b`, `p51`, `p52`, `p53`, `rok`, `pohlavi`, `p55a`, `p55b`, `p56`, `p57`, `p58` a
+- `####_databaze_chodci.csv`: sloupce `p1`, `p29`, `p30`, `p31`, `p32`, `p33c`, `p33d`, `p33e`, `p33f`, `p33g`, `p33h`,
 
-kde sloupce `p1` představuje klíčový sloupec identifikující dopravní nehodu.
+kde sloupec `p1` představuje klíčový sloupec, který jednoznačně identifikuje dopravní nehodu.
+
+Data o\ nehodách v\ tomto formátu překopírujte do adresáře `DIRORIGIN/rawdata/accidents`.
 
 
 
@@ -178,19 +179,131 @@ kde sloupce `p1` představuje klíčový sloupec identifikující dopravní neho
 
 # Konfigurace systému {#kap:konfigurace}
 
-Přípravu dat pro vizualizaci míst s\ vysokou nehodovostí je možné do jisté míry nastavit. K\ tomu slouží především soubor `DIRORIGIN/config/config.R`. Jedná se o\ R\ skript, který musí dodržet platná syntaktická pravidla jazyka\ R. V\ nejjednodušším případě stačí modifikovat hodnoty proměnných, které skript definuje. Je ovšem také možné používat platné výrazy a dokonce vytvářet vlastní proměnné. Tyto proměnné je však nutné na konci skriptu smazat (mohou tedy sloužit pouze pro zpřehlednění konfigurace).
+Způsob hledání  míst s\ vysokou nehodovostí je možné relativně flexibilně nastavit pomocí konfiguračních souborů. Všechny konfigurační soubory musí být uloženy v\ adresáři `DIRORIGIN/config`.
 
-Ve skriptu `config.R` platí následující pravidla:
+Konfigurace systému je rozdělena do dvou vrstev. Základní konfigurace je obsažena v\ souboru `DIRORIGIN/config/config.R`, který musí být v\ konfiguračním adresáři vždy obsažen a musí obsahovat všechny povinné proměnné. Tento soubor definuje všechny informace, jak se mají data zpracovávat.
+Pokud je v\ adresáři `DIRORIGIN/config` uložen pouze tento konfigurační soubor, pak se pro každý okres a zvolený čas najde pouze jeden typ nebezpečných úseků.
 
-- vše od znaku křížek (`#`) do konce řádku je komentář
-- hodnota se do proměnné přiřazuje pomocí znaku šipka (`<-`), složeného ze znaků menší (`<`) a pomlčka (`-`)
-- skript může obsahovat pouze níže uvedené proměnné
-- tyto proměnné musejí mít přiřazenou platnou hodnotu
+Často je ale užitečné najít nebezpečné úseky z\ pohledu více kritérií. Typický příklad je situace, kdy chceme najít 1)\ úseky, kde dochází k\ velkému množství nehod bez ohledu na jejich závažnost, ale současně 2)\ i\ úseky, kde dochází zejména k\ závažným dopravním nehodám. K\ tomu slouží *profily* uložené do souborů `profile_XXX.R`, kde `XXX` je část jména souboru dodaná uživatelem.
+
+Profily umožňují vytvořit několik různých konfigurací systému: např.\ jednu, která při výpočtu nehodových úseků nerozlišuje nehody podle jejich závažnosti, a druhou, která váží závažnost nehod podle zvolených kritérií. Stačí, aby jednotlivé profily definovaly jen ty proměnné, kterými se liší; hodnoty ostatních proměnných zdědí z\ nastavení `config.R`. (Zároveň však platí, že některé technické parametry mohou být definované pouze v\ `config.R`, a\ jsou tedy všem profilům společné.)
+
+Všechny konfigurační soubory jsou technicky R\ skripty, a\ musí tedy dodržet platná syntaktická pravidla jazyka\ R. V\ nejjednodušším případě stačí modifikovat hodnoty proměnných, které skript definuje. Je ovšem také možné používat platné výrazy a dokonce vytvářet vlastní proměnné. Tyto proměnné je však nutné na konci skriptu smazat (mohou tedy sloužit pouze pro zpřehlednění konfigurace).
+
+Ve všech konfiguračních skriptech platí následující pravidla:
+
+- Každý konfigurační skript může obsahovat pouze povolené proměnné; některé proměnné musí obsahovat vždy.
+- Tyto proměnné musejí mít přiřazenou platnou hodnotu.
+- Vše od znaku křížek (`#`) do konce řádku je komentář.
+- Hodnota se do proměnné přiřazuje pomocí znaku "rovná se" (`=`) tak, že jméno proměnné je vlevo a hodnota vpravo od znaku `=`.
+- Hodnoty proměnných mohou být
+    - čísla
+        - čísla nesmějí obshovat mezery
+        - desetinná místa se oddělují desetinnou tečkou (`.`)
+        - velké hodnoty je možné zapsat "vědeckou notací", tj.\ 1\ 000 je možné zapsat jako `1e3`
+    - řetězce uzavřené do uvozovek (např.\ `"motorway"`)
+    - logické hodnoty (`TRUE` pro pravdu/ano a `FALSE` pro nepravdu/ne)
+    - vektory čísel nebo řetězců
+        - vektor se vytváří pomocí funkce `c()`
+        - jeho jednotlivé hodnoty jsou odděleny čárkami (`,`)
+    - tabulky
+
+Seznam nezbytných a povolených proměnných se liší pro `config.R` a jednotlivé profily. Seznam těchto proměnných, jejich význam a povolené datové typy jsou stejně jako příklady zadávání jednotlivých typů hodnot uvedeny níže.
 
 
-## Vlastní konfigurace (config.R)
+## Základní konfigurace (soubor config.R)
 
-Skript `config.R` může obsahovat následující proměnné, rozdělené do několik sekcí:
+V\ tomto oddíle popíšeme všechny proměnné, které musejí být obsaženy v\ základním konfiguračním skriptu `config.R`. Pro přehlednost je rozdělíme do několika kategorií. (Stejným způsobem jsou tyto proměnné rozděleny i\ v\ souboru `config.R`.)
+
+
+### Časová okna
+
+Nejdříve je třeba nastavit, pro jaká období se mají nehodové úseky spočítat. To je možné udělat dvěma způsoby: buď období generovat automaticky, nebo je zadat ručně. Oba způsoby je možné kombinovat.
+
+V\ případě automatických období uživatel specifikuje jejich délku v\ letech a jejich počet. Řekněme, že délka okna je tři roky, počet oken je dva a nehodové lokality se počítají 31.\ dubna 2023. V\ takovém případě se nehodové lokality spočítají pro roky 2020--2022 (1.\ okno) a 2017--2018 (2.\ okno). Obecně platí, že první časové okno se stanoví tak, aby mělo danou délku v\ letech a končilo 31.\ prosince posledního ukončeného roku. Druhé okno se stanoví tak, aby mělo danou délku a těsně předcházelo 1.\ oknu atd.
+
+Pokud chce uživatel použít automatická okna, musí nastavit tři proměnné:
+
+- `TIME_WINDOW_AUTO` ... logická hodnota, při využití automatických oken `TRUE`,
+- `TIME_WINDOW_LENGHT` ... číselný vektor, délka časového okna v\ letech a
+- `TIME_WINDOW_NUMBER` ... číselný vektor, počet časových oken, musí mít délku\ 1 nebo stejnou jako `TIME_WINDOW_LENGHT`.
+
+Ukažme si několik příkladů:
+
+Pokud chce uživatel nastavit automatická okna způsobem popsaným výše (délka 3\ roky, počet oken\ 2), stačí v\ konfiguraci nastavit:
+
+```{r, eval=FALSE}
+TIME_WINDOW_AUTO = TRUE
+TIME_WINDOW_LENGHT = 3
+TIME_WINDOW_NUMBER = 2
+```
+
+Pokud chce uživatel spočítat nehodové úseky na datech o\ délce 1\ rok a současně jiné úseky na datech o\ délce 3\ roky, může nastavit:
+
+```{r, eval=FALSE}
+TIME_WINDOW_AUTO = TRUE
+TIME_WINDOW_LENGHT = c(1, 3)
+TIME_WINDOW_NUMBER = 2
+```
+
+Pokud by navíc chtěl spočítat dvě časová okna délky 3\ roky a tři časová okna délky 1\ rok, nastaví:
+
+```{r, eval=FALSE}
+TIME_WINDOW_AUTO = TRUE
+TIME_WINDOW_LENGHT = c(1, 3)
+TIME_WINDOW_NUMBER = c(3, 2)
+```
+
+Ve většině situací bude uživateli stačit používat automatická časová okna, která umožní aktualizovat data bez toho, aby bylo potřeba měnit konfiguraci systému a přepočítávat údaje, které se v\ čase nemění (viz oddíl\ XXX).
+
+V\ některých případech však může uživatel potřebovat najít nehodové lokality v\ pevně zadaných letech. K\ tomu slouží pevná časová okna zadaná pomocí parametru `TIME_WINDOW`. Do tohot parametru je třeba uložit tabulku se dvěma sloupci, `from_date` (počáteční datum časového okna) a `to_date` (koncové datum okna). Řádky tabulky pak odpovídají jednotivým časovým oknům. Datum se zadává jako řetězec ve formátu `"YYYY-MM-DD"`.
+
+Dvě pevná časová okna o\ délce tří let je pak možné nastavit např.\ takto:
+
+```{r, eval=FALSE}
+TIME_WINDOW = tibble::tribble(
+    ~from_date,    ~to_date,
+    "2019-01-01",  "2021-12-31",
+    "2018-01-01",  "2020-12-31"
+)
+```
+
+Automatická a pevná časová okna je možné libovolně kombinovat. V\ případě, že budou použita pouze pevná časová okna, je třeba nastavit parametr `TIME_WINDOW_AUTO` na hodnotu `FALSE`.
+
+V\ každém případě platí, že uživatel musí zajistit, aby měl systém přístup k\ datům o\ nehodách za dané roky.
+
+
+### Váhy nehod
+Jednotlivé nehody se liší svou závažností. Při hledání nebezpečných míst je proto užitečné vážit jednotlivé nehody podle jejich závažnosti. Hodnota nehody je rovna 
+
+$$\textrm{cost} = d \times D + s \times S + l \times L + m \times M + c,$$
+
+kde $D$\ je počet lidí, kteří při nehodě zahynuli, $S$\ je počet vážně zraněných, $L$\ je počet lehce zraněných a $M$\ je hodnota materiální škody v\ milionech\ Kč. Uživatel může zadat konstanty $d$, $s$, $l$, $m$ a $c$, které $d$, $s$ a $l$ určují, jaká váha se přikládá smrtelnému, těžkému a lehkému zranění respektive a jaká materiálním škodám. Jedno možné nastavení je nastavit $d$ na hodnotu statistického života v\ milionech\ Kč, $s$ a $l$ na její poměrné zlomky, $m=1$ a $c=0$.
+
+Tyto koeficienty je možné nastavit pomocí proměnných 
+
+- `UNIT_COST_DEAD` ... nezáporné číslo, váha smrtelného zranění ($d$),
+- `UNIT_COST_SERIOUS_INJURY` ... nezáporné číslo, váha těžkého zranění ($s$),
+- `UNIT_COST_LIGHT_INJURY` ... nezáporné číslo, váha lehkého zranění ($l$),
+- `UNIT_COST_MATERIAL` ... nezáporné číslo, váha materiální škody v\ milionech\ Kč ($m$) a
+- `UNIT_COST_CONST` ... nezáporné číslo, konstanta připočítaná k\ hodnotě každé nehody ($c$).
+
+Příklad nastavení, kde se hodnota smrtelného zranění nastaví na hodnotu statistického života 16\ milionů\ Kč:
+
+```{r, eval=FALSE}
+UNIT_COST_DEAD = 16
+UNIT_COST_SERIOUS_INJURY = UNIT_COST_DEAD / 4
+UNIT_COST_LIGHT_INJURY = UNIT_COST_DEAD / 16
+UNIT_COST_MATERIAL = 1
+UNIT_COST_CONST = 0
+
+```
+
+Hodnota nehod se při výpočtu rizikových oblastí používá pouze v\ případě, kdy je proměnná `NKDE_WEIGHTS` nastavena na hodnotu `"cost"`, viz dále. Je však dobré nastavit tyto parametry vždy. I\ když chceme najít nehodové klastry, které váží všechny nehody stejně, nastavení těchto parametrů pak umožní říct, které klastry jsou spojeny s\ větší škodou.
+
+**Alberiny Ščasný**
+
+**Když moc vysoká hodnota stat. života, ostatní se ignoruje. Ale nehody náhodné. Možná nastavit níže.**
 
 
 ### Nastavení paralelních výpočtů
@@ -207,19 +320,6 @@ U\ vlastních mapových podkladů je třeba nastavit čtyři parametry.
 3. OpenStreetMaps obsahují cesty mnoha typů, z\ nichž mnohé nejsou určeny pro motorová vozidla. Při práci s\ mapovými podklady se tyto typy cest ignorují. Proměnná `SUPPORTED_ROAD_CLASSES` obsahuje výčet všech typů cest, které se mají použít. V\ současné době je ve skriptu výčet všech typů cest, které OpenStreetMaps nyní používají, s\ tím, že nevhodné typy jsou odstraněny pomocí komentářů.
 
 4. Některé nehody mohou být zaměřeny velmi nepřesně\ -- daleko od silniční sítě. V\ takovém případě se při výpočtu rizikových míst ignorují. Proměnná `ACCIDENT_TO_ROAD_MAX_DISTANCE` určuje maximální vzdálenost od silniční sítě v\ metrech, při které jsou nehody použitý při hledání rizikových oblastí.
-
-
-#### Váhy nehod
-Všechny nehody si nejsou rovny\ -- některé jsou závažnější než jiné. Při výpočtu rizikových míst se proto různé nehody váží. Hodnota nehody je rovna 
-
-$$d \times D + s \times S + l \times L + m \times M + c,$$
-
-kde $D$\ je počet lidí, kteří při nehodě zahynuli, $S$\ je počet vážně zraněných, $L$\ je počet lehce zraněných a $M$\ je hodnota materiální školdy v\ milionech\ Kč. Uživatel může zadat konstanty $d$, $s$, $l$, $m$ a $c$, které $d$, $s$ a $l$ určují hodnotu statistického života, hodnotu vážného a lehkého zranění respektive. Přirozené hodnoty $m=1$ a $c=0$.
-
-Tyto koeficienty je možné nastavit pomocí proměnných `UNIT_COST_DEAD` ($d$),
-`UNIT_COST_SERIOUS_INJURY` ($s$), `UNIT_COST_LIGHT_INJURY` ($l$), `UNIT_COST_MATERIAL` ($m$) a `UNIT_COST_CONST` ($c$).
-
-Hodnota nehod se při výpočtu rizikových oblastí používá pouze v\ případě, kdy je proměnná `NKDE_WEIGHTS` nastavena na hodnotu `"cost"`, viz dále.
 
 
 ### Parametry výpočtu hustot
@@ -251,17 +351,6 @@ Mechanismus hledání klastrů je poměrně jednoduchý. Nejdříve se najdou v�
 Práh\ $h$ je stanoven dynamicky jako určitý vysoký kvantil. Tento kvantil je určen proměnnou `CLUSTER_MIN_QUANTILE`, která musí nabývat hodnotu z\ intervalu $[0,1]$, typicky však velmi blízkou jedné. Počet dodatečných lixelů\ $v$ je určen proměnnou `CLUSTER_ADDITIONAL_STEPS` (minimální hodnota je\ 1).
 
 Do interaktivní aplikace jsou exportovány i\ lixely, které mají vysokou hodnotu pravděpodobnosti nehody. Minimální kvantil lixelů, které jsou takto exportovány, určuje proměnná `VISUAL_MIN_QUANTILE`. Tato proměnná musí mít vždy menší hodnotu než `CLUSTER_MIN_QUANTILE`.
-
-
-### Časová okna
-
-from- and to-dates when densities and clusters are computed
-format: YYYY-MM-DD\
-TIME_WINDOW <- tibble::tribble(
-    ~from_date,    ~to_date,
-    "2019-01-01",  "2021-12-31",
-    "2018-01-01",  "2020-12-31"
-)
 
 
 
