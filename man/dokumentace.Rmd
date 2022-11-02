@@ -28,6 +28,7 @@ documentclass: scrartcl
 classoption: a4paper
 fontsize: 11pt
 geometry: left=25mm, right=25mm, top=25mm, bottom=40mm
+bibliography: references.bib
 ---
 
 <!--
@@ -160,12 +161,28 @@ Pokud je kterýkoli z\ existujících souborů novější než binární konfigu
 
 ## Tabulka okresů
 
+Tabulka okresů definuje tvar jednotlivých okresů jako mapový polygon. Tato data je třeba aktualizovat pouze v\ případě, že se změní tvary jednotlivých okresů v\ ČR.
 
-## Podklady o silniční síti
 
 ## Data o\ jednotlivých nehodách
 
+
+## Podklady o silniční síti
+
+Příprava podkladů o\ silniční síti probíhá v\ několika navazujících krocích:
+
+1. Z\ celé mapy silniční sítě se vyfiltrují pouze podporované typy cest (vyhodí se lesní cesty apod.) a silnice se ořežou na jednotlivé okresy. Okresy jsou přitom zvětšeny o\ určitou vzdálenost na všechny strany (důvod je vysvětlen níže). K\ filtraci a ořezu silniční sítě se používá utilitka `osmium`.
+1. Silniční síť se zjednoduší tak, aby byla zachovaná její topologie. V\ použitých OpenStreetMaps se totiž často silnice často skládají z\ velmi krátkých úseků, často o\ délce několika centimetrů. Takto krátké úseky jsou pospojovány do delších celků, pokud takto vzniklá silnice příliš nevybočí z\ tvaru skutečné silnice. V\ některých případech jsou spojeny i\ velmi blízké uzly nepodstatné pro topologii sítě.
+1. Silniční síť je rozlámána do krátkých úseků (implicitně o\ délce 5\ metrů); tyto úseky nazýváme *lixely*. Silniční síť byla v\ předchozím kroku zjednodušena právě proto, aby výsledné *lixely* mohly mít stejnou délku a tato délka nebyla extrémně krátká. Všechny následující výpočty probíhají na úrovni *lixelů*. Pro každý *lixel* je stanoven i\ bod v\ jeho středu, který tento *lixel* reprezentuje.
+1. Nakonec je zkonstruována datová struktura, která popisje geometrii sítě, tj.\ určuje, které *lixely* spolu sousedí.
+
+
 ## Hustoty pravděpodobnosti škod způsobených nehodami
+
+Nejdůležitější i\ výpočetně nejnáročnější část hledání nebezpečných úseků spočívá ve výpočtu síťové jádrové hustoty nehod pro každý *lixel* silniční sítě reprezentovaný jeho středem.
+
+[@GelbRJournal; @GelbManual]
+
 
 ## Klastrů úseků s častými nebo nebezpečnými nehodami
 
@@ -616,3 +633,9 @@ To znamená, že např.\ shapefilu `clusters_CZ0100_equal_2019-01-01_2021-12-31`
 Tam, kde může daný parametr obsahovat vektor, jsou jednotlivé hodnoty tohoto vektoru převedeny na řetězec a spojeny do jednoho řetězce; jsou odděleny znaky "\  |\ " (mezera, trubka a mezera).
 
 Soubory `profiles.csv` a `profiles.dbf` mají shodný obsah, liší se pouze formátem. Doporučujeme použít soubor ve formátu CSV, protože ve druhém souboru jsou jména sloupců strojově zkrácena. Výhodou souboru ve formátu DBF je to, že je možné jej přímo načíst do GISu.
+
+
+
+
+
+# Použité zdroje
