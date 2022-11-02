@@ -106,12 +106,34 @@ konfigurace
 
 
 
-# Jak systém funguje (přehled)
+# Jak systém funguje
+
+V\ tomto oddílu popíšeme, jak systém přípravy dat funguje jako celek. Detaily vstupů, nastavení, výstupů apod. budou podrobněji vysvětleny v\ následujících oddílech.
 
 
+## Obecný přehled
+
+Po svém spuštění systém postupně provádí následující kroky:
+
+1. vytvoří logovací soubor, kam systém loguje probíhající operace a případná varování a chyby,
+1. načte konfiguraci systému a vytvoří si její binární reprezentaci,
+1. vytvoří tabulku okresů, pro které připravuje data, a\ to jak pro další výpočty, tak (v\ jiném formátu) pro vizualizační software,
+1. nachystá mapové podklady o\ silniční síti,
+1. připraví podklady o\ jednotlivých nehodách, opět ve verzi pro další výpočty a pro vizualizační software,
+1. spočítá hustoty pravděpodobnosti nehod/škod způsobených nehodami na celé silniční síti,
+1. najde místa s\ výraznou pravděpodobností nehod/způsobených škod a vytvoří klastry takových míst a
+1. jako bonus převede klastry nebezpečných úseků do formátu pro GIS.
+
+Další krok se vždy začne provádět až po skončení předchozího kroku. Některé kroky (zejména kroky\ 1--3) jsou rychlé a provádí se na jednom jádru. Ostatní kroky se musejí provést zvlášť pro každý okres nebo kombinaci okresu, časového okna a různých alternativ nastavení systému (typicky vah jednotlivých nehod). Tyto kroky jsou paralelizované a běží na více jádrech systému\ -- vždy jeden okres nebo kombinace okresu, časového okna a parametrizace výpočtu na jednom jádře. Další krok se spustí vždy až ve chvíli, kdy doběhne výpočet pro všechny okresy apod.
+
+Návaznost mezi jednotlivými kroky funguje podobně jako závislosti v\ programu `make`: Nová binární reprezentace konfigurace se vytvoří pouze v\ případě, že neexistuje, nebo je starší než zdrojové konfigurační soubory. Nová tabulka okresů se vytvoří pouze v\ případě, že neexistuje nebo je starší než binární konfigurace nebo zdrojový shapefile okresů, na kterém závisí. Mapové podklady se přepočítají pouze v\ případě, že neexistují, nebo jsou starší než binární konfigurace, tabulka okresů nebo zdrojový shapefile silniční sítě atd.
+
+Tento postup zajišťuje, že se v\ případě aktualizace vstupních dat (viz oddíl\ \ref{kap:input-data}) přepočítají jen ty hodnoty, které je třeba aktualizovat. (To samozřejmě vyžaduje, aby se zachovaly všechny soubory s\ průběžnými výpočty.) Současně také platí, že pokud výpočet z\ jakéhokoli důvodu selže nebo je přerušen, výpočet začne pracovat tam, kde v\ předchozím běhu skončil. 
+
+Jistou nevýhodou tohoto procesu je fakt, že všechny finální i\ průběžně vytvářené soubory vždy závisí na binární konfiguraci systému. Pokud se změní, proběhnou všechny výpočty vždy od začátku. Pokud změna konfigurace nezmění validitu některých souborů, je možné jejich přepočítání zabránit tak, že je datum jejich poslední modifikace nastaveno na novější čas, než jaký má soubor nově vytvořené binární konfigurace. Tento postup však výrazně nedoporučujeme.
 
 
-# Struktura vstupních dat {#kap:input-data}
+## Použitá adresářová struktura
 
 Software pracuje s\ pevnou adresářovou strukturou, kterou jsou umístěna všechna vstupní data, výstupní data, mezivýpočty, konfigurace a logy. Všechna tato data musí být umístěna v\ příslušných složkách v\ jednom adresáři (dále označovaném jako `DIRORIGIN`). Tento adresář musí obsahovat následující složky:
 
@@ -120,6 +142,40 @@ Software pracuje s\ pevnou adresářovou strukturou, kterou jsou umístěna vše
 - `tmp` ... složka s\ mezivýpočty,
 - `output` ... složka, kam budou umístěny výstupní soubory určené k\ následné vizualizaci, a
 - `log` ... adresář s\ logy.
+
+
+## Logování
+
+Při každém spuštění systému je v\ adresáři `DIRORIGIN/log` vytvořen nový logový soubor se jménem `YYYY-MM-DD-hh-mm-ss.log`, kde `YYYY-MM-DD` je datum a `hh-mm-ss` je čas spuštění systému. Všechny kroky systému logují do tohoto souboru.
+
+
+## Konfigurace systému
+
+Konfigurace systému je detailně popsaná v\ oddílu\ \ref{kap:konfigurace}. Zde popíšeme pouze to, jak se ze zdrojových (textových) konfiguračních souborů vytváří binární konfigurace.
+
+Při tvorbě binární konfigurace systém hledá v\ adresáři `DIRORIGIN/config` soubory `config.R` a `profile_???.R`, kde `???` jsou nějaké znaky anglické abecedy nebo číslice. Soubor `config.R` je povinný, soubory `profile_???.R` jsou volitelné.
+
+Pokud je kterýkoli z\ existujících souborů novější než binární konfigurační soubor `profiles.rds`, binární konfigurace se aktualizuje. Tento systém funguje dobře v\ případě, že uživatel aktualizuje konfiguraci ve stávajících souborech nebo přidá nové profily. Pokud pouze smaže některý profilový soubor, k\ aktualizaci binární konfigurace nedojde. V\ takovém případě je třeba buď ručně smazat binární konfigurační soubor `profiles.rds` nebo aktualizovat datum modifikace kteréhokoli zdrojového konfiguračního souboru.
+
+
+## Tabulka okresů
+
+
+## Podklady o silniční síti
+
+## Data o\ jednotlivých nehodách
+
+## Hustoty pravděpodobnosti škod způsobených nehodami
+
+## Klastrů úseků s častými nebo nebezpečnými nehodami
+
+## Klastry nehodových úseků ve formátu pro GIS
+
+
+
+
+
+# Struktura vstupních dat {#kap:input-data}
 
 V\ této kapitole popíšeme blíže zdroje a strukturu vstupních dat. Software vyžaduje tři datové vstupy:
 
