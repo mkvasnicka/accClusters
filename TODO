@@ -6,14 +6,11 @@ Now
 
 - grid_shape v NKDE dořešit s autorem balíku
     - teď to má provizorní řešení -- tinkering s gridem
-- available_memory() -- doplnit pro docker
-- available_cores() -- doplnit pro docker
 - PWALK() zůstane někdy (při accidents?) viset -- proč?
     - ukončí otevřené soubory, přejde na 1 jádro, tam běží na 100 %, ale nic se
         neděje (tedy nic očividného)
     - opravil by to schedulling?
     - vyzkoušet na notebooku -- tam se to imho nedělo (je to možné?)
-- aktualizovat export do GISu
 - tvorba profilů
     - vyhodit nepoužívané testovací funkce?
     - vyhodit zakomentovaný kód
@@ -22,18 +19,6 @@ Now
 
 Big Picture
 -----------
-- proč spadly výpočty hustot?
-    - původně
-        - data/tmp/densities/densities_CZ0532_default_2019-01-01_2021-12-31.rds,
-        - data/tmp/densities/densities_CZ0532_default_2016-01-01_2018-12-31.rds,
-        - data/tmp/densities/densities_CZ0643_default_2019-01-01_2021-12-31.rds,
-        - data/tmp/densities/densities_CZ0643_default_2016-01-01_2018-12-31.rds
-    - nově
-        - data/tmp/densities/densities_CZ0324_default_2019-01-01_2021-12-31.rds,
-        - data/tmp/densities/densities_CZ0324_default_2016-01-01_2018-12-31.rds,
-        - data/tmp/densities/densities_CZ0712_default_2016-01-01_2018-12-31.rds,
-        - data/tmp/densities/densities_CZ0805_default_2019-01-01_2021-12-31.rds,
-        - data/tmp/densities/densities_CZ0805_default_2016-01-01_2018-12-31.rds
 - densities neloguje chyby do souboru (když spadne???)
 - fixovat parametry tvorby klastrů -- shiny je musí mít fixní, takže je uživatel
   nemůže měnit
@@ -45,13 +30,12 @@ Big Picture
 
 
 
-Tvorba klastrů
---------------
+Parametrizace
+-------------
 
-- najít nějaké kritérium, jak stanovil kvantil a počet kroků rozšíření
-    - PAI nefunguje ani na accident_cost, ani na densities
-
-- kontrola: klastry jsou stejné pro profil default a other -- to je divné
+- najít optimální nastavení parametrů
+- podívat se, jak se liší klastry pro continuous a discontinuous
+- podívat se, co dělá adaptive
 
 
 
@@ -65,21 +49,6 @@ Refactoring
     - unit_cost(s)()
     - handle_time_widnow()
 
-- zafixovat adresářovou strukturu tak, aby stačilo zadat začátky cest
-    - společný začátek cesty: DIR_ORIGIN
-    - alternativní začátky cest: RAW_DATA_DIR, DATA_DIR, OUTPUT_DIR a LOG_DIR
-    - hotovo:
-        - zrušeny staré konstanty
-        - zavedeny nové funkce
-    - nutno zkontrolovat
-
-- guts_config.R bude pevně v jádře
-    - parametry, které zadají uživatelé se budou volat v bashi přes --profile
-    - přejmenovat --profile na --config
-
-- process_command_line_arguments() předpokládá, že profily jsou podadresář guts --
-  změnit
-
 - PWALK by mělo throw exception, když selže
     - je potřeba najít všechna místa, kde se používá, a podívat se, jestli jsou v tryCatch()
 
@@ -87,16 +56,6 @@ Refactoring
     - pro případ, že policie sloupce přejmenuje -- není kulturní, abychom používali jejich interní značky
     - nutné domluvit se Štěpánem, co z toho použije
         - data by to mělo chystat i pro něj -- aby se vzala data z guts a šoupla do shiny app
-
-- rozmyslet si, jestli můžeme chtít, aby se uvažovalo víc různých typů nákladů nehod -- teď je to naimplementované částečně a asi nekonzistentně
-    - tabulka accidents může mít víc sloupců pro náklady nehody
-    - tabulka densities má jen jeden sloupec pro hustotu, která se počítá z nákladů
-        - používá se to, co je zadané v NKDE_WEIGHTS (implicitně "accident_cost")
-    - tabulka klastrů volá náklady
-        - nepřímo přes density -- není jasné, jaké náklady se tu používají
-        - přímo přes hodnotu klastru, která se bere z nehod -- současný kód neumožňuje zadat
-    - otázka, jak to funguje s profily -- nemění pojmenované profily jména souborů?
-        - a pokud ano, funguje to konzistentně?
 
 - při exportu do shiny ořezat lixely a klastry na okres
     - lixely nechat jen ty, které jsou uvnitř skutečného okresu
@@ -127,22 +86,6 @@ Refactoring
         (délka lixelů etc.), výpočtu hustot (nastavení NKDE), určení klastrů
         - co s tím???
 
-- výpočty klastrů jsou tak rychlé, že by se možná mohly přesunout do shiny a fungovat interaktivně
-    - implicitní mohou být předpočítané
-    - jiné se pak mohou nastavit až do výše lixelů, které jsou součástí vizualizace´
-
-
-Pokračovat
-----------
-- vytvořit a do všech prepar*.R přidat funkci, která zkontroluje, že jsou zadané všechny konfigurační parametry a že mají validní hodnotu
-- do konfigurace jména, která řeknou, které sloupce jsou id nehody, ... (p1, ...)
-- začít psát dokumentaci
-- přidat hlídání chyb a logování
-    - do všech funkcí přidat logování
-    - při paralelním nutno přidat do každého jádra
-        - see: https://github.com/HenrikBengtsson/future/issues/306
-- zkontrolovat úpravy ve funkcích pro hotspot a cluster preparation
-- do načítání nehod přidat kontroly a ukončit, když chyba
 
 
 Vizuální pohled na klastry
@@ -151,21 +94,6 @@ Vizuální pohled na klastry
     - bez ohledu na název jsou všechny pro stejné období, IMHO 2019--2021
 - napsat funkci pro vizualizace ve statické mapě
 
-
-Předání dat Štěpánovi
----------------------
-- tabulka lixels
-    - sloupce lixel_id, geometrie, density, klastr_id
-    - jen lixely, které jsou součástí nějakého klastru nebo s hustotou v 95. kvantilu a výše
-- tabulka accidents
-    - sloupce p1 a klastr_id
-    - jen nehody, které jsou součástí klastrů
-tabulky po bufferovaných okresech
-    - otázka, co dělat s okraji: nechat/oříznout
-    - pokud oříznout, co klastry na pomezí? asi nechat celé?
-každá tabulka je pro jeden okres a jeden čas
-    - to znamená, že
-        - všechno za tím (klastry) se musí počítat nejen pro okresy, ale i pro časy
 
 
 Hotspoty/klastry
