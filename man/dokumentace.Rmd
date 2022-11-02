@@ -179,15 +179,31 @@ Příprava podkladů o\ silniční síti probíhá v\ několika navazujících k
 
 ## Hustoty pravděpodobnosti škod způsobených nehodami
 
-Nejdůležitější i\ výpočetně nejnáročnější část hledání nebezpečných úseků spočívá ve výpočtu síťové jádrové hustoty nehod pro každý *lixel* silniční sítě reprezentovaný jeho středem.
+Nejdůležitější i\ výpočetně nejnáročnější část hledání nebezpečných úseků spočívá ve výpočtu síťové jádrové hustoty nehod pro každý *lixel* silniční sítě reprezentovaný jeho středem. Síťové jádrové hustoty se počítají pomocí balíku **spNetwork** [@GelbRJournal; @GelbManual].
 
-[@GelbRJournal; @GelbManual]
+Jádrová hustota představuje jádrové vyhlazení (*smoothing*) bodového procesu na síti. Intuice je následující: Nad každou nehodou se na silniční síti nakreslí kopeček (*jádro*). (Buď mají všechny nehody kopečky stejně velké, nebo závažnější nehody mají větší kopečky než méně závažné nehody. Proces je komplikovanější o\ to, jak se "výška kopečků" rozděluje na křižovatkách.) Pak se v\ každém bodě sítě se sečte výška všech kopečků, jejichž nehoda je od daného bodu maximálně vzdálena o\ nějakou konstantu\ $b$ (*bandwidth*). V\ okolí bodu, kde je součet výšky kopečků vysoký, existuje více nehod (nebo jsou závažnější) než v\ okolí bodu, kde je tento součet nižší. Nebezpečné úseky silniční sítě jsou tedy charakterizovány vysokou jádrovou hustotou. (Pro techničtější popis konzultujte prosím např.\ @GelbRJournal.)
+
+Systém umí spočítat hustoty pravděpodobnosti mnoha různých typů, viz oddíl\ \ref{sec:pardensities}. V\ nejjednodušším případě spočítá jádrovou hustotu, při které mají všechny nehody stejnou váhu. Ve složitějším mohou mít závažnější nehody vyšší váhu než méně závažné nehody. Systém také umožňuje stanovit délku\ $b$ nebo ji nechat adaptivně upravovat, viz\ @GelbManual. Umí také rozdělit "výšku kopečků" na křižovatkách nespojitě nebo spojitě, viz tamtéž.
 
 
-## Klastrů úseků s častými nebo nebezpečnými nehodami
+## Klastry úseků s častými nebo nebezpečnými nehodami
+
+V\ předchozím kroku se pro každý *lixel* silniční sítě spočítala hustota pravděpodobnosti nehody. Tato data jsou následně použita k\ nalezení obzvláště nebezpečných úseků.
+
+Uživatel si ve webovém vizualizačním nástroji může stanovit, kolik promile nejhorších úseků se mu zobrazí, a\ o\ kolik *lixelů* se výsledné klastry zvětší. Klastry se tedy počítají pro takto zadané parametry $h$ (počet promile nejhorších úseků silniční sítě, které se mají najít) a $a$ (počet dodatečně přidaných *lixelů*):
+
+1. Vybere se $h$ promile *lixelů* s\ nejvyšší hustotou pravděpodobnosti.
+1. Idenitifikují se klastry takových *lixelů*, tj.\ skupiny lixelů, které tvoří souvislý graf (tj.\ z\ každého *lixelu* v\ klastru je možné přejet do jiného *lixelu* v\ klastru čistě přes úseky silniční sítě, které leží v\ klastru).
+1. Ke každému klastru se rekurzivně $a\times$ přidají sousední lixely, které neleží v\ daném klastru.
+1. Pokud některé klastry po svém rozšíření v\ předchozím kroku sdílejí některý *lixel* nebo se dotýkají, jsou spojeny.
+1. Pro rychlejší vykreslování jsou klastry zjednodušeny tak, že souvislé *lixely* jsou spojeny do jednoho `LINESTRING` a  tyto `LINESRTRING` jsou spojeny do `MULTILINESTRING`.
+
+Rozšíření klastrů v\ kroku\ 3
+
 
 ## Klastry nehodových úseků ve formátu pro GIS
 
+Klastry úseků s\ častými nebo závažnými nehodami jsou exportovány do shapefilů, které je možné načíst v\ GISu. Způsob jejich použití je popsán v\ oddíle\ \ref{kap:gis}.
 
 
 
@@ -385,7 +401,7 @@ Hodnota nehod se při výpočtu rizikových oblastí používá pouze v\ přípa
 **Když moc vysoká hodnota stat. života, ostatní se ignoruje. Ale nehody náhodné. Možná nastavit níže.**
 
 
-### Parametry výpočtu hustot
+### Parametry výpočtu hustot {#sec:pardensities}
 Další skupina parametrů ovlivňuje, jak se počítají hustoty pravděpodobností nehod, ze kterých se pak hledají problémová místa. Patří sem následující parametry:
 
 - `NKDE_WEIGHTS` ... buď `"cost"` nebo `"equal"`, jaké váhy se přikládají jednotlivým nehodám
@@ -463,7 +479,7 @@ RAM_PER_CORE_ACCIDENTS = 10
 V\ případě potřeby může uživatel nastavit parametry `NO_OF_WORKERS` a `NO_OF_WORKERS_ACCIDENTS` přímo na počet jader, který se má použít. V\ tom případě je však zodpovědný za to, aby měl systém dost volné operační paměti. Pokud ji mít nebude, systém "spadne".
 
 
-#### Parametry pro hledání klastrů
+### Parametry pro hledání klastrů
 Mechanismus hledání klastrů je poměrně jednoduchý. Nejdříve se najdou všechny souvislé lixely s\ hustotou pravděpodobnosti vyšší než zadaný práh\ $h$. Tak vzniknou prvotní klastry. Následně se tyto klastry rozšíří na všechny strany o\ $v$\ lixelů. V\ posledním kroku spojí ty klastry, které mají vzájemný průnik.
 
 Práh\ $h$ je stanoven dynamicky jako určitý vysoký kvantil. Tento kvantil je určen proměnnou `CLUSTER_MIN_QUANTILE`, která musí nabývat hodnotu z\ intervalu $[0,1]$, typicky však velmi blízkou jedné. Počet dodatečných lixelů\ $v$ je určen proměnnou `CLUSTER_ADDITIONAL_STEPS` (minimální hodnota je\ 1).
@@ -535,7 +551,7 @@ pro změně vstupních dat a konfigurace/profilů -- ala Makefile
 
 
 
-# Výstup pro GIS
+# Výstup pro GIS {#kap:gis}
 
 Složka `DIRORIGIN/data/output/gis` obsahuje identifikovaná nebezpečná místa exportovaná ve formátu pro GIS. Data jsou rozdělena po jednotlivých okresech tak, že nebezpečné úseky pro každý okres jsou umístěny do zvláštního podadresáře, jehož jméno je NUTS\ 4 kód daného okresu (Hlavní město Praha je chápána jako jeden celek). Kromě těchto adresářů obsahuje složka ještě soubory `profiles.csv` a `profiles.dbf`, které popisují profily, které byly použity při generování nebezpečných míst.
 
