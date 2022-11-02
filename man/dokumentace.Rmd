@@ -98,7 +98,7 @@ Jako "dedikovaná operační paměť" se chápe paměť, která je softwaru k\ d
 
 
 
-# Instalace softwaru
+# Instalace a spuštění softwaru
 
 
 konfigurace
@@ -130,6 +130,8 @@ Další krok se vždy začne provádět až po skončení předchozího kroku. N
 Návaznost mezi jednotlivými kroky funguje podobně jako závislosti v\ programu `make`: Nová binární reprezentace konfigurace se vytvoří pouze v\ případě, že neexistuje, nebo je starší než zdrojové konfigurační soubory. Nová tabulka okresů se vytvoří pouze v\ případě, že neexistuje nebo je starší než binární konfigurace nebo zdrojový shapefile okresů, na kterém závisí. Mapové podklady se přepočítají pouze v\ případě, že neexistují, nebo jsou starší než binární konfigurace, tabulka okresů nebo zdrojový shapefile silniční sítě atd.
 
 Tento postup zajišťuje, že se v\ případě aktualizace vstupních dat (viz oddíl\ \ref{kap:input-data}) přepočítají jen ty hodnoty, které je třeba aktualizovat. (To samozřejmě vyžaduje, aby se zachovaly všechny soubory s\ průběžnými výpočty.) Současně také platí, že pokud výpočet z\ jakéhokoli důvodu selže nebo je přerušen, výpočet začne pracovat tam, kde v\ předchozím běhu skončil. 
+
+Při prvním spuštění tedy proběhnou všechny kroky. Následně je třeba data připravovat vždy, když jsou aktualizována data o\ dopravních nehodách. V\ takovém případě proběhnou pouze kroky\ 1 a 5--8, takže příprava dat bude rychlejší než při prvním spuštění. Pokud uživatel aktualizuje data o\ tvaru okresů nebo data o\ silniční síti, bude aktualizován jak daný krok, tak všechny následující. Pokud uživatel změní konfigurační soubor nebo profily, budou aktualizována všechna data.
 
 Jistou nevýhodou tohoto procesu je fakt, že všechny finální i\ průběžně vytvářené soubory vždy závisí na binární konfiguraci systému. Pokud se změní, proběhnou všechny výpočty vždy od začátku. Pokud změna konfigurace nezmění validitu některých souborů, je možné jejich přepočítání zabránit tak, že je datum jejich poslední modifikace nastaveno na novější čas, než jaký má soubor nově vytvořené binární konfigurace. Tento postup však výrazně nedoporučujeme.
 
@@ -165,6 +167,10 @@ Tabulka okresů definuje tvar jednotlivých okresů jako mapový polygon. Tato d
 
 
 ## Data o\ jednotlivých nehodách
+
+Data o\ nehodách se připravují ve dvou formách: 1)\ pro vizualizační část softwaru a 2)\ pro další výpočty. V\ obou případech jsou spojena data ze všech tabulek, které PČR do systému exportuje (viz\ oddíl\ \ref{sec:accidents}) a následně jsou rozdělena do jednotlivých souborů podle okresů.
+
+V\ případě dat použitých pro identifikaci nehodových úseků jsou okresy zvětšeny o\ určitou vzdálenost a ze souboru jsou vyloučeny všechny nehody, které neleží dostatečně blízko u\ silniční sítě (nastavení viz\ oddíl\ \ref{kap:konfigurace}). Geolokace těchto nehod je zřejmě defektní a tyto nehody by do identifikace problémových úseků pouze zanesly šum.
 
 
 ## Podklady o silniční síti
@@ -242,7 +248,7 @@ Soubor vložte do adresáře `DIRORIGIN/rawdata/osm`.
 Mapu silniční sítě je v\ systému třeba jednou za několik let akutalizovat. Po aktualizace mapy silniční sítě je třeba aktualizovat všechna data, viz oddíl\  \ref{sec:aktutalizace-dat}.
 
 
-## Data o nehodách
+## Data o nehodách {#sec:accidents}
 
 Zdrojem dat o\ nehodách je PČR. Předpokládá se, že data jsou exportována pro každý rok zvlášť. Data pro jeden rok se skládají z\ pěti souborů typu CSV:
 
@@ -267,6 +273,11 @@ Jednotlivé soubory musejí obsahovat následující sloupce:
 kde sloupec `p1` představuje klíčový sloupec, který jednoznačně identifikuje dopravní nehodu.
 
 Data o\ nehodách v\ tomto formátu překopírujte do adresáře `DIRORIGIN/rawdata/accidents`.
+
+
+## Aktualizace dat
+
+pro změně vstupních dat a konfigurace/profilů -- ala Makefile
 
 
 
@@ -427,7 +438,7 @@ V\ tomto případě se parametr `NKDE_TRIM_BW` ignoruje (musí však být přít
 Pokud by bylo cílem sestavit klastry nehod tak, že by všechny nehody měly stejnou váhu, stačilo by změnit první parametr na `NKDE_WEIGHTS = "equal"`. Podobně při změně metody na nespojitou by stačilo změnit na druhém řádku `NKDE_METHOD = "continuous"`. Adaptivní vyhlazovací okno by se zapnulo nastavením `NKDE_ADAPTIVE = TRUE`. V\ takovém případě by se vyhlazovací okno našlo automaticky tak, že jeho největší délka by byla 600\ metrů. Parametr `NKDE_BW` by se v\ takovém případě ignoroval (ale musí být přítomen).
 
 
-### Příprava mapových podkladů
+### Příprava mapových podkladů a nehod
 Hustoty pravděpodobnosti se počítají na zjednodušené silniční síti. Další skupina parametrů určuje, jak se tato síť zpracuje. Pokud k\ tomu nemáte velmi silný důvod, nechte tyto parametry v\ doporučeném (základním nastavení).
 
 U\ vlastních mapových podkladů je třeba nastavit čtyři parametry.
@@ -493,53 +504,6 @@ Do interaktivní aplikace jsou exportovány i\ lixely, které mají vysokou hodn
 ## Zpracovaná konfigurace a profily
 
 Software pro přípravu dat nejdříve načte konfiguraci a všechny profily, zkontroluje je a uloží do souboru `profiles.rds`. Tento soubor proto vymažte pouze v\ případě, kdy je třeba zajistit kompletní přepočítání konfigurace a profilů, např.\ v\ případě, kdy byl některý profil smazán.
-
-
-
-
-
-# Běh systému
-
-Po svém spuštění systém provádí postupně následující kroky:
-
-1. vytvoří nový log-file v\ adresáři `DIRORIGIN/log`
-2. aktualizuje konfiguraci systému (soubor `DIRORIGIN/config/profiles.rds`)
-3. aktualizuje tabulku okresů
-4. aktualizuje mapové podklady silniční sítě
-    - vyfiltruje dopravní komunikace, které mají být zahrnuty, v\ jednotlivých okresech
-    - zjednoduší takto vzniklou silniční síť tak, že se pokusí sloučit extrémně krátké úseky sítě
-    - rozdělí silnice do krátkých úseků (*lixely*; doporučená délka je 5\ m) a najde středy těchto úseků
-5. aktualizuje data o\ dopravních nehodách
-6. spočítá síťové hustoty pravděpodobnosti nehodové škody na jednotlivých *lixelech*
-7. najde souvislé shluky lixelů, kde je pravděpodobnost výskytu nebo výše nehod extrémně vysoká
-
-Kroky 4--7 jsou paralelizované tak, že výpočet pro každý okres nebo kombinaci okresu, času a profilu je spuštěna na separátním jádře.
-
-Následující krok je spuštěn až ve chvíli, kdy doběhne celý předchozí krok. Pokud výpočet z\ jakéhokoli důvodu selže pro jeden okres, data pro ostatní okresy budou aktualizována. Na konci kroku se však běh zastaví. Informace o\ problémech jsou uložena v\ logu.
-
-Pokud data vytvořená v\ daném kroku neexistují, jsou vytvořena. Pokud existují, jsou aktualizována pouze v\ případě, že čas poslední modifikace souboru je starší, než čas modifikace souborů, které jsou použity při jeho výpočtu. Aktualizace tedy respektují jednoduché závislosti způsobem podobným `make`.
-
-Při prvním spuštění tedy proběhnou všechny kroky. Následně je třeba data připravovat vždy, když jsou aktualizována data o\ dopravních nehodách. V\ takovém případě proběhnou pouze kroky\ 1 a 5--7, takže příprava dat bude podstatně rychlejší než při prvním spuštění. Pokud uživatel aktualizuje data o\ tvaru okresů nebo data o\ silniční síti, bude aktualizován jak daný krok, tak všechny následující. Pokud uživatel změní konfigurační soubor nebo profily, budou aktualizována všechna data.
-
-
-
-
-
-# Průběžně vytvářená data
-
-
-
-# Výstupy systému
-
-
-
-# Spuštění systému {#sec:aktutalizace-dat}
-
-
-
-# Aktualizace dat
-
-pro změně vstupních dat a konfigurace/profilů -- ala Makefile
 
 
 
