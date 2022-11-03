@@ -24,6 +24,7 @@ header-includes:
    - \pagestyle{empty}
    - \tolerance=4500
    - \emergencystretch=11pt
+   - \def\sw{\textsf{\textbf{accClusters}}}
 documentclass: scrartcl
 classoption: a4paper
 fontsize: 11pt
@@ -63,16 +64,13 @@ library(knitr)
 
 # Úvod
 
-Tento text popisuje instalaci a použití softwaru pro přípravu dat pro vizualizaci dopravních nehod v\ ČR.
+Tento text popisuje instalaci a použití softwaru \sw.
+Software \sw{} je součástí softwaru pro vizualizaci dopravních nehod vytvořeného s\ podporou grantu TAČR CK01000049 *Tvorba pokročilých nástrojů pro analýzu dopravních nehod pro Policii ČR*. V\ rámci tohoto projektu byly vytvořeny dva nástroje:
 
-Software pro vizualizaci dopravních nehod vytvořený s\ podporou grantu TAČR CK01000049 *Tvorba pokročilých nástrojů pro analýzu dopravních nehod pro Policii ČR* má dvě části:
+- offline neinteraktivní software \sw, který ze vstupních dat spočítá potřebné metriky, identifikuje místa častých nebo nebezpečných nehod a připraví podklady potřebné pro jejich interaktivní vizualizaci a
+- interaktivní webová aplikace, která data vizualizuje.
 
-- offline neinteraktivní software, který ze vstupních dat spočítá potřebné metriky, identifikuje místa častých nebo nebezpečných nehod a přípraví podklady potřebné pro jejich interaktivní vizualizaci a
-- interaktivní webovou aplikaci, která data vizualizuje.
-
-Tento dokument popisuje použití první části softwaru, která připravuje data; použití webové aplikace je popsané v\ separátním dokumentu.
-
-Rozdělení softwaru do dvou částí je nutné kvůli výpočetní náročnosti přípravy dat, kterou není možné provádět za běhu. Nejdříve se tedy pomocí přípravné aplikace všechna data předpočítají, a\ pak se vizualizují ve webové aplikaci.
+(Rozdělení softwaru do dvou částí je nutné kvůli výpočetní náročnosti přípravy dat, kterou není možné provádět za běhu. Nejdříve se tedy pomocí přípravné aplikace všechna data předpočítají, a\ pak se vizualizují ve webové aplikaci.)
 
 
 
@@ -84,15 +82,14 @@ Výpočty jsou poměrně hardwarově náročné. Proto se předpokládá násled
 
 - procesor minimálně třídy i5 (vyšší je lepší), minimálně 4\ jádra (větší počet jader je výhodou),
 - minimálně 32\ GB operační paměti dedikované pro tento software (více jader vyžaduje více operační paměti),
-- operační systém **TODO**,
-- docker **TODO**,
-- **TODO**
+- operační systém Linux nebo Windows a
+- docker.
 
 Drtivá většina výpočtů běží paralelně na více jádrech. Čím větší počet jader má systém dedikovaný, tím rychleji příprava dat proběhne. Odhadovaný čas při prvním spuštění softwaru je při procesoru třídy\ i5 se čtyřmi jádry a 32\ GB operační paměti kolem tří dny v\ případě práce s\ nespojitými hustotami pravděpodobnosti. V\ případě práce se spojitými hustotami pravděpodobnosti lze očekávat několikanásobně delší přípravu dat. Zvýšení počtu jader spojené se zvětšením dostupné paměti tento čas proporcionálně zkrátí.
 
-Výpočet běžící na každém jádru vyžaduje typicky cca 4\ GB operační paměti (v\ některých krocích však 10\ GB). Větší počet jader se tedy použije pouze v\ případě, že je k\ dispozici dostatečné množství dedikované operační paměti.
+Výpočet běžící na každém jádru vyžaduje typicky cca 4\ GB operační paměti (v\ některých krocích však 10\ GB). Větší počet jader se tedy může použít pouze v\ případě, že je k\ dispozici dostatečné množství dedikované operační paměti.
 
-Jako "dedikovaná operační paměť" se chápe paměť, která je softwaru k\ dispozici, tj.\ není okupovaná operačním systémem ani jinými procesy. V\ případě virtualizace se jedná o\ operační paměť, která je vyhrazena danému kontejneru.
+Jako "dedikovaná operační paměť" se chápe paměť, kterou má software k\ dispozici, tj.\ která není okupovaná operačním systémem ani jinými procesy. V\ případě virtualizace se jedná o\ operační paměť, která je vyhrazena danému kontejneru.
 
 
 
@@ -100,8 +97,11 @@ Jako "dedikovaná operační paměť" se chápe paměť, která je softwaru k\ d
 
 # Instalace a spuštění softwaru
 
+## Instalace softwaru
 
-konfigurace
+## Spuštění softwaru
+
+## Přenos výsledků do vizualizačního softwaru
 
 
 
@@ -109,36 +109,36 @@ konfigurace
 
 # Jak systém funguje
 
-V\ tomto oddílu popíšeme, jak systém přípravy dat funguje jako celek. Detaily vstupů, nastavení, výstupů apod. budou podrobněji vysvětleny v\ následujících oddílech.
+V\ tomto oddílu popíšeme, jak software \sw{} funguje jako celek. V\ dalších oddílech pak podrobněji vysvětlíme strukturu použitých vstupů, konfiguraci softwaru, interpretaci nehodových klastrů a použití výstupu pro GIS.
 
 
 ## Obecný přehled
 
-Po svém spuštění systém postupně provádí následující kroky:
+Po svém spuštění software \sw{} postupně provádí následující kroky:
 
 1. vytvoří logovací soubor, kam systém loguje probíhající operace a případná varování a chyby,
 1. načte konfiguraci systému a vytvoří si její binární reprezentaci,
 1. vytvoří tabulku okresů, pro které připravuje data, a\ to jak pro další výpočty, tak (v\ jiném formátu) pro vizualizační software,
 1. nachystá mapové podklady o\ silniční síti,
 1. připraví podklady o\ jednotlivých nehodách, opět ve verzi pro další výpočty a pro vizualizační software,
-1. spočítá hustoty pravděpodobnosti nehod/škod způsobených nehodami na celé silniční síti,
-1. najde místa s\ výraznou pravděpodobností nehod/způsobených škod a vytvoří klastry takových míst a
+1. spočítá hustoty pravděpodobnosti nehod nebo škod způsobených nehodami na celé silniční síti,
+1. najde klastry úseků silniční sítě s\ výraznou pravděpodobností nehod nebo způsobených škod a
 1. jako bonus převede klastry nebezpečných úseků do formátu pro GIS.
 
-Další krok se vždy začne provádět až po skončení předchozího kroku. Některé kroky (zejména kroky\ 1--3) jsou rychlé a provádí se na jednom jádru. Ostatní kroky se musejí provést zvlášť pro každý okres nebo kombinaci okresu, časového okna a různých alternativ nastavení systému (typicky vah jednotlivých nehod). Tyto kroky jsou paralelizované a běží na více jádrech systému\ -- vždy jeden okres nebo kombinace okresu, časového okna a parametrizace výpočtu na jednom jádře. Další krok se spustí vždy až ve chvíli, kdy doběhne výpočet pro všechny okresy apod.
+Další krok se vždy začne provádět až po skončení předchozího kroku. Některé kroky (zejména kroky\ 1--3) jsou rychlé a provádí se na jednom jádru. Ostatní kroky se musejí provést zvlášť pro každý okres nebo kombinaci okresu, časového období a různých alternativních nastavení systému. Tyto kroky jsou paralelizované a běží na více jádrech systému\ -- vždy jeden okres nebo kombinace okresu, období a parametrizace výpočtu na jednom jádře. Další krok se spustí vždy až ve chvíli, kdy doběhne výpočet tohoto kroku na všech jádrech.
 
-Návaznost mezi jednotlivými kroky funguje podobně jako závislosti v\ programu `make`: Nová binární reprezentace konfigurace se vytvoří pouze v\ případě, že neexistuje, nebo je starší než zdrojové konfigurační soubory. Nová tabulka okresů se vytvoří pouze v\ případě, že neexistuje nebo je starší než binární konfigurace nebo zdrojový shapefile okresů, na kterém závisí. Mapové podklady se přepočítají pouze v\ případě, že neexistují, nebo jsou starší než binární konfigurace, tabulka okresů nebo zdrojový shapefile silniční sítě atd.
+Návaznost mezi jednotlivými kroky funguje podobně jako závislosti v\ programu `make`: Nová binární reprezentace konfigurace se vytvoří pouze v\ případě, že neexistuje, nebo je starší než zdrojové konfigurační soubory. Nová tabulka okresů se vytvoří pouze v\ případě, že neexistuje nebo je starší než binární konfigurace nebo zdrojový *shapefile* okresů, na kterém závisí. Mapové podklady se přepočítají pouze v\ případě, že neexistují, nebo jsou starší než binární konfigurace, tabulka okresů nebo zdrojový *shapefile* silniční sítě atd.
 
-Tento postup zajišťuje, že se v\ případě aktualizace vstupních dat (viz oddíl\ \ref{kap:input-data}) přepočítají jen ty hodnoty, které je třeba aktualizovat. (To samozřejmě vyžaduje, aby se zachovaly všechny soubory s\ průběžnými výpočty.) Současně také platí, že pokud výpočet z\ jakéhokoli důvodu selže nebo je přerušen, výpočet začne pracovat tam, kde v\ předchozím běhu skončil. 
+Tento postup zajišťuje, že se v\ případě aktualizace vstupních dat (viz oddíl\ \ref{kap:input-data}) přepočítají jen ty hodnoty, které je třeba aktualizovat. (To samozřejmě vyžaduje, aby se zachovaly všechny soubory s\ průběžnými výpočty z\ minulého spuštění softwaru.) Současně také platí, že pokud výpočet z\ jakéhokoli důvodu selže nebo je přerušen, začne při příštím spuštění pracovat tam, kde v\ předchozím běhu skončil. 
 
-Při prvním spuštění tedy proběhnou všechny kroky. Následně je třeba data připravovat vždy, když jsou aktualizována data o\ dopravních nehodách. V\ takovém případě proběhnou pouze kroky\ 1 a 5--8, takže příprava dat bude rychlejší než při prvním spuštění. Pokud uživatel aktualizuje data o\ tvaru okresů nebo data o\ silniční síti, bude aktualizován jak daný krok, tak všechny následující. Pokud uživatel změní konfigurační soubor nebo profily, budou aktualizována všechna data.
+Při prvním spuštění tedy proběhnou všechny kroky. Po následné aktualizaci dat o\ dopravních nehodách však proběhnou pouze kroky\ 1 a 5--8, takže příprava dat bude rychlejší než při prvním spuštění. Pokud uživatel aktualizuje data o\ tvaru okresů nebo data o\ silniční síti, bude aktualizován jak daný krok, tak všechny následující. Pokud uživatel změní konfigurační soubor nebo profily, budou aktualizována všechna data.
 
 Jistou nevýhodou tohoto procesu je fakt, že všechny finální i\ průběžně vytvářené soubory vždy závisí na binární konfiguraci systému. Pokud se změní, proběhnou všechny výpočty vždy od začátku. Pokud změna konfigurace nezmění validitu některých souborů, je možné jejich přepočítání zabránit tak, že je datum jejich poslední modifikace nastaveno na novější čas, než jaký má soubor nově vytvořené binární konfigurace. Tento postup však výrazně nedoporučujeme.
 
 
 ## Použitá adresářová struktura
 
-Software pracuje s\ pevnou adresářovou strukturou, kterou jsou umístěna všechna vstupní data, výstupní data, mezivýpočty, konfigurace a logy. Všechna tato data musí být umístěna v\ příslušných složkách v\ jednom adresáři (dále označovaném jako `DIRORIGIN`). Tento adresář musí obsahovat následující složky:
+Software \sw{} pracuje s\ pevnou adresářovou strukturou, ve které jsou umístěna všechna vstupní data, výstupní data, mezivýpočty, konfigurace a logy. Všechna tato data musí být umístěna v\ příslušných složkách v\ hlavním adresáři (dále označovaném jako `DIRORIGIN`). Tento adresář musí obsahovat následující složky:
 
 - `config` ... složka s\ konfigurací softwaru,
 - `rawdata` ... složka se vstupními daty,
@@ -149,67 +149,82 @@ Software pracuje s\ pevnou adresářovou strukturou, kterou jsou umístěna vše
 
 ## Logování
 
-Při každém spuštění systému je v\ adresáři `DIRORIGIN/log` vytvořen nový logový soubor se jménem `YYYY-MM-DD-hh-mm-ss.log`, kde `YYYY-MM-DD` je datum a `hh-mm-ss` je čas spuštění systému. Všechny kroky systému logují do tohoto souboru.
+Při každém spuštění \sw{} se v\ adresáři `DIRORIGIN/log` vytvoří nový logovací soubor se jménem `YYYY-MM-DD-hh-mm-ss.log`, kde `YYYY-MM-DD` je datum a `hh-mm-ss` je čas spuštění systému. Všechny kroky systému a případná varování či chyby se logují do tohoto souboru.
 
 
 ## Konfigurace systému
 
 Konfigurace systému je detailně popsaná v\ oddílu\ \ref{kap:konfigurace}. Zde popíšeme pouze to, jak se ze zdrojových (textových) konfiguračních souborů vytváří binární konfigurace.
 
-Při tvorbě binární konfigurace systém hledá v\ adresáři `DIRORIGIN/config` soubory `config.R` a `profile_???.R`, kde `???` jsou nějaké znaky anglické abecedy nebo číslice. Soubor `config.R` je povinný, soubory `profile_???.R` jsou volitelné.
+Při tvorbě binární konfigurace hledá \sw{} v\ adresáři `DIRORIGIN/config` soubory `config.R` a `profile_???.R`, kde `???` jsou nějaké znaky anglické abecedy nebo číslice. Soubor `config.R` je povinný, soubory `profile_???.R` jsou volitelné.
 
-Pokud je kterýkoli z\ existujících souborů novější než binární konfigurační soubor `profiles.rds`, binární konfigurace se aktualizuje. Tento systém funguje dobře v\ případě, že uživatel aktualizuje konfiguraci ve stávajících souborech nebo přidá nové profily. Pokud pouze smaže některý profilový soubor, k\ aktualizaci binární konfigurace nedojde. V\ takovém případě je třeba buď ručně smazat binární konfigurační soubor `profiles.rds` nebo aktualizovat datum modifikace kteréhokoli zdrojového konfiguračního souboru.
+Pokud je kterýkoli z\ existujících souborů novější než binární konfigurační soubor `profiles.rds`, binární konfigurace se aktualizuje. Tento systém funguje dobře v\ případě, že uživatel aktualizuje konfiguraci ve stávajících souborech nebo přidá nové profily. Pokud pouze smaže některý profilový soubor, k\ aktualizaci binární konfigurace nedojde. V\ takovém případě je třeba po smazání profilu smazat i\ binární konfigurační soubor `profiles.rds`. Pak bude binární konfigurační soubor vytvořen správně.
 
 
 ## Tabulka okresů
 
 Tabulka okresů definuje tvar jednotlivých okresů jako mapový polygon. Tato data je třeba aktualizovat pouze v\ případě, že se změní tvary jednotlivých okresů v\ ČR.
 
+Pozor: Před aktualizací *shapefilu* definujících okresy ČR je třeba zkontrolovat, že nový *shapefile* používá stejná jména proměnných v\ atributové tabulce, že mají stejný význam, že obsahuje všechny potřebné okresy (včetně Hlavního města Prahy jako jednoho polygonu) a že má stejnou projekci. Pokud tomu tak není, bude změna mapového podkladu nutně spojena s\ nutností upravit software \sw.¨
+
 
 ## Data o\ jednotlivých nehodách
 
-Data o\ nehodách se připravují ve dvou formách: 1)\ pro vizualizační část softwaru a 2)\ pro další výpočty. V\ obou případech jsou spojena data ze všech tabulek, které PČR do systému exportuje (viz\ oddíl\ \ref{sec:accidents}) a následně jsou rozdělena do jednotlivých souborů podle okresů.
+Data o\ dopravních nehodách se připravují ve dvou formách: 1)\ pro vizualizační část softwaru a 2)\ pro další výpočty. V\ obou případech jsou spojena data ze všech tabulek, které PČR do systému exportuje (viz\ oddíl\ \ref{sec:accidents}) a následně jsou rozdělena do jednotlivých souborů podle okresů.
 
-V\ případě dat použitých pro identifikaci nehodových úseků jsou okresy zvětšeny o\ určitou vzdálenost a ze souboru jsou vyloučeny všechny nehody, které neleží dostatečně blízko u\ silniční sítě (nastavení viz\ oddíl\ \ref{kap:konfigurace}). Geolokace těchto nehod je zřejmě defektní a tyto nehody by do identifikace problémových úseků pouze zanesly šum.
+V\ případě dat použitých pro identifikaci nehodových úseků jsou okresy zvětšeny o\ určitou vzdálenost (důvod je vysvětlen níže) a ze souboru jsou vyloučeny všechny nehody, které neleží dostatečně blízko u\ silniční sítě (nastavení viz\ oddíl\ \ref{kap:konfigurace}). Geolokace těchto nehod je zřejmě defektní a tyto nehody by do identifikace problémových úseků pouze zanesly šum.
 
 
-## Podklady o silniční síti
+## Mapa silniční sítě
 
-Příprava podkladů o\ silniční síti probíhá v\ několika navazujících krocích:
+Příprava mapysilniční sítě probíhá v\ několika navazujících krocích:
 
-1. Z\ celé mapy silniční sítě se vyfiltrují pouze podporované typy cest (vyhodí se lesní cesty apod.) a silnice se ořežou na jednotlivé okresy. Okresy jsou přitom zvětšeny o\ určitou vzdálenost na všechny strany (důvod je vysvětlen níže). K\ filtraci a ořezu silniční sítě se používá utilitka `osmium`.
-1. Silniční síť se zjednoduší tak, aby byla zachovaná její topologie. V\ použitých OpenStreetMaps se totiž často silnice často skládají z\ velmi krátkých úseků, často o\ délce několika centimetrů. Takto krátké úseky jsou pospojovány do delších celků, pokud takto vzniklá silnice příliš nevybočí z\ tvaru skutečné silnice. V\ některých případech jsou spojeny i\ velmi blízké uzly nepodstatné pro topologii sítě.
+1. Z\ celé mapy silniční sítě se vyfiltrují pouze podporované typy cest (vyhodí se lesní cesty apod.) a silnice se ořežou na jednotlivé okresy. Okresy jsou přitom zvětšeny o\ určitou vzdálenost na všechny strany (důvod je vysvětlen níže). K\ filtraci a ořezu silniční sítě se používá software `osmium`.
+1. Silniční síť se zjednoduší tak, aby byla zachovaná její topologie. V\ použitých OpenStreetMaps se totiž často silnice často skládají z\ velmi krátkých úseků, někdy o\ délce pouhých několika centimetrů. Takto krátké úseky jsou pospojovány do delších celků, pokud takto vzniklá silnice příliš nevybočí z\ tvaru skutečné silnice. V\ některých případech jsou spojeny i\ velmi blízké uzly nepodstatné pro topologii sítě (typicky v\ případě, že je jednoduchá křižovatka reprezentovaná více než jedním uzlem).
 1. Silniční síť je rozlámána do krátkých úseků (implicitně o\ délce 5\ metrů); tyto úseky nazýváme *lixely*. Silniční síť byla v\ předchozím kroku zjednodušena právě proto, aby výsledné *lixely* mohly mít stejnou délku a tato délka nebyla extrémně krátká. Všechny následující výpočty probíhají na úrovni *lixelů*. Pro každý *lixel* je stanoven i\ bod v\ jeho středu, který tento *lixel* reprezentuje.
 1. Nakonec je zkonstruována datová struktura, která popisje geometrii sítě, tj.\ určuje, které *lixely* spolu sousedí.
 
 
 ## Hustoty pravděpodobnosti škod způsobených nehodami
 
-Nejdůležitější i\ výpočetně nejnáročnější část hledání nebezpečných úseků spočívá ve výpočtu síťové jádrové hustoty nehod pro každý *lixel* silniční sítě reprezentovaný jeho středem. Síťové jádrové hustoty se počítají pomocí balíku **spNetwork** [@GelbRJournal; @GelbManual].
+Nejdůležitější a výpočetně nejnáročnější část hledání nebezpečných úseků spočívá ve výpočtu síťové jádrové hustoty (NKDE) nehod pro každý *lixel* silniční sítě reprezentovaný jeho středem. NKDE se počítají pomocí balíku **spNetwork** [@GelbRJournal; @GelbManual], který představuje nejlepší dostupnou implementaci algoritmů pro jejich výpočet.
 
-Jádrová hustota představuje jádrové vyhlazení (*smoothing*) bodového procesu na síti. Intuice je následující: Nad každou nehodou se na silniční síti nakreslí kopeček (*jádro*). (Buď mají všechny nehody kopečky stejně velké, nebo závažnější nehody mají větší kopečky než méně závažné nehody. Proces je komplikovanější o\ to, jak se "výška kopečků" rozděluje na křižovatkách.) Pak se v\ každém bodě sítě se sečte výška všech kopečků, jejichž nehoda je od daného bodu maximálně vzdálena o\ nějakou konstantu\ $b$ (*bandwidth*). V\ okolí bodu, kde je součet výšky kopečků vysoký, existuje více nehod (nebo jsou závažnější) než v\ okolí bodu, kde je tento součet nižší. Nebezpečné úseky silniční sítě jsou tedy charakterizovány vysokou jádrovou hustotou. (Pro techničtější popis konzultujte prosím např.\ @GelbRJournal.)
+Jádrová hustota představuje jádrové vyhlazení bodového procesu na síti a fakticky odhad prostorového bodového procesu, který na síti generuje nehody. Intuice odhadu NKDE je následující: Nad každou nehodou se na silniční síti nakreslí kopeček (*jádro*; používají se jádra obvyklého typu *quartic*); buď mají všechny nehody kopečky stejně velké, nebo závažnější nehody mají větší kopečky než méně závažné nehody. Na křižovatkách se "výška kopečků" rozděluje buď spojitě, nebo nespojitě. Pak se v\ každém bodě sítě sečte výška všech kopečků, jejichž střed (místo nehody) je od daného bodu maximálně vzdálena o\ vzdálenost\ $b$, což je vyhlazovací konstanta, tzv. *bandwidth*. Čím je vzdálenost $b$ delší, tím více bude odhad NKDE vylazenější. V\ okolí bodu, kde je součet výšky kopečků vysoký, existuje více nehod (nebo jsou závažnější) než v\ okolí bodu, kde je tento součet nižší. Nebezpečné úseky silniční sítě jsou tedy charakterizovány vysokou jádrovou hustotou. (Technický popis odhadu NKDE viz např.\ @GelbRJournal.)
 
-Systém umí spočítat hustoty pravděpodobnosti mnoha různých typů, viz oddíl\ \ref{sec:pardensities}. V\ nejjednodušším případě spočítá jádrovou hustotu, při které mají všechny nehody stejnou váhu. Ve složitějším mohou mít závažnější nehody vyšší váhu než méně závažné nehody. Systém také umožňuje stanovit délku\ $b$ nebo ji nechat adaptivně upravovat, viz\ @GelbManual. Umí také rozdělit "výšku kopečků" na křižovatkách nespojitě nebo spojitě, viz tamtéž.
+Software \sw{} umí spočítat hustoty pravděpodobnosti mnoha různých typů, viz oddíl\ \ref{sec:pardensities}. V\ nejjednodušším případě spočítá jádrovou hustotu, při které mají všechny nehody stejnou váhu. Ve složitějším mohou mít závažnější nehody vyšší váhu než méně závažné nehody. Systém také umožňuje stanovit délku vyhlazovací konstanty (*bandwidth*)\ $b$ nebo ji nechat adaptivně upravovat tak, že bude kratší v\ regionech s\ vyšší hustotou nehod a delší v\ regionech s\ nižší hustotou nehod, viz\ @GelbManual. Umí také rozdělit "výšku kopečků" na křižovatkách nespojitě nebo spojitě, viz tamtéž.
+
+Odhad NKDE je zkreslen na okrajích sítě ořezané do určitého polygonu, protože se všechny silnice překračující hranice tohoto polygonu (mylně) jeví jako slepé a protože nehody za krajem ořezového polygonu nejsou vzaty v\ úvahu. Z\ tohoto důvodu je při výpočtu NKDE okres zvětšen na všechny strany o\ vzdálenost, která musí být několikrát větší než vyhlazovací konstanta\ $b$. Z\ polygonů okresů jsou také z\ výpočetních důvodů odstraněny "díry" (např.\ v\ okrese Brno venkov a Litoměřice). Tak jsou jsou využity všechny silnice a nehody nejen v\ daném okrese, i\ za jeho hranicí. Hodnoty NKDE uvnitř okresu jsou tedy spočítané správně. Po výpočtu klastrů častých nehod (viz následující oddíl) se pak klastry mimo hranice daného okresu "zahodí".
 
 
 ## Klastry úseků s častými nebo nebezpečnými nehodami
 
 V\ předchozím kroku se pro každý *lixel* silniční sítě spočítala hustota pravděpodobnosti nehody. Tato data jsou následně použita k\ nalezení obzvláště nebezpečných úseků.
 
-Uživatel si ve webovém vizualizačním nástroji může stanovit, kolik promile nejhorších úseků se mu zobrazí, a\ o\ kolik *lixelů* se výsledné klastry zvětší. Klastry se tedy počítají pro takto zadané parametry $h$ (počet promile nejhorších úseků silniční sítě, které se mají najít) a $a$ (počet dodatečně přidaných *lixelů*):
+Data o\ síťových jádrových hustotách pravděpodobnosti pro jednotlivé *lixely* jsou použita pro identifikaci obzvláště nebezpečných úseků. V\ literatuře neexistuje jasná definice problémového úseku. My proto definujeme obzvláště nebezpečné úseky jako úseky silniční sítě, kde je hustota pravděpodobnosti výskytu nehody nebo škod způsobených nehodami obzvlášť vysoká. Řekněme, že nás zajímá $h$ promile nejnebezpečnějších úseků silniční sítě, které chceme dodatečně rozšířit o\ $a$ dodatečně přidaných lixelů. Hledání klastrů nebezpečných míst pak probíhá v\ následujících krocích:
 
 1. Vybere se $h$ promile *lixelů* s\ nejvyšší hustotou pravděpodobnosti.
-1. Idenitifikují se klastry takových *lixelů*, tj.\ skupiny lixelů, které tvoří souvislý graf (tj.\ z\ každého *lixelu* v\ klastru je možné přejet do jiného *lixelu* v\ klastru čistě přes úseky silniční sítě, které leží v\ klastru).
-1. Ke každému klastru se rekurzivně $a\times$ přidají sousední lixely, které neleží v\ daném klastru.
+1. Idenitifikují se *klastry* takových *lixelů*, tj.\ skupiny takových *lixelů*, které tvoří souvislý graf. Klastr tedy tvoří taková podmnožina *lixelů* vybraných v\ předchozím kroku, že je možné z\ každého *lixelu* v\ daném klastru přejet do jiného *lixelu* v\ tomto klastru čistě přes úseky silniční sítě, které leží v\ tomto klastru.
+1. Ke každému klastru se rekurzivně $a\times$ přidají sousední *lixely*, které neleží v\ daném klastru. To znamená, že se pro každý *lixel* v\ klastru najdou jeho sousední *lixely*. Pokud nepatří do klastru, přidají se do něj. Tento postup se opakuje $a$\ krát.
+1. Ke klastru se přiřadí ty nehody, které leží na úsecích silnic, které tvoří daný klastr. Pro každý klastr se pak spočítá celková výše škody spočítaná jako součet škod tvořených těmito nehodami.
 1. Pokud některé klastry po svém rozšíření v\ předchozím kroku sdílejí některý *lixel* nebo se dotýkají, jsou spojeny.
-1. Pro rychlejší vykreslování jsou klastry zjednodušeny tak, že souvislé *lixely* jsou spojeny do jednoho `LINESTRING` a  tyto `LINESRTRING` jsou spojeny do `MULTILINESTRING`.
+1. Pro rychlejší vykreslování jsou klastry zjednodušeny tak, že souvislé *lixely* jsou spojeny do jednoho `LINESTRING` a tyto `LINESRTRING` jsou spojeny do `MULTILINESTRING`.
 
-Rozšíření klastrů v\ kroku\ 3
+Rozšíření klastrů v\ kroku\ 3 klastry zvětšuje. Pokud je např.\ klastr tvořen čistě lineárním úsekem silniční sítě (např.\ částí jednoho směru dálnice daleko od nájezdů a exitů), znamená zvětšení o\ $4$ *lixely* to že se vybraný segment dálnice prodlouží v\ obou směrech cca o\ 20\ metrů (4\ *lixely* pro cca\ 5\ metrech délky). Pokud je klastr tvořen např.\ několika silnicemi, které se potkávají na křižovatce, je stejným způsobem prodloužena každá ze silnic, které tvoří klastr.
+
+Toto rozšiřování klastrů nehod je důležité proto, že klastr je generován nejen nehodami, kterou jsou ke klastru přiřazeny v\ kroku\ X, ale také nehodami, které leží za "okrajem" klastru. Také tyto nehody totiž do jisté míry přispívají k\ hodnotě NKDE v\ *lixelech*, které klastr tvoří. V\ extrémním případě by se bez rozšíření klastru mohlo stát, že budou existovat krátké klastry nehodových úseků, kterým nebude přiřazena žádná nehoda, a\ nehody, které tento klastr vytvořily budou ležet plně mimo jeho okraje.
+
+Neexistuje jedno jasné kritérium, jak stanovit "správné" hodnoty parametrů $h$ a $a$. Promile nejproblematičtějších úseků silniční sítě, které může chtít analytik vidět, totiž závisí na mnoha faktorech, zejména na objemu zdrojů, které má k\ dispozici na řešení problémů, např.\ na přebudování problémových komunikací nebo umístění policejních hlídek. Software \sw{} proto identifikuje nehodové klastry pro mnoho různých kombinací hodnot\ $h$ a $a$. Uživatel si pak ve webovém vizualizačním nástroji může podle stvých potřeb nastavit, kolik promile nejhorších úseků se mu zobrazí a\ o\ kolik *lixelů* se výsledné klastry zvětší. Více o\ interpretaci klastrů úseků častých nehod viz\ oddíl\ \ref{kap:interpret}.
 
 
 ## Klastry nehodových úseků ve formátu pro GIS
 
-Klastry úseků s\ častými nebo závažnými nehodami jsou exportovány do shapefilů, které je možné načíst v\ GISu. Způsob jejich použití je popsán v\ oddíle\ \ref{kap:gis}.
+Klastry úseků s\ častými nebo závažnými nehodami jsou exportovány do *shapefilů*, které je možné načíst do GISu. Způsob jejich použití je popsán v\ oddíle\ \ref{kap:gis}.
+
+
+## Technická dokumentace
+
+Pro případné zájemce jsou detaily fungování softwaru \sw{} dokumentované formou komentářů ve zdrojovém kódu.
+
 
 
 
@@ -506,10 +521,12 @@ Do interaktivní aplikace jsou exportovány i\ lixely, které mají vysokou hodn
 Software pro přípravu dat nejdříve načte konfiguraci a všechny profily, zkontroluje je a uloží do souboru `profiles.rds`. Tento soubor proto vymažte pouze v\ případě, kdy je třeba zajistit kompletní přepočítání konfigurace a profilů, např.\ v\ případě, kdy byl některý profil smazán.
 
 
+## Aktualizace konfigurace a profilů
 
 
 
-# Interpretace klastrů {#sec:interpret}
+
+# Interpretace klastrů {#kap:interpret}
 
 
 
