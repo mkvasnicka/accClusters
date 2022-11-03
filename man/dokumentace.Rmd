@@ -231,11 +231,11 @@ Pro případné zájemce jsou detaily fungování softwaru \sw{} dokumentované 
 
 # Struktura vstupních dat {#kap:input-data}
 
-V\ této kapitole popíšeme blíže zdroje a strukturu vstupních dat. Software vyžaduje tři datové vstupy:
+V\ této kapitole popíšeme blíže zdroje a strukturu vstupních dat, která software \sw{} vyžaduje. Jedná se o\ tři datové vstupy:
 
-- mapový podklad o\ administrativním členění ČR\ -- používají se data ČÚZK,
-- mapový podklad silniční sítě\ -- používá se OpenStreetMap a
-- data k\ jednotlivým dopravním nehodám ve formátu CSV.
+- mapový podklad o\ administrativním členění ČR,
+- mapový podklad silniční sítě a
+- data o\ jednotlivých dopravních nehodách.
 
 
 ## Administrativní členění ČR
@@ -248,7 +248,9 @@ Mapový podklad je k\ dispozici na Geoportálu ČÚZK. Jedná se o\ Soubor sprá
 
 Stažený soubor rozzipujte a kompletní obsah adresáře `JTSK` překopírujte do adresáře `DIRORIGIN/rawdata/cuzk`.
 
-Mapový podklad administrativního členění ČR je nutné aktualizovat vždy, když se změní hranice okresů ČR. Po aktualizace mapy okresů je třeba aktualizovat všechna data, viz oddíl\ \ref{sec:aktutalizace-dat}.
+**POPIS, JAK DATA TEĎ VYPADAJÍ**
+
+Mapový podklad administrativního členění ČR je nutné aktualizovat po každé změně hranic okresů ČR. Po aktualizace mapy okresů je třeba aktualizovat všechna data novým spuštěním \sw.
 
 
 ## Silniční síť ČR
@@ -260,12 +262,12 @@ Jako mapový podklad pro silniční síť se používají data OpenStreetMaps ve
 
 Soubor vložte do adresáře `DIRORIGIN/rawdata/osm`.
 
-Mapu silniční sítě je v\ systému třeba jednou za několik let akutalizovat. Po aktualizace mapy silniční sítě je třeba aktualizovat všechna data, viz oddíl\  \ref{sec:aktutalizace-dat}.
+Mapu silniční sítě je vhodné jednou za několik let aktualizovat. Po její aktualizaci je třeba aktualizovat všechna data novým spuštěním \sw.
 
 
 ## Data o nehodách {#sec:accidents}
 
-Zdrojem dat o\ nehodách je PČR. Předpokládá se, že data jsou exportována pro každý rok zvlášť. Data pro jeden rok se skládají z\ pěti souborů typu CSV:
+Zdrojem dat o\ nehodách je PČR. Předpokládá se, že data jsou exportována pro každý rok zvlášť tak, že se data pro jeden rok skládají z\ pěti souborů ve formátu\ CSV:
 
 - `####_databaze_nehody.csv`,
 - `####_databaze_GPS.csv`,
@@ -292,7 +294,9 @@ Data o\ nehodách v\ tomto formátu překopírujte do adresáře `DIRORIGIN/rawd
 
 ## Aktualizace dat
 
-pro změně vstupních dat a konfigurace/profilů -- ala Makefile
+Po aktualizaci vstupních dat nejdříve zkontrolujte, že odpovídají formátu popsanému výše; nejlépe také zkontrolujte, že mají stejnou strukturu jako data používaná dříve.
+
+Potom vymažte obsah adresáře `DIRORIGIN/output` a znovu spusťe software \sw{}, který vytvoří novu verzi výstupních dat.
 
 
 
