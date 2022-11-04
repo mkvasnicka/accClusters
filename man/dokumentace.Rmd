@@ -185,7 +185,7 @@ Příprava mapysilniční sítě probíhá v\ několika navazujících krocích:
 1. Nakonec je zkonstruována datová struktura, která popisje geometrii sítě, tj.\ určuje, které *lixely* spolu sousedí.
 
 
-## Hustoty pravděpodobnosti škod způsobených nehodami
+## Hustoty pravděpodobnosti škod způsobených nehodami {#sec:nkdeIntro}
 
 Nejdůležitější a výpočetně nejnáročnější část hledání nebezpečných úseků spočívá ve výpočtu síťové jádrové hustoty (NKDE) nehod pro každý *lixel* silniční sítě reprezentovaný jeho středem. NKDE se počítají pomocí balíku **spNetwork** [@GelbRJournal; @GelbManual], který představuje nejlepší dostupnou implementaci algoritmů pro jejich výpočet.
 
@@ -304,14 +304,15 @@ Potom vymažte obsah adresáře `DIRORIGIN/output` a znovu spusťe software \sw{
 
 # Konfigurace systému {#kap:konfigurace}
 
-Způsob hledání  míst s\ vysokou nehodovostí je možné relativně flexibilně nastavit pomocí konfiguračních souborů. Všechny konfigurační soubory musí být uloženy v\ adresáři `DIRORIGIN/config`.
+Chování softwaru \sw, zejména způsob hledání  míst s\ vysokou nehodovostí, je možné relativně flexibilně nastavit pomocí konfiguračních souborů uložených v\ adresáři `DIRORIGIN/config`.
 
 Konfigurace systému je rozdělena do dvou vrstev. Základní konfigurace je obsažena v\ souboru `DIRORIGIN/config/config.R`, který musí být v\ konfiguračním adresáři vždy obsažen a musí obsahovat všechny povinné proměnné. Tento soubor definuje všechny informace, jak se mají data zpracovávat.
 Pokud je v\ adresáři `DIRORIGIN/config` uložen pouze tento konfigurační soubor, pak se pro každý okres a zvolený čas najde pouze jeden typ nebezpečných úseků.
 
 Často je ale užitečné najít nebezpečné úseky z\ pohledu více kritérií. Typický příklad je situace, kdy chceme najít 1)\ úseky, kde dochází k\ velkému množství nehod bez ohledu na jejich závažnost, ale současně 2)\ i\ úseky, kde dochází zejména k\ závažným dopravním nehodám. K\ tomu slouží *profily* uložené do souborů `profile_XXX.R`, kde `XXX` je část jména souboru dodaná uživatelem.
+Profily umožňují vytvořit několik různých konfigurací systému: např.\ jednu, která při výpočtu nehodových úseků nerozlišuje nehody podle jejich závažnosti, a druhou, která váží závažnost nehod podle zvolených kritérií. Stačí, aby jednotlivé profily definovaly jen ty proměnné, kterými se mezi profily liší; hodnoty ostatních proměnných profil zdědí z\ nastavení `config.R`. (Zároveň však platí, že některé technické parametry mohou být definované pouze v\ `config.R`, a\ jsou tedy všem profilům společné.)
 
-Profily umožňují vytvořit několik různých konfigurací systému: např.\ jednu, která při výpočtu nehodových úseků nerozlišuje nehody podle jejich závažnosti, a druhou, která váží závažnost nehod podle zvolených kritérií. Stačí, aby jednotlivé profily definovaly jen ty proměnné, kterými se liší; hodnoty ostatních proměnných zdědí z\ nastavení `config.R`. (Zároveň však platí, že některé technické parametry mohou být definované pouze v\ `config.R`, a\ jsou tedy všem profilům společné.)
+Seznam nezbytných a povolených proměnných se liší pro `config.R` a jednotlivé profily. Seznam těchto proměnných, jejich význam a povolené datové typy jsou stejně jako příklady zadávání jednotlivých typů hodnot uvedeny níže.
 
 Všechny konfigurační soubory jsou technicky R\ skripty, a\ musí tedy dodržet platná syntaktická pravidla jazyka\ R. V\ nejjednodušším případě stačí modifikovat hodnoty proměnných, které skript definuje. Je ovšem také možné používat platné výrazy a dokonce vytvářet vlastní proměnné. Tyto proměnné je však nutné na konci skriptu smazat (mohou tedy sloužit pouze pro zpřehlednění konfigurace).
 
@@ -319,21 +320,16 @@ Ve všech konfiguračních skriptech platí následující pravidla:
 
 - Každý konfigurační skript může obsahovat pouze povolené proměnné; některé proměnné musí obsahovat vždy.
 - Tyto proměnné musejí mít přiřazenou platnou hodnotu.
-- Vše od znaku křížek (`#`) do konce řádku je komentář.
+- Vše od znaku křížek (`#`) do konce řádku je komentář a ignoruje se.
 - Hodnota se do proměnné přiřazuje pomocí znaku "rovná se" (`=`) tak, že jméno proměnné je vlevo a hodnota vpravo od znaku `=`.
 - Hodnoty proměnných mohou být
-    - čísla
-        - čísla nesmějí obshovat mezery
-        - desetinná místa se oddělují desetinnou tečkou (`.`)
-        - velké hodnoty je možné zapsat "vědeckou notací", tj.\ 1\ 000 je možné zapsat jako `1e3`
-    - řetězce uzavřené do uvozovek (např.\ `"motorway"`)
-    - logické hodnoty (`TRUE` pro pravdu/ano a `FALSE` pro nepravdu/ne)
-    - vektory čísel nebo řetězců
-        - vektor se vytváří pomocí funkce `c()`
-        - jeho jednotlivé hodnoty jsou odděleny čárkami (`,`)
-    - tabulky
+    - čísla: Čísla se skládají pouze z\ číslic, nesmějí obsahovat mezery a desetinná místa se oddělují desetinnou tečkou (`.`). Velké hodnoty je možné zapsat ve "vědecké notaci", kde např.\ 1\ 000 je možné zapsat jako `1e3`.
+    - řetězce: Řetězec je text uzavřený do uvozovek (např.\ `"motorway"`).
+    - logické hodnoty: Povolené logické hodnoty jsou `TRUE` pro pravdu/ano a `FALSE` pro nepravdu/ne.
+    - vektory čísel nebo řetězců: Vektory se vytváří pomocí funkce `c()`; jednotlivé hodnoty v\ této funkci odděleny čárkami (`,`).
+    - tabulky (viz dále)
 
-Seznam nezbytných a povolených proměnných se liší pro `config.R` a jednotlivé profily. Seznam těchto proměnných, jejich význam a povolené datové typy jsou stejně jako příklady zadávání jednotlivých typů hodnot uvedeny níže.
+V\ některých případech mohou být povolené hodnoty dále omezeny; některé parametry mohou např.\ obsahovat pouze kladná celá čísla apod.
 
 
 ## Základní konfigurace (soubor config.R)
@@ -343,7 +339,7 @@ V\ tomto oddíle popíšeme všechny proměnné, které musejí být obsaženy v
 
 ### Časová okna
 
-Nejdříve je třeba nastavit, pro jaká období se mají nehodové úseky spočítat. To je možné udělat dvěma způsoby: buď období generovat automaticky, nebo je zadat ručně. Oba způsoby je možné kombinovat.
+Nejdříve je třeba nastavit, pro jaká období se mají spočítat klastry míst s\ častými/nebezpečnými nehodami. To je možné udělat dvěma způsoby: buď období generovat automaticky, nebo je zadat ručně. Oba způsoby je možné kombinovat.
 
 V\ případě automatických období uživatel specifikuje jejich délku v\ letech a jejich počet. Řekněme, že délka okna je tři roky, počet oken je dva a nehodové lokality se počítají 31.\ dubna 2023. V\ takovém případě se nehodové lokality spočítají pro roky 2020--2022 (1.\ okno) a 2017--2018 (2.\ okno). Obecně platí, že první časové okno se stanoví tak, aby mělo danou délku v\ letech a končilo 31.\ prosince posledního ukončeného roku. Druhé okno se stanoví tak, aby mělo danou délku a těsně předcházelo 1.\ oknu atd.
 
@@ -379,9 +375,9 @@ TIME_WINDOW_LENGHT = c(1, 3)
 TIME_WINDOW_NUMBER = c(3, 2)
 ```
 
-Ve většině situací bude uživateli stačit používat automatická časová okna, která umožní aktualizovat data bez toho, aby bylo potřeba měnit konfiguraci systému a přepočítávat údaje, které se v\ čase nemění (viz oddíl\ XXX).
+Ve většině situací bude uživateli stačit používat automatická časová okna, která umožní aktualizovat data bez toho, aby bylo potřeba měnit konfiguraci systému a přepočítávat údaje, které se v\ čase nemění.
 
-V\ některých případech však může uživatel potřebovat najít nehodové lokality v\ pevně zadaných letech. K\ tomu slouží pevná časová okna zadaná pomocí parametru `TIME_WINDOW`. Do tohot parametru je třeba uložit tabulku se dvěma sloupci, `from_date` (počáteční datum časového okna) a `to_date` (koncové datum okna). Řádky tabulky pak odpovídají jednotivým časovým oknům. Datum se zadává jako řetězec ve formátu `"YYYY-MM-DD"`.
+V\ některých případech však může uživatel potřebovat najít nehodové lokality v\ pevně zadaných letech. K\ tomu slouží pevná časová okna zadaná pomocí parametru `TIME_WINDOW`. Do tohoto parametru je třeba uložit tabulku se dvěma sloupci, `from_date` (počáteční datum časového okna) a `to_date` (koncové datum okna). Řádky tabulky pak odpovídají jednotlivým časovým oknům. Datum se zadává jako řetězec ve formátu `"YYYY-MM-DD"`.
 
 Dvě pevná časová okna o\ délce tří let je pak možné nastavit např.\ takto:
 
@@ -395,15 +391,18 @@ TIME_WINDOW = tibble::tribble(
 
 Automatická a pevná časová okna je možné libovolně kombinovat. V\ případě, že budou použita pouze pevná časová okna, je třeba nastavit parametr `TIME_WINDOW_AUTO` na hodnotu `FALSE`.
 
-V\ každém případě platí, že uživatel musí zajistit, aby měl systém přístup k\ datům o\ nehodách za dané roky.
+Stanovení časových období se týká pouze hledání klastrů lokalit s\ častými/nebezpečnými nehodami. Přitom je potřeba pamatovat na dvě věci:
+
+1. Identifikace nehodových klastrů vychází z\ výpočtu síťové hustoty pravděpodobnosti. Její rozumná identifikace vyžaduje dostatečný počet nehod. Minimální rozumná délka použitého období je tedy zhruba 3\ roky.
+1. Uživatel musí zajistit, aby měl systém přístup k\ datům o\ nehodách za všechny roky, pro které se nehodové lokality hledají.
 
 
 ### Váhy nehod
-Jednotlivé nehody se liší svou závažností. Při hledání nebezpečných míst je proto užitečné vážit jednotlivé nehody podle jejich závažnosti. Hodnota nehody je rovna 
+Jednotlivé nehody se liší svou závažností. Při hledání klastrů nebezpečných míst je proto užitečné vážit jednotlivé nehody podle jejich závažnosti. Hodnota nehody je rovna 
 
 $$\textrm{cost} = d \times D + s \times S + l \times L + m \times M + c,$$
 
-kde $D$\ je počet lidí, kteří při nehodě zahynuli, $S$\ je počet vážně zraněných, $L$\ je počet lehce zraněných a $M$\ je hodnota materiální škody v\ milionech\ Kč. Uživatel může zadat konstanty $d$, $s$, $l$, $m$ a $c$, které $d$, $s$ a $l$ určují, jaká váha se přikládá smrtelnému, těžkému a lehkému zranění respektive a jaká materiálním škodám. Jedno možné nastavení je nastavit $d$ na hodnotu statistického života v\ milionech\ Kč, $s$ a $l$ na její poměrné zlomky, $m=1$ a $c=0$.
+kde $D$\ je počet lidí, kteří při nehodě zahynuli, $S$\ je počet vážně zraněných, $L$\ je počet lehce zraněných a $M$\ je hodnota materiální škody v\ milionech\ Kč. Uživatel může zadat konstanty $d$, $s$, $l$, $m$ a $c$, které $d$, $s$ a $l$ určují, jaká váha se přikládá smrtelnému, těžkému a lehkému zranění respektive a jaká materiálním škodám. 
 
 Tyto koeficienty je možné nastavit pomocí proměnných 
 
@@ -413,7 +412,7 @@ Tyto koeficienty je možné nastavit pomocí proměnných
 - `UNIT_COST_MATERIAL` ... nezáporné číslo, váha materiální škody v\ milionech\ Kč ($m$) a
 - `UNIT_COST_CONST` ... nezáporné číslo, konstanta připočítaná k\ hodnotě každé nehody ($c$).
 
-Příklad nastavení, kde se hodnota smrtelného zranění nastaví na hodnotu statistického života 16\ milionů\ Kč:
+Příklad nastavení, kde se hodnota smrtelného zranění nastaví na hodnotu 16\ milionů\ Kč, hodnota těžkého zranění na 4\ miliony\ Kč, hodnota lehkého zranění na 1\ milion\ Kč a materiální škoda se zahrne ve své skutečné výši:
 
 ```{r, eval=FALSE}
 UNIT_COST_DEAD = 16
@@ -426,20 +425,21 @@ UNIT_COST_CONST = 0
 
 Hodnota nehod se při výpočtu rizikových oblastí používá pouze v\ případě, kdy je proměnná `NKDE_WEIGHTS` nastavena na hodnotu `"cost"`, viz dále. Je však dobré nastavit tyto parametry vždy. I\ když chceme najít nehodové klastry, které váží všechny nehody stejně, nastavení těchto parametrů pak umožní říct, které klastry jsou spojeny s\ větší škodou.
 
-**Alberiny Ščasný**
+Jedno možné nastavení je nastavit parametr\ $d$ na hodnotu statistického života v\ milionech\ Kč, $s$ a $l$ na její poměrné zlomky a $m=1$ a $c=0$.
+Odhady hodnoty statistického života pro Českou republiku je možné najít např.\ v\ článcích @AlberiniVSL2011 nebo @ScasnyVSL2012.
 
-**Když moc vysoká hodnota stat. života, ostatní se ignoruje. Ale nehody náhodné. Možná nastavit níže.**
+Výhodou nastavení parametru\ $d$ na hodnotu statistického života je jasná ekonomická interpretace. Případnou nevýhodou může být fakt, že hodnota statistického života je tak vysoká, že se při jejím použití budou brát v\ úvahu fakticky jen nehody, kde došlo ke smrtelnému (a\ případně i\ těžkému) zranění. Přitom je zřejmé, že to, jestli někdo při nehodě zahynul, je z\ velké části náhodné. Problém je samozřejmě tím větší, pro čím kratší období se hledají klastry nehodových lokalit. Zejména v\ případě kratších časových období proto může být rozumné nastavit parametry `UNIT_COST_DEAD`, `UNIT_COST_SERIOUS_INJURY` a `UNIT_COST_LIGHT_INJURY` na nižší hodnoty.
 
 
 ### Parametry výpočtu hustot {#sec:pardensities}
-Další skupina parametrů ovlivňuje, jak se počítají hustoty pravděpodobností nehod, ze kterých se pak hledají problémová místa. Patří sem následující parametry:
+Další skupina parametrů určuje, jak se počítají hustoty pravděpodobností nehod, ze kterých se pak hledají problémová místa. Patří sem následující parametry (pro jejich detailní významy prosím konzultujte @GelbManual):
 
-- `NKDE_WEIGHTS` ... buď `"cost"` nebo `"equal"`, jaké váhy se přikládají jednotlivým nehodám
-- `NKDE_METHOD` ... buď `"continuous"` nebo `"discontinuous"`, jak se počítají hustoty pravděpodobností: buď spojitě (`"continuous"`) nebo nespojitě (`"discontinuous"`); spojitý výpočet je poněkud přesnější, ale je také podstatně pomalejší
-- `NKDE_ADAPTIVE` ... logická hodnota; zda je použito adaptivní vyhlazovací okno (`TRUE`), nebo ne (`FALSE`); při použijí adaptivního vyhlazovacího okna může být výpočet poněkud přesnější, ale je také podstatně pomalejší
-- `NKDE_BW` ... kladné číslo, délka vyhlazovacího okna v\ metrech při použití neadaptivního vyhlazovacího okna (při `NKDE_ADAPTIVE = FALSE`)
-- `NKDE_TRIM_BW` ... kladné číslo, maximální délka vyhlazovacího okna v\ metrech při použití adaptivního okna (když je `NKDE_ADAPTIVE = TRUE`)
-- `NKDE_AGG` ... kladné číslo, vzdálenost v\ metrech: nehody, které jsou vzájemně blíže než je tato hodnota jsou při výpočtu zagregovány pro zrychlení výpočtu
+- `NKDE_WEIGHTS` ... buď `"cost"` nebo `"equal"`; určuje, jaké váhy se přikládají jednotlivým nehodám: zda váhy určené parametry popsanými v\ předchozím oddílu (hodnota `"cost"`) nebo zda mají všechny nehody stejnou váhu (hodnota `"equal"`)
+- `NKDE_METHOD` ... buď `"continuous"` nebo `"discontinuous"`; určuje, jak se počítají hustoty pravděpodobnosti na křižovatkách: buď spojitě (`"continuous"`) nebo nespojitě (`"discontinuous"`); spojitý výpočet je poněkud přesnější, ale je také podstatně pomalejší
+- `NKDE_ADAPTIVE` ... logická hodnota; určuje, zda je použito adaptivní vyhlazovací parametr vzdálenosti $b$ (*bandwidth*) popsaný v\ oddíle\ \ref{sec:nkdeIntro} (`TRUE`), nebo zda se vždy použije fixní hodnota\ $b$ vzatá z\ parametru `NKDE_BW` (`FALSE`); při použijí adaptivního vyhlazovacího okna může být výpočet poněkud přesnější, ale je také podstatně pomalejší
+- `NKDE_BW` ... kladné číslo; určuje délku vyhlazovacího parametru\ $b$ v\ metrech při použití neadaptivního vyhlazovacího okna (při `NKDE_ADAPTIVE = FALSE`)
+- `NKDE_TRIM_BW` ... kladné číslo; určuje maximální délku vyhlazovacího parametru\ $b$ v\ metrech při použití adaptivního okna (když je `NKDE_ADAPTIVE = TRUE`)
+- `NKDE_AGG` ... kladné číslo; určuje vzdálenost v\ metrech, ve které se nehody agregují; nehody, které jsou vzájemně blíže než je tato hodnota jsou při výpočtu sloučeny do jedné pro zrychlení výpočtu (váha takto vzniklé umělé nehody je součtem vah sloučených nehod)
 
 Příklad nastavení, při kterém se při výpočtu hustot pravděpodobností bere v\ úvahu závažnost nehod (`NKDE_WEIGHTS = "cost"`) a používá se nespojitá NKDE metoda s\ neadaptivním vyhlazovacím oknem o\ délce 300\ metrů:
 
