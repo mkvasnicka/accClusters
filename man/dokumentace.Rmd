@@ -152,7 +152,7 @@ Software \sw{} pracuje s\ pevnou adresářovou strukturou, ve které jsou umíst
 Při každém spuštění \sw{} se v\ adresáři `DIRORIGIN/log` vytvoří nový logovací soubor se jménem `YYYY-MM-DD-hh-mm-ss.log`, kde `YYYY-MM-DD` je datum a `hh-mm-ss` je čas spuštění systému. Všechny kroky systému a případná varování či chyby se logují do tohoto souboru.
 
 
-## Konfigurace systému
+## Konfigurace systému {#sec:conf-one}
 
 Konfigurace systému je detailně popsaná v\ oddílu\ \ref{kap:konfigurace}. Zde popíšeme pouze to, jak se ze zdrojových (textových) konfiguračních souborů vytváří binární konfigurace.
 
@@ -458,7 +458,7 @@ Pokud by bylo cílem sestavit klastry nehod tak, že by všechny nehody měly st
 
 
 ### Příprava mapových podkladů a nehod
-Hustoty pravděpodobnosti se počítají na zjednodušené silniční síti. Další skupina parametrů určuje, jak se tato síť zpracuje. Pokud k\ tomu nemáte velmi silný důvod, nechte tyto parametry v\ doporučeném (základním nastavení).
+Hustoty pravděpodobnosti se počítají na zjednodušené silniční síti. Další skupina parametrů určuje, jak se tato síť zpracuje. Pokud k\ tomu nemáte velmi silný důvod, nechte tyto parametry v\ doporučeném (základním) nastavení.
 
 U\ vlastních mapových podkladů je třeba nastavit čtyři parametry.
 Parametr `SUPPORTED_ROAD_CLASSES` určuje, které typy cest se zařadí do silniční použité sítě. Podkladová mapa OpenStreetMaps totiž obsahuje cesty mnoha typů, z\ nichž mnohé nejsou určeny pro motorová vozidla. Při výpočtu hustot je třeba tyto typy cest ignorovat. Do proměnné `SUPPORTED_ROAD_CLASSES` zadejte výčet všech typů cest (jako vektor řetězců), které se mají použít. Jména typů cest musejí odpovídat kódování OpenStreetMaps. V\ současné době je v\ základním nastavení skriptu `config.R` výčet všech typů cest, které OpenStreetMaps nyní používají, s\ tím, že nevhodné typy jsou odstraněny pomocí komentářů. Seznam podporavných typů je dostupný na adrese https://wiki.openstreetmap.org/wiki/Key:highway.
@@ -475,7 +475,7 @@ Doporučené nastavení těchto parametrů je následující:
 DISTRICT_BUFFER_SIZE = 3e3  # okres je zvětšen na všechny strany o 3 kilometry
 LIXEL_SIZE = 5  # typická délka lixelu je 5 metrů
 LIXEL_MIN_DIST = 2  # minimální délka lixelu je 2 metry
-ACCIDENT_TO_ROAD_MAX_DISTANCE = 30  # nehoda nesmí být dál než 30 metrů od silnice
+ACCIDENT_TO_ROAD_MAX_DISTANCE = 30  # nehoda musí být max. 30 metrů od silnice
 SUPPORTED_ROAD_CLASSES = c("motorway", "motorway_link",
                            "trunk", "trunk_link",
                            "primary", "primary_link",
@@ -491,7 +491,7 @@ Doporučený výběr silnic (parametr `SUPPORTED_ROAD_CLASSES`) obsahuje i\ siln
 
 
 ### Nastavení paralelních výpočtů
-Většina přípravy dat probíhá paralelně na větším počtu jader. Parametry uvedné v\ tomto oddíle určují, kolik jader může být paralelně využito. Jsou zde dvě možnosti: Buď uživatel nastaví počet jader sám, nebo dovolí systému, aby počet jader sám odhadl. 
+Většina přípravy dat probíhá paralelně na větším počtu jader. Parametry uvedné v\ tomto oddíle určují, kolik jader může být paralelně využito. Jsou zde dvě možnosti: Buď uživatel nastaví počet jader sám, nebo dovolí systému, aby počet jader odhadl. 
 
 Doporučené je použití automatického mechanismu. Ten zohlední jednak to, kolik jader je v\ systému k\ dispozici (nebo kolik jich má alokovaný dockerový kontejner), jednak to, kolik je k\ dispozici volné operační paměti (nebo kolik jí má k\ dispozici dockerový kontejner).
 
@@ -510,22 +510,77 @@ V\ případě potřeby může uživatel nastavit parametry `NO_OF_WORKERS` a `NO
 
 
 ### Parametry pro hledání klastrů
-Mechanismus hledání klastrů je poměrně jednoduchý. Nejdříve se najdou všechny souvislé lixely s\ hustotou pravděpodobnosti vyšší než zadaný práh\ $h$. Tak vzniknou prvotní klastry. Následně se tyto klastry rozšíří na všechny strany o\ $v$\ lixelů. V\ posledním kroku spojí ty klastry, které mají vzájemný průnik.
 
-Práh\ $h$ je stanoven dynamicky jako určitý vysoký kvantil. Tento kvantil je určen proměnnou `CLUSTER_MIN_QUANTILE`, která musí nabývat hodnotu z\ intervalu $[0,1]$, typicky však velmi blízkou jedné. Počet dodatečných lixelů\ $v$ je určen proměnnou `CLUSTER_ADDITIONAL_STEPS` (minimální hodnota je\ 1).
+Neměnit:
 
-Do interaktivní aplikace jsou exportovány i\ lixely, které mají vysokou hodnotu pravděpodobnosti nehody. Minimální kvantil lixelů, které jsou takto exportovány, určuje proměnná `VISUAL_MIN_QUANTILE`. Tato proměnná musí mít vždy menší hodnotu než `CLUSTER_MIN_QUANTILE`.
+```{r, eval=FALSE}
+CLUSTER_SEVERITY_LIMIT = 25
+CLUSTER_SEVERITY_STEP = 2
+CLUSTER_STEP_LIMIT = 10
+```
 
 
 ## Profily
 
+Profily umožňují identifikovat klastry míst s\ častými/nebezpečnými nehodami podle několika kritérií současně. Pokud v\ adresáři `DIRORIGIN/config` existuje pouze soubor `config.R`, pak se vytvoří pouze jeden implicitní profil (s\ názvem `default`). Pokud zde existují soubory se jmény `profile_???.R`, kde znaky `???` označují písmena nebo číslice, pak se pro každý takový soubor vytvoří jeden profil (a\ implicitní profil nebude vytvořen). To např.\ znamená, že pokud
 
-## Zpracovaná konfigurace a profily
+- existuje pouze `config.R`\ $\Rightarrow$ vytvoří se pouze jeden implicitní profil
+- existuje `config.R` a `profile_cost.R`\ $\Rightarrow$ vytvoří se pouze jeden profil vytvořený ze souboru `profile_cost.R`
+- existuje `config.R`, `profile_cost.R` a `profile_equal.R`\ $\Rightarrow$ vytvoří se dva profily, jeden z\ každého profilového souboru
 
-Software pro přípravu dat nejdříve načte konfiguraci a všechny profily, zkontroluje je a uloží do souboru `profiles.rds`. Tento soubor proto vymažte pouze v\ případě, kdy je třeba zajistit kompletní přepočítání konfigurace a profilů, např.\ v\ případě, kdy byl některý profil smazán.
+Každý profilový soubor musí vždy definovat dvě proměnné: `PROFILE_NAME` a `PROFILE_COMMENT`. Parametr `PROFILE_NAME` je unikátní jméno profilu používané interně. Toto jméno se může skládat pouze z\ písmen anglické abecedy a číslic, musí začínat písmenem a musí obsahovat aspoň jedno písmeno. Parametr `PROFILE_COMMENT` identifikuje profil v\ interaktivní webové aplikace. Může obsahovat jakýkoli řetězec, který dobře popisuje obsah profilu.
+
+Následující příklad jednak ukazuje maximální obsah profilu, zároveň ukazuje i\ všechny parametry, které profil může modifikovat:
+
+```{r, eval=FALSE}
+PROFILE_NAME = "cost"
+PROFILE_COMMENT = "accidents are weighted by VSL"
+
+UNIT_COST_DEAD = 32
+UNIT_COST_SERIOUS_INJURY = UNIT_COST_DEAD / 4
+UNIT_COST_LIGHT_INJURY = UNIT_COST_DEAD / 32
+UNIT_COST_MATERIAL = 1
+UNIT_COST_CONST = 0
+
+NKDE_WEIGHTS = "cost"
+NKDE_BW = 300
+NKDE_ADAPTIVE = FALSE
+NKDE_TRIM_BW = 600
+NKDE_METHOD = "discontinuous"
+NKDE_AGG = 1
+```
+
+Profil může modifikovat pouze parametry, které určují váhy jednotlivých důsledků nehody a parametry pro výpočet jádrových hustot (NKDE). Pokud kterýkoli z\ těchto parametrů chybí, je příslušná hodnota převzata ze základního konfiguračního souboru `config.R`.
+
+Pozor: Pokud `config.R` obsahuje výrazy (jako např.\ `UNIT_COST_SERIOUS_INJURY = UNIT_COST_DEAD / 4`), tyto výrazy jsou v\ profilu nahrazeny danou hodnotou. Pokud tedy `config.R` nastaví hodnoty jednotlivých typů následků dopravní nehody takto:
+
+```{r, eval=FALSE}
+# config.R
+UNIT_COST_DEAD = 32
+UNIT_COST_SERIOUS_INJURY = UNIT_COST_DEAD / 4
+UNIT_COST_LIGHT_INJURY = UNIT_COST_DEAD / 32
+UNIT_COST_MATERIAL = 1
+UNIT_COST_CONST = 0
+```
+
+a profil bude obsahovat pouze tyto řádky: 
+```{r, eval=FALSE}
+# profile_lowerCost.R
+PROFILE_NAME = "lowerCost"
+PROFILE_COMMENT = "accidents are weighted by a lower VSL"
+UNIT_COST_DEAD = 16
+```
+
+pak v\ tomto profilu bude mít parametr `UNIT_COST_DEAD` hodnotu\ 16 a parametr 
+`UNIT_COST_SERIOUS_INJURY` hodnotu\ 8 (nikoli\ 4). Důvod je ten, že všechny parametry, které nejsou v\ profilu explicitně změněny, zdědí své hodnoty z\ nastavení `config.R`.
+
+Nastavení použitého profilu je možné zobrazit i\ v\ interaktivní webové aplikaci v\ okně, kde se zobrazují klastry lokací s\ častými nebo nebezpečnými nehodami.
 
 
 ## Aktualizace konfigurace a profilů
+Software pro přípravu dat nejdříve načte konfiguraci a všechny profily, zkontroluje je a uloží do souboru `profiles.rds`. Pokud cokoli změníte, přečtěte si prosím znovu oddíl\ \ref{sec:conf-one}. Ten vysvětluje, jak se konfigurace softwaru \sw{} interně zpracovává.
+
+Nejbezpečnější způsob, jak měnit konfiguraci systému, je ten, že po jakékoli změně základní konfigurace `config.R` nebo kteréhokoli profilu (včetně toho, že některý profil odstraníte), vymažete soubor `profiles.rds`. To zajistí kompletní přepočítání konfigurace i\ profilů i\ správnou aktualizaci veškerých vypočtených dat.
 
 
 
