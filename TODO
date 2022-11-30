@@ -1,6 +1,14 @@
 TODO
 ====
 
+Nové nápady
+-----------
+
+- aktualizovat data bez klastrů -- klastry se aktualizují jen jednou ročně, zatímco ten zbytek by mohli chtít častěji
+- vyhodit v update_data.R --vanilla ze skriptu spouštění Rscriptu
+    - v dockeru se nanačte .Rprofile, takže se nenačtou balíky v renv
+
+
 Now
 ---
 
