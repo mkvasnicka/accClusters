@@ -1,0 +1,50 @@
+#!/bin/bash
+
+
+usage()
+{
+	echo
+	echo "Usage: `basename $0` [<file_mask>] [<grep_params>] <reg_exp>"	
+	echo "e.g. `basename $0` *.sh sRegister   ...  search only *.sh"
+	echo "e.g. `basename $0` -i -l sRegister  ...  ignore case and list names only"
+	echo "e.g. `basename $0` -I sRegister     ...  ignore binary files"
+	echo
+	exit 1
+}
+
+[ $# -eq 0 ] && usage
+
+#the last param always reg exp
+for last; do :; done
+GREP_EX=$last
+
+#from the second last down to the first
+for ((i=$#-1;i>0;i--))
+do
+	#is a param?
+	if echo -n "${!i}" | /usr/bin/grep -q "^-"
+	then
+		GREP_PAR="${!i} $GREP_PAR"
+	else
+		#it is a file mask
+		FILE_MASK=${!i}
+		#end loop
+		break
+	fi 
+done
+
+#echo "FILE_MASK=$FILE_MASK"
+#echo "GREP_PAR=$GREP_PAR"
+#echo "GREP_EX=$GREP_EX"
+
+if [ -z "$FILE_MASK" ]
+then
+	#find all files without any mask, just ignore .git directory
+#	set -x
+	/usr/bin/find . -path ./.git -prune -false -o -follow -type f -printf \"%p\"\\n 2>/dev/null | xargs /usr/bin/egrep --color $GREP_PAR "$GREP_EX"
+#	set +x
+else
+#	set -x	 
+	/usr/bin/find . -follow -type f -iname "$FILE_MASK" -printf \"%p\"\\n 2>/dev/null | xargs /usr/bin/egrep --color $GREP_PAR "$GREP_EX"
+#	set +x 												
+fi		
