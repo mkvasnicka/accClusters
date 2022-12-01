@@ -1,5 +1,7 @@
 data
 tmp
+tests
 config/*rds
 .Rproj.user
 .Rhistory
+ideas
