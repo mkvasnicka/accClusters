@@ -1,6 +1,6 @@
 ---
-title: "Jak hledáme klastry nehod"
-subtitle: "TAČR CK01000049 *Tvorba pokročilých nástrojů pro analýzu dopravních nehod pro Policii ČR*"
+title: "Mechanismus identifikace nebezpečných míst (klastrů nehod)"
+subtitle: "TAČR CK01000049\\break Tvorba pokročilých nástrojů pro analýzu dopravních nehod pro Policii ČR"
 author: "Michal Kvasnička"
 institute: "Masarykova univerzita"
 format:
@@ -77,6 +77,7 @@ Váhy nehod:
 \
 
 - najdeme *lixely* s vysokou hodnotou NKDE
+    - prahovou hodnotu určíme jako *x* promile nejhorších úseků
 
 - rekurzivně spojíme *lixely* s vysokou NKDE, které sousedí
 
@@ -100,14 +101,17 @@ Klastry nejsou "zjevená pravda":
 - Pro různá promile nejhorších úseků *x* a rozšíření *n* budou klastry vypadat různě.
 
 - Může se změnit i\ pořadí klastrů seřazených podle způsobené škody.
+    - Nejhorší klastry pro dvě různá nastavení *x* a *n* mohou ležet úplně jinde.
 
 \
 
-Detekce klastrů nemá sloužit jako automat, ale pomoci policistovi zaměřit pozornost na problematická místa.
+Detekce klastrů nemá sloužit jako automat, ale má pomoci policistovi zaměřit pozornost na problematická místa.
+
+- Policista by měl vyzkoušet různé pohledy na data (různá nastavení *x* a *n*).
+- Pak by se měl dívat na mapu skutečných nehod.
+- Přitom musí zohlednit svou expertní znalost svého okresu.
 
 Konečné rozhodnutí musí vždy záležet na posouzení policisty.
-
-Ten by měl vyzkoušet různé pohledy na data (nastavení *x* a *n*), tak najít problémová místa, a\ pak se dívat na mapu skutečných nehod\ -- a\ přitom zohlednit svou expertní znalost svého okresu.
 
 
 
