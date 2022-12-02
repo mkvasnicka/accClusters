@@ -579,7 +579,7 @@ docker_cpu_limit <- function() {
 				quota <- cl[[1]][[1]] |> as.numeric()
 				period <- cl[[1]][[2]] |> as.numeric()
 			}
-			if (quota==-1) {
+			if (is.na(quota) || quota < 0) {
 				return(NA)
 			}
 			#integer division
