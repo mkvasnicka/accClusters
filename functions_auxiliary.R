@@ -565,23 +565,30 @@ available_memory <- function() {
 # - it may be necessary to add a new file in cpu_limit() in a new version
 #   of Docker
 docker_cpu_limit <- function() {
-    cpu_limit <- function(file) {
+    cpu_limit <- function(quota_file,period_file="") {
         cl <- NA
-        if (file.exists(file)) {
-            cl <- base::readLines(file) |>
-                base::strsplit("\\s+")
-            cl <- cl[[1]] |>
-                as.numeric() / 1e5
-            if (cl[2] != 1)
-                stop("I can't work with fractional cpu-periods.\n",
-                     "    Run docker with --cpu-period=100000!")
+        if (file.exists(quota_file)) {
+			if (file.exists(period_file)) {
+				quota <- base::readLines(quota_file)
+				quota <- as.numeric(quota[[1]])
+				period <- base::readLines(period_file)
+				period <- as.numeric(period[[1]])
+				#cat(quota %/% period,"\n\n")
+				#integer division
+				return(quota %/% period)
+			} else {
+				cl <- base::readLines(quota_file) |> 
+					base::strsplit(split="\\s+")
+				cl <- cl[[1]] |> as.numeric()
+				return(cl[1] %/% cl[2])
+			}
         }
         cl[1]
     }
 
     suppressWarnings(
         c(
-            cpu_limit("/sys/fs/cgroup/cpu/cpu.cfs_quota_us"),
+            cpu_limit("/sys/fs/cgroup/cpu/cpu.cfs_quota_us","/sys/fs/cgroup/cpu/cpu.cfs_period_us"),
             cpu_limit("/sys/fs/cgroup/cpu.max")
         ) |>
             min(na.rm = TRUE) |>
@@ -606,7 +613,7 @@ docker_cpu_limit <- function() {
 available_cores <- function() {
     min(
         docker_cpu_limit(),
-        future::availableCores()
+        future::availableCores(methods="system")
     ) |> as.integer()
 }
 

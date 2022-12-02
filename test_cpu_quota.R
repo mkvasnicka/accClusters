@@ -29,27 +29,25 @@
 cat(commandArgs(), sep = "\n")
 
 source("functions_auxiliary.R")
-
-#NO_OF_WORKERS <- 7
+library('parallel')
 
 #process_command_line_arguments("guts")
 
-#cat("NO_OF_WORKERS:", NO_OF_WORKERS, "\n")
+cat("future availableCores methods=empty:",future::availableCores(),"\n")
+cat("future availableCores methods=system:",future::availableCores(methods="system"),"\n")
+cat("future availableCores methods=mc.cores:",future::availableCores(methods="mc.cores"),"\n")
+cat("future availableCores methods=_R_CHECK_LIMIT_CORES_:",future::availableCores(methods="_R_CHECK_LIMIT_CORES_"),"\n")
+cat("future availableCores methods=PBS:",future::availableCores(methods="PBS"),"\n")
+cat("future availableCores methods=SGE:",future::availableCores(methods="SGE"),"\n")
+cat("future availableCores methods=Slurm:",future::availableCores(methods="Slurm"),"\n")
+cat("future availableCores methods=fallback:",future::availableCores(methods="fallback"),"\n")
 
-#cat("LIXEL_SIZE:", LIXEL_SIZE, "\n")
+cat("detectCores logical=FALSE:",parallel::detectCores(all.tests = TRUE,logical = FALSE),"\n")
+cat("detectCores logical=TRUE:",parallel::detectCores(all.tests = TRUE,logical = TRUE),"\n")
 
+cat("docker_cpu_limit:",docker_cpu_limit(),"\n")
+cat("available_cores:",available_cores(),"\n")
 
-workers <- get_number_of_workers("auto")
-cat("workers:",workers,"\n")
+cat("available_memory:",available_memory(),"\n")
 
-ram <- available_memory()
-cat("ram:",ram,"\n")
-
-cat("Sys.meminfo",as.numeric(memuse::Sys.meminfo()$freeram) / 1024 ^ 3,"\n")
-
-#no_of_cores <- available_cores()
-
-cat("future cores:",future::availableCores(),"\n")
-
-
-
+cat("get_number_of_workers:",get_number_of_workers("auto",0.1),"\n")
