@@ -50,5 +50,5 @@ cat("available_cores:",available_cores(),"\n")
 
 cat("available_memory:",available_memory(),"\n")
 
-cat("get_number_of_workers:",get_number_of_workers("auto",0.1),"\n")
+cat("get_number_of_workers:",get_number_of_workers("auto",4.5),"\n")
 
