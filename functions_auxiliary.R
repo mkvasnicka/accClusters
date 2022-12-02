@@ -583,7 +583,7 @@ docker_cpu_limit <- function() {
 				return(NA)
 			}
 			#integer division
-			return(quota %/% period)
+			return(max(quota %/% period,1))
         }
         return(NA)
     }
