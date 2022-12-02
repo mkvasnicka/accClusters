@@ -566,24 +566,26 @@ available_memory <- function() {
 #   of Docker
 docker_cpu_limit <- function() {
     cpu_limit <- function(quota_file,period_file="") {
-        cl <- NA
+		quota <- -1
+		period <- 100000
         if (file.exists(quota_file)) {
 			if (file.exists(period_file)) {
 				quota <- base::readLines(quota_file)
 				quota <- as.numeric(quota[[1]])
 				period <- base::readLines(period_file)
 				period <- as.numeric(period[[1]])
-				#cat(quota %/% period,"\n\n")
-				#integer division
-				return(quota %/% period)
 			} else {
-				cl <- base::readLines(quota_file) |> 
-					base::strsplit(split="\\s+")
-				cl <- cl[[1]] |> as.numeric()
-				return(cl[1] %/% cl[2])
+				cl <- base::readLines(quota_file) |> base::strsplit(split="\\s+")
+				quota <- cl[[1]][[1]] |> as.numeric()
+				period <- cl[[1]][[2]] |> as.numeric()
 			}
+			if (quota==-1) {
+				return(NA)
+			}
+			#integer division
+			return(quota %/% period)
         }
-        cl[1]
+        return(NA)
     }
 
     suppressWarnings(
