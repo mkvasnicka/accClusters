@@ -554,6 +554,9 @@ available_memory <- function() {
 # docker_cpu_limit() returns number of cpus available to the docker container
 # in which it's running
 #
+# it returns the constraint set individually for the container; it ignores
+# the constraint set globally in Docker desktop
+#
 # inputs:
 #   none
 #
@@ -561,7 +564,6 @@ available_memory <- function() {
 #   either number of cpus or Inf if unconstrained
 #
 # notes:
-# -
 # - it may be necessary to add a new file in cpu_limit() in a new version
 #   of Docker
 docker_cpu_limit <- function() {
@@ -594,10 +596,45 @@ docker_cpu_limit <- function() {
 }
 
 
+# docker_global_cpu_limit() returns number of cpus available to the docker
+# container in which it's running
+#
+# it returns the constraint set globally in Docker desktop; it ignores
+# the constraint set individually for the container
+#
+#
+# inputs:
+# - logical ... (logical scalar) if TRUE, it returns the number of logical
+#   cores; if FALSE, it returns the number of physical cores
+#
+# value:
+#   either number of cpus or Inf if unconstrained
+#
+# WARNING:
+# - the distingtion between logical cores (threads) and physical cores may not
+#   work in Docker container
+docker_global_cpu_limit <- function(logical = TRUE) {
+    limit <- Inf
+    cpuinfo <- "/proc/cpuinfo"
+    if (file.exists(cpuinfo)) {
+        info <- base::readLines(cpuinfo)
+        if (logical) {
+            limit <- length(grep("processor", info))
+        } else {
+            idx <- base::grep("cpu cores", info)
+            limit <- base::unique(info[idx])
+            limit <- as.integer(base::gsub("\\D", "", limit))
+        }
+    }
+    min(limit)
+}
+
+
 # available_cores() returns the number of cores available at the moment
 #
 # inputs:
-#   none
+# - logical ... (logical scalar) if TRUE, it returns the number of logical
+#   cores; if FALSE, it returns the number of physical cores
 #
 # value:
 #   (integer scalar) number of available cpu cores
@@ -607,10 +644,15 @@ docker_cpu_limit <- function() {
 #   of cores dedicated to the docker container and the number of cores available
 #   at the machine
 # - it returns the number of cores available at the machine otherwise
-available_cores <- function() {
+#
+# WARNING:
+# - the distingtion between logical cores (threads) and physical cores may not
+#   work in Docker container
+available_cores <- function(logical = TRUE) {
     min(
         docker_cpu_limit(),
-        parallelly::availableCores(methods = "system", logical = FALSE)
+        docker_global_cpu_limit(logical = logical),
+        parallelly::availableCores(methods = "system", logical = logical)
     ) |> as.integer()
 }
 
