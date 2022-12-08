@@ -1,25 +1,57 @@
 FROM rocker/r-ver:4.2.2
+#upgrade Ubuntu packages
 RUN apt update
 RUN apt upgrade -y
-RUN apt install -y apt-file iproute2 iputils-ping libc-bin osmium-tool screen vim
-#RUN apt-file update
+
+#useful tools
+RUN apt install -y apt-utils apt-file iproute2 iputils-ping libc-bin screen vim
+
+#snippet from /rocker_scripts/install_geospatial.sh with Ubuntu prerequisites only
+RUN apt install -y \
+gdal-bin \
+lbzip2 \
+libfftw3-dev \
+libgdal-dev \
+libgeos-dev \
+libgsl0-dev \
+libgl1-mesa-dev \
+libglu1-mesa-dev \
+libhdf4-alt-dev \
+libhdf5-dev \
+libjq-dev \
+libpq-dev \
+libproj-dev \
+libprotobuf-dev \
+libnetcdf-dev \
+libsqlite3-dev \
+libssl-dev \
+libudunits2-dev \
+lsb-release \
+netcdf-bin \
+postgis \
+protobuf-compiler \
+sqlite3 \
+tk-dev \
+unixodbc-dev \
+osmium-tool
 
 WORKDIR /usr/src/accClusters
-COPY . .
-COPY Docker/.vimrc Docker/.screenrc /root/
-COPY Docker/.vimrc /root/
-COPY Docker/findgrep /usr/local/bin/
-
-RUN /bin/sh -c Docker/install_geospatial.sh 
-
+#renv restore
 ENV RENV_VERSION=0.16.0
 RUN R -e "install.packages('remotes', repos = c(CRAN = 'https://cloud.r-project.org'))"
 RUN R -e "remotes::install_github('rstudio/renv@${RENV_VERSION}')"
+#copy the renv
+COPY renv/ ./renv
+COPY renv.lock .Rprofile .
 RUN R -e "renv::restore()"
+
+#useful tools
+COPY Docker/.vimrc Docker/.screenrc /root/
+COPY Docker/findgrep /usr/local/bin/
+
+#copy the application itself at the very end
+COPY . .
 
 #The CMD command tells Docker how to run the application we packaged in the image. 
 #CMD [“command”, “argument1”, “argument2”].
-#CMD ["node", "src/index.js"]
-
-#Exposing port 3000 informs Docker which port the container is listening on at runtime
-#EXPOSE 3000
+CMD /usr/src/accClusters/update_data.sh
