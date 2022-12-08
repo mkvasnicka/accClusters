@@ -610,6 +610,10 @@ docker_cpu_limit <- function() {
 # value:
 #   either number of cpus or Inf if unconstrained
 #
+# notes:
+# - this function may not be needed; it seems that parallelly::availableCores()
+#   returns this value
+#
 # WARNING:
 # - the distingtion between logical cores (threads) and physical cores may not
 #   work in Docker container
