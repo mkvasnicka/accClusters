@@ -565,32 +565,27 @@ available_memory <- function() {
 # - it may be necessary to add a new file in cpu_limit() in a new version
 #   of Docker
 docker_cpu_limit <- function() {
-    cpu_limit <- function(quota_file,period_file="") {
-		quota <- -1
-		period <- 100000
+    cpu_limit <- function(quota_file, period_file = "") {
+        quota <- NA
+        period <- 1e5
         if (file.exists(quota_file)) {
-			if (file.exists(period_file)) {
-				quota <- base::readLines(quota_file)
-				quota <- as.numeric(quota[[1]])
-				period <- base::readLines(period_file)
-				period <- as.numeric(period[[1]])
-			} else {
-				cl <- base::readLines(quota_file) |> base::strsplit(split="\\s+")
-				quota <- cl[[1]][[1]] |> as.numeric()
-				period <- cl[[1]][[2]] |> as.numeric()
-			}
-			if (is.na(quota) || quota < 0) {
-				return(NA)
-			}
-			#integer division
-			return(max(quota %/% period,1))
+            if (file.exists(period_file)) {
+                quota <- as.numeric(base::readLines(quota_file))[1]
+                period <- as.numeric(base::readLines(period_file))[1]
+            } else {
+                cl <- base::readLines(quota_file) |>
+                    base::strsplit(split = "\\s+")
+                quota <- as.numeric(cl[[1]][1])
+                period <- as.numeric(cl[[1]][2])
+            }
         }
-        return(NA)
+        max(quota %/% period, 1)
     }
 
     suppressWarnings(
         c(
-            cpu_limit("/sys/fs/cgroup/cpu/cpu.cfs_quota_us","/sys/fs/cgroup/cpu/cpu.cfs_period_us"),
+            cpu_limit("/sys/fs/cgroup/cpu/cpu.cfs_quota_us",
+                      "/sys/fs/cgroup/cpu/cpu.cfs_period_us"),
             cpu_limit("/sys/fs/cgroup/cpu.max")
         ) |>
             min(na.rm = TRUE) |>
@@ -615,7 +610,7 @@ docker_cpu_limit <- function() {
 available_cores <- function() {
     min(
         docker_cpu_limit(),
-        future::availableCores(methods="system")
+        parallelly::availableCores(methods = "system", logical = FALSE)
     ) |> as.integer()
 }
 
