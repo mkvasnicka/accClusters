@@ -54,6 +54,10 @@ if [ -z $DIRORIGIN ]; then
     DIRORIGIN=$DIRORIGIN_IMPLICIT
 fi
 
+#TODO remove
+echo "Arguments:"
+echo $*
+
 # show configuration
 echo "Updating data on traffic accidents for shiny app"
 echo "================================================"

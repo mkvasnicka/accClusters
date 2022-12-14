@@ -52,6 +52,7 @@ COPY Docker/findgrep /usr/local/bin/
 #copy the application itself at the very end
 COPY . .
 
+#You can use the exec form of ENTRYPOINT to set fairly stable default commands and arguments and then use either form of CMD to set additional defaults that are more likely to be changed.
+ENTRYPOINT [ "/usr/src/accClusters/update_data.sh" ]
 #The CMD command tells Docker how to run the application we packaged in the image. 
-#CMD [“command”, “argument1”, “argument2”].
-CMD /usr/src/accClusters/update_data.sh
+#CMD [ “argument1”, “argument2” ]
