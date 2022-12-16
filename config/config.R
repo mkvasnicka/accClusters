@@ -33,8 +33,8 @@ TIME_WINDOW_NUMBER = 2
 
 # cost of various damages in mil. CZK: dead people, serious, and light injuries
 UNIT_COST_DEAD = 12
-UNIT_COST_SERIOUS_INJURY = UNIT_COST_DEAD / 4
-UNIT_COST_LIGHT_INJURY = UNIT_COST_DEAD / 24
+UNIT_COST_SERIOUS_INJURY = UNIT_COST_DEAD * 0.25
+UNIT_COST_LIGHT_INJURY = UNIT_COST_DEAD * 0.003
 
 # material cost (in mil. CZK) is multiplied by this coefficient
 UNIT_COST_MATERIAL = 1
