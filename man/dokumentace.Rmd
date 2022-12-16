@@ -412,12 +412,12 @@ Tyto koeficienty je možné nastavit pomocí proměnných
 - `UNIT_COST_MATERIAL` ... nezáporné číslo, váha materiální škody v\ milionech\ Kč ($m$) a
 - `UNIT_COST_CONST` ... nezáporné číslo, konstanta připočítaná k\ hodnotě každé nehody ($c$).
 
-Příklad nastavení, kde se hodnota smrtelného zranění nastaví na hodnotu 16\ milionů\ Kč, hodnota těžkého zranění na 4\ miliony\ Kč, hodnota lehkého zranění na 1\ milion\ Kč a materiální škoda se zahrne ve své skutečné výši:
+Příklad nastavení, kde se hodnota smrtelného zranění nastaví na hodnotu 12\ milionů\ Kč, hodnota těžkého zranění čtvrtinu této částky, hodnota lehkého zranění na 3\ promile této částky a materiální škoda se zahrne ve své skutečné výši:
 
 ```{r, eval=FALSE}
-UNIT_COST_DEAD = 16
-UNIT_COST_SERIOUS_INJURY = UNIT_COST_DEAD / 4
-UNIT_COST_LIGHT_INJURY = UNIT_COST_DEAD / 16
+UNIT_COST_DEAD = 12
+UNIT_COST_SERIOUS_INJURY = UNIT_COST_DEAD * 0. 25
+UNIT_COST_LIGHT_INJURY = UNIT_COST_DEAD * 0.003
 UNIT_COST_MATERIAL = 1
 UNIT_COST_CONST = 0
 
@@ -426,9 +426,11 @@ UNIT_COST_CONST = 0
 Hodnota nehod se při výpočtu rizikových oblastí používá pouze v\ případě, kdy je proměnná `NKDE_WEIGHTS` nastavena na hodnotu `"cost"`, viz dále. Je však dobré nastavit tyto parametry vždy. I\ když chceme najít nehodové klastry, které váží všechny nehody stejně, nastavení těchto parametrů pak umožní říct, které klastry jsou spojeny s\ větší škodou.
 
 Jedno možné nastavení je nastavit parametr\ $d$ na hodnotu statistického života v\ milionech\ Kč, $s$ a $l$ na její poměrné zlomky a $m=1$ a $c=0$.
-Odhady hodnoty statistického života pro Českou republiku je možné najít např.\ v\ článcích @AlberiniVSL2011 nebo @ScasnyVSL2012.
+Odhady hodnoty statistického života pro Českou republiku je možné najít např.\ v\ článcích @AlberiniVSL2011 nebo @ScasnyVSL2012. @AlberiniVSL2011 odhadují hodnotu statistického života dospělého ztracenou při dopravní nehodě na 12\ mil.\ Kč.
 
 Výhodou nastavení parametru\ $d$ na hodnotu statistického života je jasná ekonomická interpretace. Případnou nevýhodou může být fakt, že hodnota statistického života je tak vysoká, že se při jejím použití budou brát v\ úvahu fakticky jen nehody, kde došlo ke smrtelnému (a\ případně i\ těžkému) zranění. Přitom je zřejmé, že to, jestli někdo při nehodě zahynul, je z\ velké části náhodné. Problém je samozřejmě tím větší, pro čím kratší období se hledají klastry nehodových lokalit. Zejména v\ případě kratších časových období proto může být rozumné nastavit parametry `UNIT_COST_DEAD`, `UNIT_COST_SERIOUS_INJURY` a `UNIT_COST_LIGHT_INJURY` na nižší hodnoty.
+
+Váhy zranění mohou být odvozeny od hodnoty statistického života např.\ podle vah zřanění uvedených v\ @USDeptTransportation2021 v\ tabulce\ 2. Význam jednotlivých kategorií popisuje např.\ https://en.wikipedia.org/wiki/Abbreviated_Injury_Scale. Problém při použití v\ ČR spočívá v\ tom, že PČR nepoužívá standardní klasifikaci zranění. Pro lehká zranění se zdá být rozumné použít kategorii MAIS\ 1 a váhu 0.003. Pro těžká zranění je zřejmě vhodné použít vybranou hodnotu z\ kategorií MAIS\ 2--4, kterým odpovídají po řadě váhy\ 0.047, 0.105 a\ 0.266.
 
 
 ### Parametry výpočtu hustot {#sec:pardensities}
@@ -536,9 +538,9 @@ Následující příklad jednak ukazuje maximální obsah profilu, zároveň uka
 PROFILE_NAME = "cost"
 PROFILE_COMMENT = "accidents are weighted by VSL"
 
-UNIT_COST_DEAD = 32
-UNIT_COST_SERIOUS_INJURY = UNIT_COST_DEAD / 4
-UNIT_COST_LIGHT_INJURY = UNIT_COST_DEAD / 32
+UNIT_COST_DEAD = 12
+UNIT_COST_SERIOUS_INJURY = UNIT_COST_DEAD * 0. 25
+UNIT_COST_LIGHT_INJURY = UNIT_COST_DEAD * 0.003
 UNIT_COST_MATERIAL = 1
 UNIT_COST_CONST = 0
 
@@ -552,13 +554,13 @@ NKDE_AGG = 1
 
 Profil může modifikovat pouze parametry, které určují váhy jednotlivých důsledků nehody a parametry pro výpočet jádrových hustot (NKDE). Pokud kterýkoli z\ těchto parametrů chybí, je příslušná hodnota převzata ze základního konfiguračního souboru `config.R`.
 
-Pozor: Pokud `config.R` obsahuje výrazy (jako např.\ `UNIT_COST_SERIOUS_INJURY = UNIT_COST_DEAD / 4`), tyto výrazy jsou v\ profilu nahrazeny danou hodnotou. Pokud tedy `config.R` nastaví hodnoty jednotlivých typů následků dopravní nehody takto:
+Pozor: Pokud `config.R` obsahuje výrazy (jako např.\ `UNIT_COST_SERIOUS_INJURY = UNIT_COST_DEAD * 0.25`), tyto výrazy jsou v\ profilu nahrazeny danou hodnotou. Pokud tedy `config.R` nastaví hodnoty jednotlivých typů následků dopravní nehody takto:
 
 ```{r, eval=FALSE}
 # config.R
-UNIT_COST_DEAD = 32
-UNIT_COST_SERIOUS_INJURY = UNIT_COST_DEAD / 4
-UNIT_COST_LIGHT_INJURY = UNIT_COST_DEAD / 32
+UNIT_COST_DEAD = 12
+UNIT_COST_SERIOUS_INJURY = UNIT_COST_DEAD * 0. 25
+UNIT_COST_LIGHT_INJURY = UNIT_COST_DEAD * 0.003
 UNIT_COST_MATERIAL = 1
 UNIT_COST_CONST = 0
 ```
@@ -572,7 +574,7 @@ UNIT_COST_DEAD = 16
 ```
 
 pak v\ tomto profilu bude mít parametr `UNIT_COST_DEAD` hodnotu\ 16 a parametr 
-`UNIT_COST_SERIOUS_INJURY` hodnotu\ 8 (nikoli\ 4). Důvod je ten, že všechny parametry, které nejsou v\ profilu explicitně změněny, zdědí své hodnoty z\ nastavení `config.R`.
+`UNIT_COST_SERIOUS_INJURY` hodnotu\ 3 (nikoli\ 4). Důvod je ten, že všechny parametry, které nejsou v\ profilu explicitně změněny, zdědí své hodnoty z\ nastavení `config.R`.
 
 Nastavení použitého profilu je možné zobrazit i\ v\ interaktivní webové aplikaci v\ okně, kde se zobrazují klastry lokací s\ častými nebo nebezpečnými nehodami.
 
