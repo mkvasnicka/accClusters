@@ -15,11 +15,6 @@ while getopts ":i:" OPTION; do
 			IMAGE="$OPTARG"	
 			shift 2
 			;;
-		\?)
-			echo "Neplatný parametr"
-			usage
-			exit 1
-			;;
 	esac
 done
 
