@@ -14,16 +14,17 @@ RSCRIPTDIR_IMPLICIT=.
 DIRORIGIN_IMPLICIT=data
 
 # help
-help()
+usage()
 {
-    echo "update_data.sh updates traffic accidents data for shiny."
-    echo
-    echo "Syntax: update_data [-r|b|h]"
-    echo "options:"
-    echo "r     Sets path to the folder where R scripts are stored."
-    echo "b     Sets path to the folder where data are stored."
-    echo "h     Print this help."
-    echo
+    echo "Usage $(basename $0) [-h] | [-m -c] | -k"
+    echo "Syntax: "
+    echo "  h     Print this help."
+    echo "  m     Stores the manual in the data/man folder."
+    echo "  c     Stores the initial config/profile in the data/config folder."
+    echo "        (The folder must be empty or non-existent; error is thrown otherwise.)"
+    echo "  k     Accidents clusters are updated."
+    echo "  h     Print this help."
+    echo "If not additional parameter is present, basic data are updated."
 }
 
 # function to run R scripts; it sets RSCRIPTDIR variable and handles other
@@ -38,15 +39,33 @@ runRscript () {
 }
 
 # process flag parameters; use the implicit values it they aren't set
-while getopts :hr:b: flag
-do
-    case "${flag}" in
-        h) help
-           exit;;
+WHATTODO="update"
+while getopts 'hmckr:b:' opt; do
+    case "$opt" in
+        m)
+            echo "Writing the manual to $DIRORIGIN/man"
+            WHATTODO="nothing"
+            ;;
+        c)
+            echo "Writing basic config to $DIRORIGIN/config"
+            WHATTODO="nothing"
+            ;;
+        k)
+            if [ $WHATTODO == "nothing" ]; then
+                echo "You cannot produce manual/initial config and calculate clusters at the same time!"
+                exit 1
+            fi
+            WHATTODO="update clusters"
+            ;;
         r) RSCRIPTDIR=${OPTARG};;
         b) DIRORIGIN=${OPTARG};;
+        ?|h)
+            usage
+            exit 1
+            ;;
     esac
 done
+shift "$(($OPTIND -1))"
 if [ -z $RSCRIPTDIR ]; then
     RSCRIPTDIR=$RSCRIPTDIR_IMPLICIT
 fi
@@ -54,23 +73,35 @@ if [ -z $DIRORIGIN ]; then
     DIRORIGIN=$DIRORIGIN_IMPLICIT
 fi
 
-#TODO remove
-echo "Arguments:"
-echo $*
+# #TODO remove
+# echo "Arguments:"
+# echo $*
 
 # show configuration
-echo "Updating data on traffic accidents for shiny app"
-echo "================================================"
-echo "Using RSCRIPTDIR=\"$RSCRIPTDIR\", DIR_ORIGIN=\"$DIRORIGIN\"."
+if [[ $WHATTODO == *update* ]]; then
+    NICESTRING="only"
+    if [[ $WHATTODO == *clusters* ]]; then
+        NICESTRING="and accidents clusters"
+    fi
+    echo "Updating data on traffic accidents for shiny app"
+    echo "================================================"
+    echo "Updating basic statistics $NICESTRING."
+    echo "Using RSCRIPTDIR=\"$RSCRIPTDIR\", DIR_ORIGIN=\"$DIRORIGIN\"."
+fi
 
-runRscript "start_logging"
-runRscript "prepare_profiles"
-runRscript "prepare_districts"
-runRscript "prepare_maps"
-runRscript "prepare_accidents"
-runRscript "prepare_densities"
-runRscript "prepare_clusters"
-runRscript "prepare_sidecars"
-runRscript "prepare_gis"
+# update basic statistics
+if [[ $WHATTODO == *update* ]]; then
+    runRscript "start_logging"
+    runRscript "prepare_profiles"
+    runRscript "prepare_districts"
+    runRscript "prepare_maps"
+    runRscript "prepare_accidents"
+fi
 
-# runRscript "test"
+# update clusters
+if [[ $WHATTODO == *clusters* ]]; then
+    runRscript "prepare_densities"
+    runRscript "prepare_clusters"
+    runRscript "prepare_sidecars"
+    runRscript "prepare_gis"
+fi
