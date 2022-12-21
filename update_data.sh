@@ -45,10 +45,30 @@ while getopts 'hmckr:b:' opt; do
         m)
             echo "Writing the manual to $DIRORIGIN/man"
             WHATTODO="nothing"
+            if [ -d "$DIRORIGIN/man" ];
+            then
+                # echo "$DIR directory exists."
+            else
+            	mkdir "$DIRORIGIN/man"
+            fi
+            if [ -f "$FILE" ];
+            then
+                echo "The manual already exists; skipping."
+            else
+                cp man/dokumentace.pdf "$DIRORIGIN/man"
+            fi
             ;;
         c)
             echo "Writing basic config to $DIRORIGIN/config"
             WHATTODO="nothing"
+            if [ -d "$DIRORIGIN/config" ];
+            then
+                echo "$DIRORIGIN/config already exists. I can't overwrite it."
+                echo "If you want to create it from the scratch, remove the folder."
+            else
+                mkdir "$DIRORIGIN/config"
+                cp config/* "$DIRORIGIN/config"
+            fi
             ;;
         k)
             if [ $WHATTODO == "nothing" ]; then
