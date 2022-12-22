@@ -8,10 +8,10 @@
 set -e
 
 # folder where R scripts are stored---unless replaced with -r option
-RSCRIPTDIR_IMPLICIT=.
+RSCRIPTDIR=.
 
 # folder where all data are stored---unless replaced with -b option
-DIRORIGIN_IMPLICIT=data
+DIRORIGIN=data
 
 # help
 usage()
@@ -43,29 +43,25 @@ WHATTODO="update"
 while getopts 'hmckr:b:' opt; do
     case "$opt" in
         m)
-            echo "Writing the manual to $DIRORIGIN/man"
             WHATTODO="nothing"
-            if [ -d "$DIRORIGIN/man" ];
+            if [ -f "$DIRORIGIN/man/dokumentace.pdf" ];
             then
-                # echo "$DIR directory exists."
+                echo "ERROR: The manual already exists at "$DIRORIGIN/man/dokumentace.pdf"; skipping."
+                echo "       If you want to recreate it, remove this file"
             else
-            	mkdir "$DIRORIGIN/man"
-            fi
-            if [ -f "$FILE" ];
-            then
-                echo "The manual already exists; skipping."
-            else
+                echo "Writing the manual to $DIRORIGIN/man."
+                mkdir -p "$DIRORIGIN/man"
                 cp man/dokumentace.pdf "$DIRORIGIN/man"
             fi
             ;;
         c)
-            echo "Writing basic config to $DIRORIGIN/config"
             WHATTODO="nothing"
             if [ -d "$DIRORIGIN/config" ];
             then
-                echo "$DIRORIGIN/config already exists. I can't overwrite it."
-                echo "If you want to create it from the scratch, remove the folder."
+                echo "ERROR: $DIRORIGIN/config already exists. I can't overwrite it."
+                echo "       If you want to create it from the scratch, remove this folder."
             else
+                echo "Writing basic config to $DIRORIGIN/config."
                 mkdir "$DIRORIGIN/config"
                 cp config/* "$DIRORIGIN/config"
             fi
@@ -86,16 +82,6 @@ while getopts 'hmckr:b:' opt; do
     esac
 done
 shift "$(($OPTIND -1))"
-if [ -z $RSCRIPTDIR ]; then
-    RSCRIPTDIR=$RSCRIPTDIR_IMPLICIT
-fi
-if [ -z $DIRORIGIN ]; then
-    DIRORIGIN=$DIRORIGIN_IMPLICIT
-fi
-
-# #TODO remove
-# echo "Arguments:"
-# echo $*
 
 # show configuration
 if [[ $WHATTODO == *update* ]]; then
