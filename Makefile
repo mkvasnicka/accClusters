@@ -1,5 +1,6 @@
 MANFOLDER=man
 MANNAME=dokumentace.pdf
+OWNER=  #prgosek/
 IMAGENAME=acc-clusters
 VERSIONNAME=rc1
 
@@ -12,4 +13,4 @@ $(MANFOLDER)/$(MANNAME):
 	(cd $(MANFOLDER) && make)
 
 docker:	Dockerfile $(MANFOLDER)/$(MANNAME)
-	docker build -t $(IMAGENAME):$(VERSIONNAME) .
+	docker build -t $(OWNER)$(IMAGENAME):$(VERSIONNAME) .
