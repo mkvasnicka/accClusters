@@ -14,17 +14,18 @@ RSCRIPTDIR=.
 DIRORIGIN=data
 
 # help
-usage()
-{
-    echo "Usage $(basename $0) [-h] | [-m -c] | -k"
-    echo "Syntax: "
-    echo "  h     Print this help."
-    echo "  m     Stores the manual in the data/man folder."
-    echo "  c     Stores the initial config/profile in the data/config folder."
-    echo "        (The folder must be empty or non-existent; error is thrown otherwise.)"
-    echo "  k     Accidents clusters are updated."
-    echo "  h     Print this help."
-    echo "If not additional parameter is present, basic data are updated."
+usage() {
+	echo "Použití:"
+	echo "start.sh [-h] [-i <image>] [-n <container name>] [-d <data folder>] [-m] [-c] [-k]"
+	echo "  -h ... vypíše nápovědu"
+	echo "  -i <image> ... volitelný název použitého docker image; implicitně acc-clusters:latest"
+	echo "  -n <container name> ... volitelný název kontejneru"
+	echo "  -d <data folder> ... volitelná cesta ke složce s daty; implicitně aktuální adresář"
+	echo "  -m ... volitelně uloží na disk PDF soubor s dokumentací -- pokud neexistuje"
+	echo "  -c ... volitelně uloží na disk počáteční nastavení konfigurace -- pokud neexistuje"
+	echo "  -k ... volitelně aktualizuje klastry dopravních nehod"
+	echo "Pokud není zadán žádný z parametrů -m, -c, ani -k, aktualizuje běžná data o nehodách."
+	exit 2
 }
 
 # function to run R scripts; it sets RSCRIPTDIR variable and handles other
@@ -47,7 +48,7 @@ while getopts 'hmckr:b:' opt; do
             if [ -f "$DIRORIGIN/man/dokumentace.pdf" ];
             then
                 echo "ERROR: The manual already exists at "$DIRORIGIN/man/dokumentace.pdf"; skipping."
-                echo "       If you want to recreate it, remove this file"
+                echo "       If you want to recreate it, remove this file."
             else
                 echo "Writing the manual to $DIRORIGIN/man."
                 mkdir -p "$DIRORIGIN/man"
