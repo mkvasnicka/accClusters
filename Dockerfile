@@ -81,11 +81,11 @@ update_data.sh \
 .
 
 # copy default config
-COPY config .
+COPY config/* ./config/
 
 # copy manual
 # RUN mkdir man
-COPY man/dokumentace.pdf man/
+COPY man/dokumentace.pdf ./man/
 
 # You can use the exec form of ENTRYPOINT to set fairly stable default commands
 # and arguments and then use either form of CMD to set additional defaults that
