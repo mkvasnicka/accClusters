@@ -13,7 +13,7 @@ The project is supported by the grant CK01000049 funded by [Technology Agency of
 
 ## How users can get started with the project
 
-The easiest way to run the project is build a docker container. For this, use
+The easiest way to run the project is build a docker image and use it. For this, use
 
 ```{bash}
 make docker
