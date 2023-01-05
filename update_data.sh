@@ -20,6 +20,7 @@ usage() {
 	echo "  -h ... vypíše nápovědu"
 	echo "  -i <image> ... volitelný název použitého docker image; implicitně acc-clusters:latest"
 	echo "  -n <container name> ... volitelný název kontejneru"
+	echo "  -p <docker run parameters> ... volitelné parametry předané dockeru při spuštění kontejneru"
 	echo "  -d <data folder> ... volitelná cesta ke složce s daty; implicitně aktuální adresář"
 	echo "  -m ... volitelně uloží na disk PDF soubor s dokumentací -- pokud neexistuje"
 	echo "  -c ... volitelně uloží na disk počáteční nastavení konfigurace -- pokud neexistuje"

@@ -134,6 +134,7 @@ kde
 - `-h` vypíše nápovědu
 - `-i <image>` umožňuje volitelně zadat jiný název použitého dockerového image
 - `-n <container name>` umožňuje volitelně zadat název spuštěného kontejneru
+- `-p <docker run parameters>` umožnuje zadat volitelné parametry předané dockeru při spuštění kontejneru
 - `-d <data folder>` umožňuje zadat jinou absolutní cestu ke složce s\ daty; implicitně se předpokládá, že data jsou uložena v\ aktuálním adresáři
 - `-m` při použití této volby systém uloží do adresáře s\ daty soubor s\ touto dokumentací (pokud neexistuje)
 - `-c` při použití této volby systém uloží do adresáře s\ daty adresář `config` s\ počáteční konfigurací systému (pokud neexistuje; nikdy tedy nepřepíše uživatelskou konfiguraci)
@@ -142,6 +143,12 @@ kde
 Pokud není zadán žádný z\ parametrů `-m`, `-c`, ani `-k`, pak systém aktualizuje běžná data o nehodách.
 
 Typicky tedy skript aktualizuje pouze běžná data potřebná pro vizualizaci vlastních nehod, ale ne klastry těchto nehod. Důvod je ten, že data o\ vlastních nehodách je vhodné mít ve vizualizačním softwaru k\ dispozici jen s\ minimálním zpožděním, zatímco klastry nehodových míst má smysl aktualizovat maximálně jednou ročně. Pokud se tedy mají aktualizovat i\ tato data, je třeba skript spustit s\ parametrem\ `-k`.
+
+Volitelné parametry předané dockeru při spuštění kontejneru je možné zadat pomocí parametru `-p`. Omezit počet použitých jader procesoru a použitou paměť je tak možné např.\ takto (data se zároveň čtou i zapisují do zvoleného adresáře):
+
+```
+./start.sh -p "--cpus=1 --memory=16gb" -d /home/qasar/acc_clusters/data/
+```
 
 
 ## Přenos výsledků do vizualizačního softwaru
