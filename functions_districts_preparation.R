@@ -96,6 +96,9 @@ add_greater_brno <- function(districts) {
 #   (AdministrativniCleneni_v13.gdb) are stored
 # - reader ... (closure) function that reads the districts table; several of
 #   these functions are implemented above
+# - profiles ... profile
+# - shiny ... (logical scalar) if FALSE (default), the resulting sf object is
+#   in the PLANARY_PROJECTION; if TRUE, it is reprojected to WGS84
 #
 # value:
 #   none; data are written to disk
