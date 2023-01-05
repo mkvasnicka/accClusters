@@ -67,10 +67,12 @@ library(knitr)
 Tento text popisuje instalaci a použití softwaru \sw.
 Software \sw{} je součástí softwaru pro vizualizaci dopravních nehod vytvořeného s\ podporou grantu TAČR CK01000049 *Tvorba pokročilých nástrojů pro analýzu dopravních nehod pro Policii ČR*. V\ rámci tohoto projektu byly vytvořeny dva nástroje:
 
-- offline neinteraktivní software \sw, který ze vstupních dat spočítá potřebné metriky, identifikuje místa častých nebo nebezpečných nehod a připraví podklady potřebné pro jejich interaktivní vizualizaci a
+- tento offline neinteraktivní software \sw, který ze vstupních dat spočítá potřebné metriky, identifikuje místa častých nebo nebezpečných nehod a připraví podklady potřebné pro jejich interaktivní vizualizaci a
 - interaktivní webová aplikace, která data vizualizuje.
 
-(Rozdělení softwaru do dvou částí je nutné kvůli výpočetní náročnosti přípravy dat, kterou není možné provádět za běhu. Nejdříve se tedy pomocí přípravné aplikace všechna data předpočítají, a\ pak se vizualizují ve webové aplikaci.)
+Rozdělení softwaru do dvou částí je nutné kvůli výpočetní náročnosti přípravy dat, kterou není možné provádět za běhu. Nejdříve se tedy pomocí přípravné aplikace všechna data předpočítají, a\ pak se vizualizují ve webové aplikaci.
+
+Tento manuál popisuje pouze software \sw{} pro offline přípravu dat; interaktivní webová aplikace je dokumentována jinde.
 
 
 
@@ -78,14 +80,14 @@ Software \sw{} je součástí softwaru pro vizualizaci dopravních nehod vytvoř
 
 # Systémové nároky {#sec:hw-sw-config}
 
-Výpočty jsou poměrně hardwarově náročné. Proto se předpokládá následující minimální konfigurace hardwaru a softwaru:
+Příprava dat pro jejich vizualizaci a zejména výpočty klastrů nebezpečných míst jsou poměrně hardwarově náročné. Proto se předpokládá následující minimální konfigurace hardwaru a softwaru:
 
 - procesor minimálně třídy i5 (vyšší je lepší), minimálně 4\ jádra (větší počet jader je výhodou),
 - minimálně 32\ GB operační paměti dedikované pro tento software (více jader vyžaduje více operační paměti),
 - operační systém Linux nebo Windows a
 - docker.
 
-Drtivá většina výpočtů běží paralelně na více jádrech. Čím větší počet jader má systém dedikovaný, tím rychleji příprava dat proběhne. Odhadovaný čas při prvním spuštění softwaru je při procesoru třídy\ i5 se čtyřmi jádry a 32\ GB operační paměti kolem tří dny v\ případě práce s\ nespojitými hustotami pravděpodobnosti. V\ případě práce se spojitými hustotami pravděpodobnosti lze očekávat několikanásobně delší přípravu dat. Zvýšení počtu jader spojené se zvětšením dostupné paměti tento čas proporcionálně zkrátí.
+Drtivá většina výpočtů běží paralelně na více jádrech. Čím větší počet jader má systém dedikovaný, tím rychleji příprava dat proběhne. Odhadovaný čas výpočtu klastrů nehod je při prvním spuštění softwaru s\ použitím procesoru třídy\ i5 se čtyřmi jádry a 32\ GB operační paměti kolem tří dnů v\ případě práce s\ nespojitými hustotami pravděpodobnosti. V\ případě práce se spojitými hustotami pravděpodobnosti lze očekávat několikanásobně delší přípravu dat. Použití modernější architektury pomůže; zvýšení počtu jader spojené se zvětšením dostupné paměti tento čas proporcionálně zkrátí.
 
 Výpočet běžící na každém jádru vyžaduje typicky cca 4\ GB operační paměti (v\ některých krocích však 10\ GB). Větší počet jader se tedy může použít pouze v\ případě, že je k\ dispozici dostatečné množství dedikované operační paměti.
 
@@ -97,13 +99,56 @@ Jako "dedikovaná operační paměť" se chápe paměť, kterou má software k\ 
 
 # Instalace a spuštění softwaru
 
+Software \sw{} je možné spustit ve dvou režimech: buď jako dockerový kontejner (toto je doporučený postup), nebo jako aplikaci v\ jazyce\ R [@R].
+
+
 ## Instalace softwaru
+
+Použití dockerového kontejneru vyžaduje instalaci systému docker a dedikování dostatečných zdrojů pro dockerové kontejnery. Vlastní systém se pak stáhne automaticky při prvním použití při spuštění spouštěcího skriptu, viz následující oddíl.
+
+Instalace aplikace v\ jazyce\ R vyžaduje několik kroků:
+
+1. instalaci vlastního systému\ R ve verzi\ 4.2.2
+1. instalaci systému jeho stažením z\ GitHubu (https://github.com/mkvasnicka/accClusters)
+1. instalaci potřebných balíků v\ příslušných verzích
+    - nainstalujte R\ balík `renv` a v\ R\ spusťte `renv::restore()`
+    - v\ závislosti na operačním systému může vyžadovat instalaci mnoha systémových knihoven; na operačním systému Ubuntu 22.04 je možné tyto knihovny nainstalovat naráz pomocí skriptu obsaženého v\ souborou `Dockerfile`
+
+Doporučený operační systém pro práci s\ R\ verzí systému\ \sw{} je Ubuntu\ 22.04; systém by však měl pracovat i\ v\ moderních Windows.
+
 
 ## Spuštění softwaru
 
+Ke spuštění dockerového kontejneru se systémem \sw{} slouží skript `start.sh` (na unixových počítačích) nebo `start.ps1` na počítačích s\ operačním systémem Windows.
+
+Tento skript může být spuštěn bez dodatečných parametrů. V\ takovém případě se předpokládá, že všechna potřebná data jsou umístěna v\ adresáři, kde je tento skript spuštěn. Skript také stáhne poslední verzi image systému a spustí jej s\ náhodně zvoleným jménem kontejneru. V\ tomto případě jsou navíc pouze aktualizována běžná data, tj.\ nejsou vypočtené klastry nehodových míst.
+
+Volitelně je možné skript spustit s\ následujícími parametry:
+
+```
+start.sh [-h] [-i <image>] [-n <container name>] [-d <data folder>] [-m] [-c] [-k]
+```
+
+kde 
+
+- `-h` vypíše nápovědu
+- `-i <image>` umožňuje volitelně zadat jiný název použitého dockerového image
+- `-n <container name>` umožňuje volitelně zadat název spuštěného kontejneru
+- `-d <data folder>` umožňuje zadat jinou absolutní cestu ke složce s\ daty; implicitně se předpokládá, že data jsou uložena v\ aktuálním adresáři
+- `-m` při použití této volby systém uloží do adresáře s\ daty soubor s\ touto dokumentací (pokud neexistuje)
+- `-c` při použití této volby systém uloží do adresáře s\ daty adresář `config` s\ počáteční konfigurací systému (pokud neexistuje; nikdy tedy nepřepíše uživatelskou konfiguraci)
+- `-k` při použití této volby systém aktualizuje klastry dopravních nehod
+
+Pokud není zadán žádný z\ parametrů `-m`, `-c`, ani `-k`, pak systém aktualizuje běžná data o nehodách.
+
+Typicky tedy skript aktualizuje pouze běžná data potřebná pro vizualizaci vlastních nehod, ale ne klastry těchto nehod. Důvod je ten, že data o\ vlastních nehodách je vhodné mít ve vizualizačním softwaru k\ dispozici jen s\ minimálním zpožděním, zatímco klastry nehodových míst má smysl aktualizovat maximálně jednou ročně. Pokud se tedy mají aktualizovat i\ tato data, je třeba skript spustit s\ parametrem\ `-k`.
+
+
 ## Přenos výsledků do vizualizačního softwaru
 
+Systém\ \sw{} připravuje data pro vizualizační software. Připravená data jsou uložena v\ adresáři `data` ve složce `output`. Přenos dat do vizualizačního softwaru spočívá v\ překopírování podsložek `districts`, `accidents` a `clusters` do příslušných adresářů ve vizualizačním softwaru. (Adresář `clusters` je vytvořen/aktualizován pouze v\ případě, že software identifikuje i\ klastry nehodových míst.)
 
+Zbývající složka `gis` (vytvořená/aktualizovaná pouze v\ případě, že software identifikuje i\ klastry nehodových míst) slouží k\ volitelná vizualizaci klastrů nehodových míst v\ GISu, např.\ v\ QGISu.
 
 
 
