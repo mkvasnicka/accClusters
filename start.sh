@@ -23,7 +23,7 @@ CONTAINERARGS=""
 DOCKERPARAMS=""
 
 # evaluate options
-while getopts ":hi:n:d:p:" OPTION; do
+while getopts ":hi:n:d:p:mck" OPTION; do
 	case $OPTION in
 	    h)
 	        usage
@@ -40,8 +40,12 @@ while getopts ":hi:n:d:p:" OPTION; do
 		p)
 		    DOCKERPARAMS="$OPTARG"
 		    ;;
+		m | c | k)
+		    CONTAINERARGS="$CONTAINERARGS -$OPTION"
+			;;
 		\?)
-		    CONTAINERARGS="$CONTAINERARGS -$OPTARG"
+			echo "Chyba: Neznámý parameter '$OPTARG'"
+			usage
 	esac
 done
 shift "$(($OPTIND -1))"
