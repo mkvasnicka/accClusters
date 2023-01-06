@@ -954,7 +954,7 @@ compact_time_window <- function(profile) {
     empty_window <- tibble::tibble(from_date = empty_date, to_date = empty_date)
     auto_window <- manual_window <- empty_window
     if (profile$TIME_WINDOW_AUTO)
-        auto_window <- auto_time_windows(profile$TIME_WINDOW_LENGHT,
+        auto_window <- auto_time_windows(profile$TIME_WINDOW_LENGTH,
                                          profile$TIME_WINDOW_NUMBER)
     if ("TIME_WINDOW" %in% names(profile))
         manual_window <- profile$TIME_WINDOW
@@ -967,7 +967,7 @@ compact_time_window <- function(profile) {
     }
     profile$TIME_WINDOW <- list(time_window)
     profile |>
-        dplyr::select(-c(TIME_WINDOW_AUTO, TIME_WINDOW_LENGHT,
+        dplyr::select(-c(TIME_WINDOW_AUTO, TIME_WINDOW_LENGTH,
                          TIME_WINDOW_NUMBER))
 }
 

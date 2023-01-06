@@ -61,7 +61,7 @@ CLUSTER_STEP_LIMIT <- 10
 TIME_WINDOW_AUTO <- TRUE
 
 # if so, how long should each window be (in years)
-TIME_WINDOW_LENGHT <- c(1, 3)
+TIME_WINDOW_LENGTH <- c(1, 3)
 
 # and how many such windows should be created
 TIME_WINDOW_NUMBER <- c(2, 2)

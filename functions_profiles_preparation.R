@@ -211,7 +211,7 @@ config_necessary_slots <- function() {
         CLUSTER_STEP_LIMIT = check_slot_positive_integer,
         # time windows
         TIME_WINDOW_AUTO = check_slot_true_false,
-        TIME_WINDOW_LENGHT = check_slot_positive_integer_vector,
+        TIME_WINDOW_LENGTH = check_slot_positive_integer_vector,
         TIME_WINDOW_NUMBER = check_slot_positive_integer_vector
     )
 }
@@ -264,7 +264,7 @@ profile_supported_slots <- function() {
                                "CLUSTER_SEVERITY_STEP",
                                "CLUSTER_STEP_LIMIT",
                                "TIME_WINDOW_AUTO",
-                               "TIME_WINDOW_LENGHT",
+                               "TIME_WINDOW_LENGTH",
                                "TIME_WINDOW_NUMBER")],
         config_necessary_slots()[c("TIME_WINDOW")]
     )
@@ -393,7 +393,7 @@ read_all_profiles <- function(folder) {
 # profiles_to_tibble() converts list of profiles into a tibble
 profiles_to_tibble <- function(p) {
     list_vars <- c("DISTRICTS", "SUPPORTED_ROAD_CLASSES",
-                   "TIME_WINDOW_LENGHT", "TIME_WINDOW_NUMBER")
+                   "TIME_WINDOW_LENGTH", "TIME_WINDOW_NUMBER")
     p <- p |>
         purrr::map(as.list) |>
         purrr::transpose()
@@ -407,12 +407,12 @@ profiles_to_tibble <- function(p) {
 
 # check_auto_time_windows(profiles)
 check_auto_time_windows <- function(profiles) {
-    lens <- map_int(profiles$TIME_WINDOW_LENGHT, length)
+    lens <- map_int(profiles$TIME_WINDOW_LENGTH, length)
     nums <- map_int(profiles$TIME_WINDOW_NUMBER, length)
     ids <- !(nums == lens | nums == 1)
     if (any(ids)) {
         stop("config prep: TIME_WINDOW_NUMBER must either be a scalar or must ",
-             "have the same length as TIME_WINDOW_LENGHT: it's violated in ",
+             "have the same length as TIME_WINDOW_LENGTH: it's violated in ",
              "profiles with names ",
              str_c(profiles$PROFILE_NAME[ids], collapse = ", "))
     }
