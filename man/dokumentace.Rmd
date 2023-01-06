@@ -64,10 +64,10 @@ library(knitr)
 
 # Úvod
 
-Tento text popisuje instalaci a použití softwaru \sw.
-Software \sw{} je součástí softwaru pro vizualizaci dopravních nehod vytvořeného s\ podporou grantu TAČR CK01000049 *Tvorba pokročilých nástrojů pro analýzu dopravních nehod pro Policii ČR*. V\ rámci tohoto projektu byly vytvořeny dva nástroje:
+Tento text popisuje instalaci a použití systému \sw.
+Systému \sw{} je součástí softwaru pro vizualizaci dopravních nehod vytvořeného s\ podporou grantu TAČR CK01000049 *Tvorba pokročilých nástrojů pro analýzu dopravních nehod pro Policii ČR*. V\ rámci tohoto projektu byly vytvořeny dva nástroje:
 
-- tento offline neinteraktivní software \sw, který ze vstupních dat spočítá potřebné metriky, identifikuje místa častých nebo nebezpečných nehod a připraví podklady potřebné pro jejich interaktivní vizualizaci a
+- offline neinteraktivní software \sw, který ze vstupních dat spočítá potřebné metriky, identifikuje místa častých nebo nebezpečných nehod a připraví podklady potřebné pro jejich interaktivní vizualizaci, a
 - interaktivní webová aplikace, která data vizualizuje.
 
 Rozdělení softwaru do dvou částí je nutné kvůli výpočetní náročnosti přípravy dat, kterou není možné provádět za běhu. Nejdříve se tedy pomocí přípravné aplikace všechna data předpočítají, a\ pak se vizualizují ve webové aplikaci.
@@ -84,12 +84,13 @@ Příprava dat pro jejich vizualizaci a zejména výpočty klastrů nebezpečný
 
 - procesor minimálně třídy i5 (vyšší je lepší), minimálně 4\ jádra (větší počet jader je výhodou),
 - minimálně 32\ GB operační paměti dedikované pro tento software (více jader vyžaduje více operační paměti),
-- operační systém Linux nebo Windows a
-- docker.
+- operační systém Linux nebo Windows,
+- docker a
+- PowerShell (pouze na Windows).
 
 Drtivá většina výpočtů běží paralelně na více jádrech. Čím větší počet jader má systém dedikovaný, tím rychleji příprava dat proběhne. Odhadovaný čas výpočtu klastrů nehod je při prvním spuštění softwaru s\ použitím procesoru třídy\ i5 se čtyřmi jádry a 32\ GB operační paměti kolem tří dnů v\ případě práce s\ nespojitými hustotami pravděpodobnosti. V\ případě práce se spojitými hustotami pravděpodobnosti lze očekávat několikanásobně delší přípravu dat. Použití modernější architektury pomůže; zvýšení počtu jader spojené se zvětšením dostupné paměti tento čas proporcionálně zkrátí.
 
-Výpočet běžící na každém jádru vyžaduje typicky cca 4\ GB operační paměti (v\ některých krocích však 10\ GB). Větší počet jader se tedy může použít pouze v\ případě, že je k\ dispozici dostatečné množství dedikované operační paměti.
+Výpočet vyžaduje typicky cca 4,5\ GB operační paměti na jedno jádro (v\ některých krocích však 10\ GB). Větší počet jader se tedy může použít pouze v\ případě, že je k\ dispozici dostatečné množství dedikované operační paměti.
 
 Jako "dedikovaná operační paměť" se chápe paměť, kterou má software k\ dispozici, tj.\ která není okupovaná operačním systémem ani jinými procesy. V\ případě virtualizace se jedná o\ operační paměť, která je vyhrazena danému kontejneru.
 
@@ -104,29 +105,31 @@ Software \sw{} je možné spustit ve dvou režimech: buď jako dockerový kontej
 
 ## Instalace softwaru
 
-Použití dockerového kontejneru vyžaduje instalaci systému docker a dedikování dostatečných zdrojů pro dockerové kontejnery. Vlastní systém se pak stáhne automaticky při prvním použití při spuštění spouštěcího skriptu, viz následující oddíl.
+Použití dockerového kontejneru vyžaduje instalaci systému docker a dedikování dostatečných zdrojů pro dockerové kontejnery. Vlastní systém se pak stáhne automaticky při prvním použití z\ Docker Hubu při spuštění spouštěcího skriptu, viz následující oddíl.
 
-Instalace aplikace v\ jazyce\ R vyžaduje několik kroků:
+Naproti tomu instalace aplikace v\ jazyce\ R vyžaduje několik kroků:
 
-1. instalaci vlastního systému\ R ve verzi\ 4.2.2
-1. instalaci systému jeho stažením z\ GitHubu (https://github.com/mkvasnicka/accClusters)
-1. instalaci potřebných balíků v\ příslušných verzích
-    - nainstalujte R\ balík `renv` a v\ R\ spusťte `renv::restore()`
-    - v\ závislosti na operačním systému může vyžadovat instalaci mnoha systémových knihoven; na operačním systému Ubuntu 22.04 je možné tyto knihovny nainstalovat naráz pomocí skriptu obsaženého v\ souborou `Dockerfile`
+1. instalaci vlastního systému\ R ve verzi\ 4.2.2,
+1. instalaci systému jeho stažením z\ GitHubu, (https://github.com/mkvasnicka/accClusters)
+1. instalaci potřebných balíků v\ příslušných verzích a
+1. instalaci softwaru `osmium`.
+
+Nejjednodušší způsob instalace potřebných balíků v\ R je je pomocí `renv`. Nainstalujte R\ balík `renv` a v\ R\ spusťte `renv::restore()`. Instalace balíků může v\ závislosti na operačním systému vyžadovat instalaci mnoha systémových knihoven. Na operačním systému Ubuntu 22.04 je možné tyto knihovny nainstalovat naráz pomocí skriptu obsaženého v\ souboru `Dockerfile`
 
 Doporučený operační systém pro práci s\ R\ verzí systému\ \sw{} je Ubuntu\ 22.04; systém by však měl pracovat i\ v\ moderních Windows.
 
 
-## Spuštění softwaru
+## Spuštění softwaru {#sec:run-system}
 
 Ke spuštění dockerového kontejneru se systémem \sw{} slouží skript `start.sh` (na unixových počítačích) nebo `start.ps1` na počítačích s\ operačním systémem Windows.
 
-Tento skript může být spuštěn bez dodatečných parametrů. V\ takovém případě se předpokládá, že všechna potřebná data jsou umístěna v\ adresáři, kde je tento skript spuštěn. Skript také stáhne poslední verzi image systému a spustí jej s\ náhodně zvoleným jménem kontejneru. V\ tomto případě jsou navíc pouze aktualizována běžná data, tj.\ nejsou vypočtené klastry nehodových míst.
+Tento skript může být spuštěn bez dodatečných parametrů. V\ takovém případě se předpokládá, že všechna potřebná data (viz kap.\ \ref{kap:input-data}) jsou umístěna v\ adresáři, kde je tento skript spuštěn. Skript také stáhne poslední verzi image systému a spustí jej s\ náhodně zvoleným jménem kontejneru. V\ tomto případě jsou navíc pouze aktualizována běžná data, tj.\ nejsou vypočtené klastry nehodových míst.
 
 Volitelně je možné skript spustit s\ následujícími parametry:
 
 ```
-start.sh [-h] [-i <image>] [-n <container name>] [-d <data folder>] [-m] [-c] [-k]
+start.sh [-h] [-i <image>] [-n <container name>] [-p <docker run parameters>]
+    [-d <data folder>] [-m] [-c] [-k]
 ```
 
 kde 
@@ -135,17 +138,17 @@ kde
 - `-i <image>` umožňuje volitelně zadat jiný název použitého dockerového image
 - `-n <container name>` umožňuje volitelně zadat název spuštěného kontejneru
 - `-p <docker run parameters>` umožnuje zadat volitelné parametry předané dockeru při spuštění kontejneru
-- `-d <data folder>` umožňuje zadat jinou absolutní cestu ke složce s\ daty; implicitně se předpokládá, že data jsou uložena v\ aktuálním adresáři
+- `-d <data folder>` umožňuje zadat absolutní cestu ke složce s\ daty; implicitně se předpokládá, že data jsou uložena v\ aktuálním adresáři; adresář, ve kterém jsou data uložena, je dále nazýván `DIRORIGIN`
 - `-m` při použití této volby systém uloží do adresáře s\ daty soubor s\ touto dokumentací (pokud neexistuje)
 - `-c` při použití této volby systém uloží do adresáře s\ daty adresář `config` s\ počáteční konfigurací systému (pokud neexistuje; nikdy tedy nepřepíše uživatelskou konfiguraci)
 - `-k` při použití této volby systém aktualizuje klastry dopravních nehod
 
-Pokud není zadán žádný z\ parametrů `-m`, `-c`, ani `-k`, pak systém aktualizuje běžná data o nehodách, ale ne klastry těchto nehod. Důvod je ten, že data o\ vlastních nehodách je vhodné mít ve vizualizačním softwaru k\ dispozici jen s\ minimálním zpožděním, takže tato data se budou v\ průběhu roku aktualizovat mnohokrát, zatímco klastry nehodových míst má smysl aktualizovat maximálně jednou ročně. Zároveň je aktualizace běžných dat velmi rychlá (v\ řádech desítek minut, pokud se současně neaktualizují i\ data o\ silniční síti), zatímcé hledání klastrů dopravních nehod je výpočetně vysoce náročné. Pokud se tedy mají aktualizovat i\ tato data, je třeba skript spustit s\ parametrem\ `-k`.
+Pokud není zadán žádný z\ parametrů `-m`, `-c`, ani `-k`, pak systém aktualizuje běžná data o nehodách, ale ne klastry těchto nehod. Důvod je ten, že data o\ vlastních nehodách je vhodné mít ve vizualizačním softwaru k\ dispozici jen s\ minimálním zpožděním, takže tato data se budou v\ průběhu roku aktualizovat mnohokrát, zatímco klastry nehodových míst má smysl aktualizovat maximálně jednou ročně. Zároveň je aktualizace běžných dat velmi rychlá (v\ řádech desítek minut, pokud se současně neaktualizují i\ data o\ silniční síti), zatímco hledání klastrů dopravních nehod je výpočetně vysoce náročné. Pokud se tedy mají aktualizovat i\ tato data, je třeba skript spustit s\ parametrem\ `-k`.
 
-Volitelné parametry předané dockeru při spuštění kontejneru je možné zadat pomocí parametru `-p`. Omezit počet použitých jader procesoru a použitou paměť je tak možné např.\ takto (data se zároveň čtou i zapisují do zvoleného adresáře):
+Volitelné parametry předané dockeru při spuštění kontejneru je možné zadat pomocí parametru `-p`. Omezit počet použitých jader procesoru a použitou paměť je tak možné např.\ takto:
 
 ```
-./start.sh -p "--cpus=1 --memory=16gb" -d /home/qasar/acc_clusters/data/
+./start.sh -p "--cpus=1 --memory=16gb"
 ```
 
 
@@ -153,13 +156,13 @@ Volitelné parametry předané dockeru při spuštění kontejneru je možné za
 
 Systém\ \sw{} připravuje data pro vizualizační software. Připravená data jsou uložena v\ adresáři `data` ve složce `output`. Přenos dat do vizualizačního softwaru spočívá v\ překopírování podsložek `districts`, `accidents` a `clusters` do příslušných adresářů ve vizualizačním softwaru. (Adresář `clusters` je vytvořen/aktualizován pouze v\ případě, že software identifikuje i\ klastry nehodových míst.)
 
-Zbývající složka `gis` (vytvořená/aktualizovaná pouze v\ případě, že software identifikuje i\ klastry nehodových míst) slouží k\ volitelná vizualizaci klastrů nehodových míst v\ GISu, např.\ v\ QGISu.
+Zbývající složka `gis` (vytvořená/aktualizovaná pouze v\ případě, že software identifikuje i\ klastry nehodových míst) slouží k\ volitelná vizualizaci klastrů nehodových míst ve zvoleném geografickém informačním systému, např.\ v\ QGISu.
 
 
 
 # Jak systém funguje
 
-V\ tomto oddílu popíšeme, jak software \sw{} funguje jako celek. V\ dalších oddílech pak podrobněji vysvětlíme strukturu použitých vstupů, konfiguraci softwaru, interpretaci nehodových klastrů a použití výstupu pro GIS.
+V\ tomto oddílu popíšeme, jak systém \sw{} funguje jako celek. V\ dalších oddílech pak podrobněji vysvětlíme strukturu použitých vstupů, konfiguraci softwaru, interpretaci nehodových klastrů a použití výstupu pro GIS.
 
 
 ## Obecný přehled
@@ -171,30 +174,32 @@ Po svém spuštění software \sw{} postupně provádí následující kroky:
 1. vytvoří tabulku okresů, pro které připravuje data, a\ to jak pro další výpočty, tak (v\ jiném formátu) pro vizualizační software,
 1. nachystá mapové podklady o\ silniční síti,
 1. připraví podklady o\ jednotlivých nehodách, opět ve verzi pro další výpočty a pro vizualizační software,
-1. spočítá hustoty pravděpodobnosti nehod nebo škod způsobených nehodami na celé silniční síti,
+1. spočítá hustoty pravděpodobnosti nehod nebo škod způsobených nehodami na silniční síti,
 1. najde klastry úseků silniční sítě s\ výraznou pravděpodobností nehod nebo způsobených škod a
 1. jako bonus převede klastry nebezpečných úseků do formátu pro GIS.
 
 Další krok se vždy začne provádět až po skončení předchozího kroku. Některé kroky (zejména kroky\ 1--3) jsou rychlé a provádí se na jednom jádru. Ostatní kroky se musejí provést zvlášť pro každý okres nebo kombinaci okresu, časového období a různých alternativních nastavení systému. Tyto kroky jsou paralelizované a běží na více jádrech systému\ -- vždy jeden okres nebo kombinace okresu, období a parametrizace výpočtu na jednom jádře. Další krok se spustí vždy až ve chvíli, kdy doběhne výpočet tohoto kroku na všech jádrech.
 
-Návaznost mezi jednotlivými kroky funguje podobně jako závislosti v\ programu `make`: Nová binární reprezentace konfigurace se vytvoří pouze v\ případě, že neexistuje, nebo je starší než zdrojové konfigurační soubory. Nová tabulka okresů se vytvoří pouze v\ případě, že neexistuje nebo je starší než binární konfigurace nebo zdrojový *shapefile* okresů, na kterém závisí. Mapové podklady se přepočítají pouze v\ případě, že neexistují, nebo jsou starší než binární konfigurace, tabulka okresů nebo zdrojový *shapefile* silniční sítě atd.
+Návaznost mezi jednotlivými kroky funguje podobně jako závislosti v\ programu `make`: Nová binární reprezentace konfigurace se vytvoří pouze v\ případě, že neexistuje, nebo je starší než zdrojové a konfigurační soubory. Nová tabulka okresů se vytvoří pouze v\ případě, že neexistuje nebo je starší než binární konfigurace nebo zdrojový *shapefile* okresů, na kterém závisí. Mapové podklady se přepočítají pouze v\ případě, že neexistují, nebo jsou starší než binární konfigurace, tabulka okresů nebo zdrojový *shapefile* silniční sítě atd.
 
 Tento postup zajišťuje, že se v\ případě aktualizace vstupních dat (viz oddíl\ \ref{kap:input-data}) přepočítají jen ty hodnoty, které je třeba aktualizovat. (To samozřejmě vyžaduje, aby se zachovaly všechny soubory s\ průběžnými výpočty z\ minulého spuštění softwaru.) Současně také platí, že pokud výpočet z\ jakéhokoli důvodu selže nebo je přerušen, začne při příštím spuštění pracovat tam, kde v\ předchozím běhu skončil. 
 
-Při prvním spuštění tedy proběhnou všechny kroky. Po následné aktualizaci dat o\ dopravních nehodách však proběhnou pouze kroky\ 1 a 5--8, takže příprava dat bude rychlejší než při prvním spuštění. Pokud uživatel aktualizuje data o\ tvaru okresů nebo data o\ silniční síti, bude aktualizován jak daný krok, tak všechny následující. Pokud uživatel změní konfigurační soubor nebo profily, budou aktualizována všechna data.
+Při prvním spuštění tedy proběhnou všechny kroky. Po následné aktualizaci dat o\ dopravních nehodách však proběhnou pouze kroky\ 1 a 5--8, takže příprava dat bude rychlejší než při prvním spuštění. Pokud uživatel aktualizuje data o\ tvaru okresů nebo data o\ silniční síti, bude aktualizován jak daný krok, tak všechny následující. Pokud uživatel změní konfigurační soubor nebo profily, budou aktualizována všechna data. (Kroky 6--8 ovšem proběhnou pouze v\ případě, že o\ ně uživatel explicitně požádá, viz oddíl\ \ref{sec:run-system}.)
 
 Jistou nevýhodou tohoto procesu je fakt, že všechny finální i\ průběžně vytvářené soubory vždy závisí na binární konfiguraci systému. Pokud se změní, proběhnou všechny výpočty vždy od začátku. Pokud změna konfigurace nezmění validitu některých souborů, je možné jejich přepočítání zabránit tak, že je datum jejich poslední modifikace nastaveno na novější čas, než jaký má soubor nově vytvořené binární konfigurace. Tento postup však výrazně nedoporučujeme.
 
 
 ## Použitá adresářová struktura
 
-Software \sw{} pracuje s\ pevnou adresářovou strukturou, ve které jsou umístěna všechna vstupní data, výstupní data, mezivýpočty, konfigurace a logy. Všechna tato data musí být umístěna v\ příslušných složkách v\ hlavním adresáři (dále označovaném jako `DIRORIGIN`). Tento adresář musí obsahovat následující složky:
+Software \sw{} pracuje s\ pevnou adresářovou strukturou, ve které jsou umístěna všechna vstupní data, výstupní data, mezivýpočty, konfigurace a logy. Všechna tato data musí být umístěna v\ příslušných složkách v\ hlavním adresáři (dále označovaném jako `DIRORIGIN`, viz\ \ref{sec:run-system}). Tento adresář musí obsahovat následující složky:
 
 - `config` ... složka s\ konfigurací softwaru,
 - `rawdata` ... složka se vstupními daty,
 - `tmp` ... složka s\ mezivýpočty,
 - `output` ... složka, kam budou umístěny výstupní soubory určené k\ následné vizualizaci, a
 - `log` ... adresář s\ logy.
+
+Obsah adresářů `config` a `rawdata` zajišťuje uživatel. Naproti tomu adresáře `tmp`, `output` a `log` vytváří systém automaticky.
 
 
 ## Logování
@@ -215,53 +220,50 @@ Pokud je kterýkoli z\ existujících souborů novější než binární konfigu
 
 Tabulka okresů definuje tvar jednotlivých okresů jako mapový polygon. Tato data je třeba aktualizovat pouze v\ případě, že se změní tvary jednotlivých okresů v\ ČR.
 
-Pozor: Před aktualizací *shapefilu* definujících okresy ČR je třeba zkontrolovat, že nový *shapefile* používá stejná jména proměnných v\ atributové tabulce, že mají stejný význam, že obsahuje všechny potřebné okresy (včetně Hlavního města Prahy jako jednoho polygonu) a že má stejnou projekci. Pokud tomu tak není, bude změna mapového podkladu nutně spojena s\ nutností upravit software \sw.¨
+Pozor: Před aktualizací *shapefilu* definujících okresy ČR je třeba zkontrolovat, že nový *shapefile* používá stejná jména proměnných v\ atributové tabulce, že mají stejný význam, že obsahuje všechny potřebné okresy (včetně Hlavního města Prahy jako jednoho polygonu) a že má stejnou projekci. Pokud tomu tak není, bude změna mapového podkladu nutně spojena s\ nutností upravit software \sw.
 
 
 ## Data o\ jednotlivých nehodách
 
 Data o\ dopravních nehodách se připravují ve dvou formách: 1)\ pro vizualizační část softwaru a 2)\ pro další výpočty. V\ obou případech jsou spojena data ze všech tabulek, které PČR do systému exportuje (viz\ oddíl\ \ref{sec:accidents}) a následně jsou rozdělena do jednotlivých souborů podle okresů.
 
-V\ případě dat použitých pro identifikaci nehodových úseků jsou okresy zvětšeny o\ určitou vzdálenost (důvod je vysvětlen níže) a ze souboru jsou vyloučeny všechny nehody, které neleží dostatečně blízko u\ silniční sítě (nastavení viz\ oddíl\ \ref{kap:konfigurace}). Geolokace těchto nehod je zřejmě defektní a tyto nehody by do identifikace problémových úseků pouze zanesly šum.
+V\ případě dat použitých pro identifikaci klastrů nehodových úseků jsou okresy zvětšeny o\ určitou vzdálenost (důvod je vysvětlen níže) a ze souboru jsou vyloučeny všechny nehody, které neleží dostatečně blízko u\ silniční sítě (nastavení viz\ oddíl\ \ref{kap:konfigurace}). Geolokace těchto nehod je zřejmě defektní a tyto nehody by do identifikace problémových úseků pouze zanesly šum. Při vlastní vizualizaci jsou však zobrazeny všechny nehody v\ daném okrese.
 
 
 ## Mapa silniční sítě
 
-Příprava mapysilniční sítě probíhá v\ několika navazujících krocích:
+Příprava mapy silniční sítě probíhá v\ několika navazujících krocích:
 
-1. Z\ celé mapy silniční sítě se vyfiltrují pouze podporované typy cest (vyhodí se lesní cesty apod.) a silnice se ořežou na jednotlivé okresy. Okresy jsou přitom zvětšeny o\ určitou vzdálenost na všechny strany (důvod je vysvětlen níže). K\ filtraci a ořezu silniční sítě se používá software `osmium`.
-1. Silniční síť se zjednoduší tak, aby byla zachovaná její topologie. V\ použitých OpenStreetMaps se totiž často silnice často skládají z\ velmi krátkých úseků, někdy o\ délce pouhých několika centimetrů. Takto krátké úseky jsou pospojovány do delších celků, pokud takto vzniklá silnice příliš nevybočí z\ tvaru skutečné silnice. V\ některých případech jsou spojeny i\ velmi blízké uzly nepodstatné pro topologii sítě (typicky v\ případě, že je jednoduchá křižovatka reprezentovaná více než jedním uzlem).
-1. Silniční síť je rozlámána do krátkých úseků (implicitně o\ délce 5\ metrů); tyto úseky nazýváme *lixely*. Silniční síť byla v\ předchozím kroku zjednodušena právě proto, aby výsledné *lixely* mohly mít stejnou délku a tato délka nebyla extrémně krátká. Všechny následující výpočty probíhají na úrovni *lixelů*. Pro každý *lixel* je stanoven i\ bod v\ jeho středu, který tento *lixel* reprezentuje.
-1. Nakonec je zkonstruována datová struktura, která popisje geometrii sítě, tj.\ určuje, které *lixely* spolu sousedí.
+1. Z\ celé mapy silniční sítě se vyfiltrují pouze podporované typy cest (vypustí se lesní cesty apod.) a silnice se ořežou na jednotlivé okresy. Okresy jsou přitom zvětšeny o\ určitou vzdálenost na všechny strany (důvod je vysvětlen níže). K\ filtraci a ořezu silniční sítě se používá software `osmium`.
+1. Silniční síť se zjednoduší tak, aby se odstranily velmi krátké úseky, ale přitom byla zachovaná topologie sítě. V\ použitých OpenStreetMaps se totiž často silnice často skládají z\ velmi krátkých úseků, někdy o\ délce pouhých několika centimetrů. Takto krátké úseky jsou pospojovány do delších celků, pokud takto vzniklá silnice příliš nevybočí z\ tvaru skutečné silnice. V\ některých případech jsou spojeny i\ velmi blízké uzly nepodstatné pro topologii sítě (typicky v\ případě, že je jednoduchá křižovatka reprezentovaná více než jedním uzlem).
+1. Silniční síť je rozlámána do krátkých úseků (implicitně o\ délce 5\ metrů); tyto úseky nazýváme *lixely*. Silniční síť byla v\ předchozím kroku zjednodušena právě proto, aby výsledné *lixely* mohly mít zhruba stejnou délku a tato délka nebyla extrémně krátká. Všechny následující výpočty probíhají na úrovni *lixelů*. Pro každý *lixel* je stanoven i\ bod v\ jeho středu, který tento *lixel* reprezentuje.
+1. Nakonec je zkonstruována datová struktura, která popisuje geometrii sítě, tj.\ určuje, které *lixely* spolu sousedí.
 
 
 ## Hustoty pravděpodobnosti škod způsobených nehodami {#sec:nkdeIntro}
 
 Nejdůležitější a výpočetně nejnáročnější část hledání nebezpečných úseků spočívá ve výpočtu síťové jádrové hustoty (NKDE) nehod pro každý *lixel* silniční sítě reprezentovaný jeho středem. NKDE se počítají pomocí balíku **spNetwork** [@GelbRJournal; @GelbManual], který představuje nejlepší dostupnou implementaci algoritmů pro jejich výpočet.
 
-Jádrová hustota představuje jádrové vyhlazení bodového procesu na síti a fakticky odhad prostorového bodového procesu, který na síti generuje nehody. Intuice odhadu NKDE je následující: Nad každou nehodou se na silniční síti nakreslí kopeček (*jádro*; používají se jádra obvyklého typu *quartic*); buď mají všechny nehody kopečky stejně velké, nebo závažnější nehody mají větší kopečky než méně závažné nehody. Na křižovatkách se "výška kopečků" rozděluje buď spojitě, nebo nespojitě. Pak se v\ každém bodě sítě sečte výška všech kopečků, jejichž střed (místo nehody) je od daného bodu maximálně vzdálena o\ vzdálenost\ $b$, což je vyhlazovací konstanta, tzv. *bandwidth*. Čím je vzdálenost $b$ delší, tím více bude odhad NKDE vylazenější. V\ okolí bodu, kde je součet výšky kopečků vysoký, existuje více nehod (nebo jsou závažnější) než v\ okolí bodu, kde je tento součet nižší. Nebezpečné úseky silniční sítě jsou tedy charakterizovány vysokou jádrovou hustotou. (Technický popis odhadu NKDE viz např.\ @GelbRJournal.)
+Jádrová hustota představuje jádrové vyhlazení bodového procesu na síti a fakticky odhad prostorového bodového procesu, který na síti generuje nehody. Intuice odhadu NKDE je následující: Nad každou nehodou se na silniční síti nakreslí kopeček (*jádro*; používají se jádra typu *quartic*); buď mají všechny nehody kopečky stejně velké, nebo závažnější nehody mají vyšší kopečky než méně závažné nehody. Na křižovatkách se "výška kopečků" rozděluje buď spojitě, nebo nespojitě. Pak se v\ každém bodě sítě sečte výška všech kopečků, jejichž střed (místo nehody) je od daného bodu maximálně vzdálena o\ vzdálenost\ $b$, což je vyhlazovací konstanta, tzv. *bandwidth*. Čím je vzdálenost $b$ delší, tím více bude odhad NKDE vyhlazenější. V\ okolí bodu, kde je součet výšky kopečků vysoký, existuje více nehod (nebo jsou závažnější) než v\ okolí bodu, kde je tento součet nižší. Nebezpečné úseky silniční sítě jsou tedy charakterizovány vysokou jádrovou hustotou. (Technický popis odhadu NKDE viz např.\ @GelbRJournal.)
 
-Software \sw{} umí spočítat hustoty pravděpodobnosti mnoha různých typů, viz oddíl\ \ref{sec:pardensities}. V\ nejjednodušším případě spočítá jádrovou hustotu, při které mají všechny nehody stejnou váhu. Ve složitějším mohou mít závažnější nehody vyšší váhu než méně závažné nehody. Systém také umožňuje stanovit délku vyhlazovací konstanty (*bandwidth*)\ $b$ nebo ji nechat adaptivně upravovat tak, že bude kratší v\ regionech s\ vyšší hustotou nehod a delší v\ regionech s\ nižší hustotou nehod, viz\ @GelbManual. Umí také rozdělit "výšku kopečků" na křižovatkách nespojitě nebo spojitě, viz tamtéž.
+Systém \sw{} umí spočítat hustoty pravděpodobnosti mnoha různých typů, viz oddíl\ \ref{sec:pardensities}. V\ nejjednodušším případě spočítá jádrovou hustotu, při které mají všechny nehody stejnou váhu. Ve složitějším mohou mít závažnější nehody vyšší váhu než méně závažné nehody. Systém také umožňuje stanovit délku vyhlazovací konstanty (*bandwidth*)\ $b$ nebo ji nechat adaptivně upravovat tak, že bude kratší v\ regionech s\ vyšší hustotou nehod a delší v\ regionech s\ nižší hustotou nehod, viz\ @GelbManual. Umí také rozdělit "výšku kopečků" na křižovatkách nespojitě nebo spojitě, viz tamtéž.
 
 Odhad NKDE je zkreslen na okrajích sítě ořezané do určitého polygonu, protože se všechny silnice překračující hranice tohoto polygonu (mylně) jeví jako slepé a protože nehody za krajem ořezového polygonu nejsou vzaty v\ úvahu. Z\ tohoto důvodu je při výpočtu NKDE okres zvětšen na všechny strany o\ vzdálenost, která musí být několikrát větší než vyhlazovací konstanta\ $b$. Z\ polygonů okresů jsou také z\ výpočetních důvodů odstraněny "díry" (např.\ v\ okrese Brno venkov a Litoměřice). Tak jsou jsou využity všechny silnice a nehody nejen v\ daném okrese, i\ za jeho hranicí. Hodnoty NKDE uvnitř okresu jsou tedy spočítané správně. Po výpočtu klastrů častých nehod (viz následující oddíl) se pak klastry mimo hranice daného okresu "zahodí".
 
 
 ## Klastry úseků s častými nebo nebezpečnými nehodami
 
-V\ předchozím kroku se pro každý *lixel* silniční sítě spočítala hustota pravděpodobnosti nehody. Tato data jsou následně použita k\ nalezení obzvláště nebezpečných úseků.
-
-Data o\ síťových jádrových hustotách pravděpodobnosti pro jednotlivé *lixely* jsou použita pro identifikaci obzvláště nebezpečných úseků. V\ literatuře neexistuje jasná definice problémového úseku. My proto definujeme obzvláště nebezpečné úseky jako úseky silniční sítě, kde je hustota pravděpodobnosti výskytu nehody nebo škod způsobených nehodami obzvlášť vysoká. Řekněme, že nás zajímá $h$ promile nejnebezpečnějších úseků silniční sítě, které chceme dodatečně rozšířit o\ $a$ dodatečně přidaných lixelů. Hledání klastrů nebezpečných míst pak probíhá v\ následujících krocích:
+V\ předchozím kroku se pro každý *lixel* silniční sítě spočítala hustota pravděpodobnosti nehody. Tato data jsou následně použita k\ nalezení obzvláště nebezpečných úseků. V\ literatuře neexistuje jasná definice problémového úseku. My proto definujeme obzvláště nebezpečné úseky jako úseky silniční sítě, kde je hustota pravděpodobnosti výskytu nehody nebo škod způsobených nehodami obzvlášť vysoká. Řekněme, že nás zajímá $h$ promile nejnebezpečnějších úseků silniční sítě, které chceme dodatečně rozšířit o\ $a$ dodatečně přidaných lixelů. Hledání klastrů nebezpečných míst pak probíhá v\ následujících krocích:
 
 1. Vybere se $h$ promile *lixelů* s\ nejvyšší hustotou pravděpodobnosti.
 1. Idenitifikují se *klastry* takových *lixelů*, tj.\ skupiny takových *lixelů*, které tvoří souvislý graf. Klastr tedy tvoří taková podmnožina *lixelů* vybraných v\ předchozím kroku, že je možné z\ každého *lixelu* v\ daném klastru přejet do jiného *lixelu* v\ tomto klastru čistě přes úseky silniční sítě, které leží v\ tomto klastru.
-1. Ke každému klastru se rekurzivně $a\times$ přidají sousední *lixely*, které neleží v\ daném klastru. To znamená, že se pro každý *lixel* v\ klastru najdou jeho sousední *lixely*. Pokud nepatří do klastru, přidají se do něj. Tento postup se opakuje $a$\ krát.
-1. Ke klastru se přiřadí ty nehody, které leží na úsecích silnic, které tvoří daný klastr. Pro každý klastr se pak spočítá celková výše škody spočítaná jako součet škod tvořených těmito nehodami.
+1. Ke každému klastru se rekurzivně $a$\ krát přidají sousední *lixely*, které neleží v\ daném klastru. To znamená, že se pro každý *lixel* v\ klastru najdou jeho sousední *lixely*. Pokud nepatří do klastru, přidají se do něj. Tento postup se opakuje $a$\ krát.
 1. Pokud některé klastry po svém rozšíření v\ předchozím kroku sdílejí některý *lixel* nebo se dotýkají, jsou spojeny.
+1. Ke klastru se přiřadí ty nehody, které leží na úsecích silnic, které tvoří daný klastr. Pro každý klastr se pak spočítá celková výše škody spočítaná jako součet škod tvořených těmito nehodami.
 1. Pro rychlejší vykreslování jsou klastry zjednodušeny tak, že souvislé *lixely* jsou spojeny do jednoho `LINESTRING` a tyto `LINESRTRING` jsou spojeny do `MULTILINESTRING`.
 
-Rozšíření klastrů v\ kroku\ 3 klastry zvětšuje. Pokud je např.\ klastr tvořen čistě lineárním úsekem silniční sítě (např.\ částí jednoho směru dálnice daleko od nájezdů a exitů), znamená zvětšení o\ $4$ *lixely* to že se vybraný segment dálnice prodlouží v\ obou směrech cca o\ 20\ metrů (4\ *lixely* pro cca\ 5\ metrech délky). Pokud je klastr tvořen např.\ několika silnicemi, které se potkávají na křižovatce, je stejným způsobem prodloužena každá ze silnic, které tvoří klastr.
-
-Toto rozšiřování klastrů nehod je důležité proto, že klastr je generován nejen nehodami, kterou jsou ke klastru přiřazeny v\ kroku\ X, ale také nehodami, které leží za "okrajem" klastru. Také tyto nehody totiž do jisté míry přispívají k\ hodnotě NKDE v\ *lixelech*, které klastr tvoří. V\ extrémním případě by se bez rozšíření klastru mohlo stát, že budou existovat krátké klastry nehodových úseků, kterým nebude přiřazena žádná nehoda, a\ nehody, které tento klastr vytvořily budou ležet plně mimo jeho okraje.
+Rozšíření klastrů v\ kroku\ 3 klastry zvětšuje. Pokud je např.\ klastr tvořen čistě lineárním úsekem silniční sítě (např.\ částí jednoho směru dálnice daleko od nájezdů a exitů), znamená zvětšení o\ $4$ *lixely* to že se vybraný segment dálnice prodlouží v\ obou směrech cca o\ 20\ metrů (4\ *lixely* po cca\ 5\ metrech délky). Pokud je klastr tvořen např.\ několika silnicemi, které se potkávají na křižovatce, je stejným způsobem prodloužena každá ze silnic, které tvoří klastr.
+Toto rozšiřování klastrů nehod je důležité proto, že klastr je generován nejen nehodami, kterou jsou ke klastru přiřazeny v\ kroku\ 2, ale také nehodami, které leží za "okrajem" klastru. Také tyto nehody totiž do jisté míry přispívají k\ hodnotě NKDE v\ *lixelech*, které klastr tvoří. V\ extrémním případě by se bez rozšíření klastru mohlo stát, že budou existovat krátké klastry nehodových úseků, kterým nebude přiřazena žádná nehoda, a\ nehody, které tento klastr vytvořily budou ležet plně mimo jeho okraje.
 
 Neexistuje jedno jasné kritérium, jak stanovit "správné" hodnoty parametrů $h$ a $a$. Promile nejproblematičtějších úseků silniční sítě, které může chtít analytik vidět, totiž závisí na mnoha faktorech, zejména na objemu zdrojů, které má k\ dispozici na řešení problémů, např.\ na přebudování problémových komunikací nebo umístění policejních hlídek. Software \sw{} proto identifikuje nehodové klastry pro mnoho různých kombinací hodnot\ $h$ a $a$. Uživatel si pak ve webovém vizualizačním nástroji může podle stvých potřeb nastavit, kolik promile nejhorších úseků se mu zobrazí a\ o\ kolik *lixelů* se výsledné klastry zvětší. Více o\ interpretaci klastrů úseků častých nehod viz\ oddíl\ \ref{kap:interpret}.
 
@@ -327,7 +329,7 @@ Zdrojem dat o\ nehodách je PČR. Předpokládá se, že data jsou exportována 
 
 kde `####` představuje daný rok (např.\ 2021).
 
-Formátem CSV se pro naše účely rozumí textový soubor, ve kterém každému záznamu odpovídá jeden řádek. První řádek představuje názvy jednotlivých sloupců psaná malými písmeny. Sloupce jsou odděleny čárkami. Desetinná místa v\ číslech jsou oddělena čárkou. Záznamy, které obsahují čáku, jsou uzavřena do uvozovek.
+Formátem CSV se pro naše účely rozumí textový soubor, ve kterém každému záznamu odpovídá jeden řádek. První řádek představuje názvy jednotlivých sloupců psaná malými písmeny. Sloupce jsou odděleny čárkami. Desetinná místa v\ číslech jsou oddělena čárkou. Záznamy, které obsahují čárku, jsou uzavřena do uvozovek.
 
 Jednotlivé soubory musejí obsahovat následující sloupce:
 
@@ -354,7 +356,7 @@ Potom vymažte obsah adresáře `DIRORIGIN/output` a znovu spusťe software \sw{
 
 # Konfigurace systému {#kap:konfigurace}
 
-Chování softwaru \sw, zejména způsob hledání  míst s\ vysokou nehodovostí, je možné relativně flexibilně nastavit pomocí konfiguračních souborů uložených v\ adresáři `DIRORIGIN/config`.
+Chování systému \sw, zejména způsob hledání klastrů míst s\ vysokou nehodovostí, je možné relativně flexibilně nastavit pomocí konfiguračních souborů uložených v\ adresáři `DIRORIGIN/config`.
 
 Konfigurace systému je rozdělena do dvou vrstev. Základní konfigurace je obsažena v\ souboru `DIRORIGIN/config/config.R`, který musí být v\ konfiguračním adresáři vždy obsažen a musí obsahovat všechny povinné proměnné. Tento soubor definuje všechny informace, jak se mají data zpracovávat.
 Pokud je v\ adresáři `DIRORIGIN/config` uložen pouze tento konfigurační soubor, pak se pro každý okres a zvolený čas najde pouze jeden typ nebezpečných úseků.
@@ -384,20 +386,20 @@ V\ některých případech mohou být povolené hodnoty dále omezeny; některé
 
 ## Základní konfigurace (soubor config.R)
 
-V\ tomto oddíle popíšeme všechny proměnné, které musejí být obsaženy v\ základním konfiguračním skriptu `config.R`. Pro přehlednost je rozdělíme do několika kategorií. (Stejným způsobem jsou tyto proměnné rozděleny i\ v\ souboru `config.R`.)
+V\ tomto oddíle popíšeme všechny proměnné, které musejí být obsaženy v\ základním konfiguračním skriptu `config.R`. Pro přehlednost je rozdělíme do několika kategorií. (Stejným způsobem jsou tyto proměnné rozděleny i\ ve vzorovém souboru `config.R`.)
 
 
 ### Časová okna
 
 Nejdříve je třeba nastavit, pro jaká období se mají spočítat klastry míst s\ častými/nebezpečnými nehodami. To je možné udělat dvěma způsoby: buď období generovat automaticky, nebo je zadat ručně. Oba způsoby je možné kombinovat.
 
-V\ případě automatických období uživatel specifikuje jejich délku v\ letech a jejich počet. Řekněme, že délka okna je tři roky, počet oken je dva a nehodové lokality se počítají 31.\ dubna 2023. V\ takovém případě se nehodové lokality spočítají pro roky 2020--2022 (1.\ okno) a 2017--2018 (2.\ okno). Obecně platí, že první časové okno se stanoví tak, aby mělo danou délku v\ letech a končilo 31.\ prosince posledního ukončeného roku. Druhé okno se stanoví tak, aby mělo danou délku a těsně předcházelo 1.\ oknu atd.
+V\ případě automatických období uživatel specifikuje jejich délku v\ letech a jejich počet. Řekněme, že délka okna je tři roky, počet oken je dva a nehodové lokality se počítají 31.\ dubna 2023. V\ takovém případě se nehodové lokality spočítají pro roky 2020--2022 (1.\ okno) a 2017--2019 (2.\ okno). Obecně platí, že první časové okno se stanoví tak, aby mělo danou délku v\ letech a končilo 31.\ prosince posledního ukončeného roku. Druhé okno se stanoví tak, aby mělo danou délku a těsně předcházelo 1.\ oknu atd.
 
 Pokud chce uživatel použít automatická okna, musí nastavit tři proměnné:
 
 - `TIME_WINDOW_AUTO` ... logická hodnota, při využití automatických oken `TRUE`,
-- `TIME_WINDOW_LENGHT` ... číselný vektor, délka časového okna v\ letech a
-- `TIME_WINDOW_NUMBER` ... číselný vektor, počet časových oken, musí mít délku\ 1 nebo stejnou jako `TIME_WINDOW_LENGHT`.
+- `TIME_WINDOW_LENGTH` ... číselný vektor, délka časového okna v\ letech a
+- `TIME_WINDOW_NUMBER` ... číselný vektor, počet časových oken, musí mít délku\ 1 nebo stejnou jako `TIME_WINDOW_LENGTH`.
 
 Ukažme si několik příkladů:
 
@@ -405,7 +407,7 @@ Pokud chce uživatel nastavit automatická okna způsobem popsaným výše (dél
 
 ```{r, eval=FALSE}
 TIME_WINDOW_AUTO = TRUE
-TIME_WINDOW_LENGHT = 3
+TIME_WINDOW_LENGTH = 3
 TIME_WINDOW_NUMBER = 2
 ```
 
@@ -413,7 +415,7 @@ Pokud chce uživatel spočítat nehodové úseky na datech o\ délce 1\ rok a so
 
 ```{r, eval=FALSE}
 TIME_WINDOW_AUTO = TRUE
-TIME_WINDOW_LENGHT = c(1, 3)
+TIME_WINDOW_LENGTH = c(1, 3)
 TIME_WINDOW_NUMBER = 2
 ```
 
@@ -421,7 +423,7 @@ Pokud by navíc chtěl spočítat dvě časová okna délky 3\ roky a tři časo
 
 ```{r, eval=FALSE}
 TIME_WINDOW_AUTO = TRUE
-TIME_WINDOW_LENGHT = c(1, 3)
+TIME_WINDOW_LENGTH = c(1, 3)
 TIME_WINDOW_NUMBER = c(3, 2)
 ```
 
@@ -452,7 +454,7 @@ Jednotlivé nehody se liší svou závažností. Při hledání klastrů nebezpe
 
 $$\textrm{cost} = d \times D + s \times S + l \times L + m \times M + c,$$
 
-kde $D$\ je počet lidí, kteří při nehodě zahynuli, $S$\ je počet vážně zraněných, $L$\ je počet lehce zraněných a $M$\ je hodnota materiální škody v\ milionech\ Kč. Uživatel může zadat konstanty $d$, $s$, $l$, $m$ a $c$, které $d$, $s$ a $l$ určují, jaká váha se přikládá smrtelnému, těžkému a lehkému zranění respektive a jaká materiálním škodám. 
+kde $D$\ je počet lidí, kteří při nehodě zahynuli, $S$\ je počet vážně zraněných, $L$\ je počet lehce zraněných a $M$\ je hodnota materiální škody v\ milionech\ Kč. Uživatel může zadat konstanty $d$, $s$, $l$, $m$ a $c$, kde $d$, $s$, $l$ a $m$ určují, jaká váha se přikládá smrtelnému, těžkému a lehkému zranění respektive a jaká materiálním škodám. 
 
 Tyto koeficienty je možné nastavit pomocí proměnných 
 
@@ -475,15 +477,15 @@ UNIT_COST_CONST = 0
 
 Hodnota nehod se při výpočtu rizikových oblastí používá pouze v\ případě, kdy je proměnná `NKDE_WEIGHTS` nastavena na hodnotu `"cost"`, viz dále. Je však dobré nastavit tyto parametry vždy. I\ když chceme najít nehodové klastry, které váží všechny nehody stejně, nastavení těchto parametrů pak umožní říct, které klastry jsou spojeny s\ větší škodou.
 
-Jedno možné nastavení je nastavit parametr\ $d$ na hodnotu statistického života v\ milionech\ Kč, $s$ a $l$ na její poměrné zlomky a $m=1$ a $c=0$.
+Otázkou je, na jakou výši tyto parametry nastavit. Jednou možností je nastavit parametr\ $d$ na hodnotu statistického života v\ milionech\ Kč, $s$ a $l$ na její poměrné zlomky a $m=1$ a $c=0$.
 Odhady hodnoty statistického života pro Českou republiku je možné najít např.\ v\ článcích @AlberiniVSL2011 nebo @ScasnyVSL2012. @AlberiniVSL2011 odhadují hodnotu statistického života dospělého ztracenou při dopravní nehodě na 12\ mil.\ Kč.
 
-Výhodou nastavení parametru\ $d$ na hodnotu statistického života je jasná ekonomická interpretace. Případnou nevýhodou může být fakt, že hodnota statistického života je tak vysoká, že se při jejím použití budou brát v\ úvahu fakticky jen nehody, kde došlo ke smrtelnému (a\ případně i\ těžkému) zranění. Přitom je zřejmé, že to, jestli někdo při nehodě zahynul, je z\ velké části náhodné. Problém je samozřejmě tím větší, pro čím kratší období se hledají klastry nehodových lokalit. Zejména v\ případě kratších časových období proto může být rozumné nastavit parametry `UNIT_COST_DEAD`, `UNIT_COST_SERIOUS_INJURY` a `UNIT_COST_LIGHT_INJURY` na nižší hodnoty.
+Výhodou nastavení parametru\ $d$ na hodnotu statistického života je jasná ekonomická interpretace. Případnou nevýhodou může být fakt, že hodnota statistického života je tak vysoká, že se při jejím použití budou brát v\ úvahu primárně jen nehody, kde došlo ke smrtelnému (a\ případně i\ těžkému) zranění. Přitom je zřejmé, že to, jestli někdo při nehodě zahynul, je z\ velké části náhodné. Problém je samozřejmě tím větší, pro čím kratší období se hledají klastry nehodových lokalit. Zejména v\ případě kratších časových období proto může být rozumné nastavit parametry `UNIT_COST_DEAD`, `UNIT_COST_SERIOUS_INJURY` a `UNIT_COST_LIGHT_INJURY` na nižší hodnoty.
 
-Váhy zranění mohou být odvozeny od hodnoty statistického života např.\ podle vah zřanění uvedených v\ @USDeptTransportation2021 v\ tabulce\ 2. Význam jednotlivých kategorií popisuje např.\ https://en.wikipedia.org/wiki/Abbreviated_Injury_Scale. Problém při použití v\ ČR spočívá v\ tom, že PČR nepoužívá standardní klasifikaci zranění. Pro lehká zranění se zdá být rozumné použít kategorii MAIS\ 1 a váhu 0.003. Pro těžká zranění je zřejmě vhodné použít vybranou hodnotu z\ kategorií MAIS\ 2--4, kterým odpovídají po řadě váhy\ 0.047, 0.105 a\ 0.266.
+Váhy zranění mohou být odvozeny od hodnoty statistického života např.\ podle vah zranění uvedených v\ @USDeptTransportation2021 v\ tabulce\ 2. Význam jednotlivých kategorií popisuje např.\ https://en.wikipedia.org/wiki/Abbreviated_Injury_Scale. Problém při použití v\ ČR spočívá v\ tom, že PČR nepoužívá standardní klasifikaci zranění. Pro lehká zranění se zdá být rozumné použít kategorii MAIS\ 1 a váhu 0.003. Pro těžká zranění je zřejmě vhodné použít vybranou hodnotu z\ kategorií MAIS\ 2--4, kterým odpovídají po řadě váhy\ 0.047, 0.105 a\ 0.266.
 
 
-### Parametry výpočtu hustot {#sec:pardensities}
+### Parametry výpočtu hustot pravděpodobností škody {#sec:pardensities}
 Další skupina parametrů určuje, jak se počítají hustoty pravděpodobností nehod, ze kterých se pak hledají problémová místa. Patří sem následující parametry (pro jejich detailní významy prosím konzultujte @GelbManual):
 
 - `NKDE_WEIGHTS` ... buď `"cost"` nebo `"equal"`; určuje, jaké váhy se přikládají jednotlivým nehodám: zda váhy určené parametry popsanými v\ předchozím oddílu (hodnota `"cost"`) nebo zda mají všechny nehody stejnou váhu (hodnota `"equal"`)
@@ -519,7 +521,7 @@ Všechny výpočty probíhají po jednotlivých okresech. Aby nedocházelo ke zk
 
 Pro účely výpočtů hustot pravděpodobností nehody je třeba rozdělit silniční síť do krátkých (*lixelů*). Tyto lixely musejí být tak krátké, aby byly v\ rámci silniční sítě velmi podobně dlouhé; zároveň však platí, že čím jsou kratší, tím je jich více a výpočet běží pomaleji a vyžaduje vyšší zdroje. Typickou délku *lixelů* v\ metrech nastavuje parametr `LIXEL_SIZE`. Parametr `LIXEL_MIN_DIST` určuje minimální délku *lixelu* v\ metrech; kratší lixely budou připojeny k\ někerému sousednímu *lixelu*.
 
-Některé nehody mohou být zaměřeny velmi nepřesně\ -- daleko od silniční sítě. V\ takovém případě se při výpočtu rizikových míst ignorují. Parametr `ACCIDENT_TO_ROAD_MAX_DISTANCE` určuje maximální vzdálenost od silniční sítě v\ metrech, při které jsou nehody použitý při hledání rizikových oblastí.
+Některé nehody mohou být geolokovány velmi nepřesně\ -- daleko od silniční sítě. V\ takovém případě se při výpočtu rizikových míst ignorují. Parametr `ACCIDENT_TO_ROAD_MAX_DISTANCE` určuje maximální vzdálenost od silniční sítě v\ metrech, při které jsou nehody použity při hledání rizikových oblastí.
 
 Doporučené nastavení těchto parametrů je následující:
 
@@ -561,8 +563,8 @@ RAM_PER_CORE_ACCIDENTS = 10
 V\ případě potřeby může uživatel nastavit parametry `NO_OF_WORKERS` a `NO_OF_WORKERS_ACCIDENTS` přímo na počet jader, který se má použít. V\ tom případě je však zodpovědný za to, aby měl systém dost volné operační paměti. Pokud ji mít nebude, systém "spadne".
 
 
-### Parametry pro hledání klastrů
-
+<!--### Parametry pro hledání klastrů-->
+<!--
 Neměnit:
 
 ```{r, eval=FALSE}
@@ -570,6 +572,7 @@ CLUSTER_SEVERITY_LIMIT = 25
 CLUSTER_SEVERITY_STEP = 2
 CLUSTER_STEP_LIMIT = 10
 ```
+-->
 
 
 ## Profily
