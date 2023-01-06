@@ -43,12 +43,19 @@ while getopts ":hi:n:d:p:mck" OPTION; do
 		m | c | k)
 		    CONTAINERARGS="$CONTAINERARGS -$OPTION"
 			;;
-		\?)
-			echo "Chyba: Neznámý parameter '$OPTARG'"
+		:)
+			echo "Chyba: Přepínač '$OPTARG' vyžaduje hodnotu."
 			usage
+			;;
+		\?)
+			echo "Chyba: Neznámý přepínač '$OPTARG'."
+			usage
+			;;
 	esac
 done
 shift "$(($OPTIND -1))"
+
+[ -z "$*" ] || usage
 
 docker run -it --rm \
 --mount type=bind,source="$DATAFOLDER",target=/usr/src/accClusters/data \
