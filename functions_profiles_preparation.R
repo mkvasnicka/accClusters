@@ -17,6 +17,11 @@ library(readr, verbose = FALSE, warn.conflicts = FALSE)
 library(rlang, verbose = FALSE, warn.conflicts = FALSE)
 
 
+# constants
+DEFAULT_PROFILE_COMMENT <- "základní nastavení"
+
+
+
 # variable checks --------------------------------------------------------------
 
 # These functions are used to define/check that variables supplied by the user
@@ -403,7 +408,7 @@ read_all_profiles <- function(folder) {
                  call. = NA)
     } else {
         config$PROFILE_NAME <- "default"
-        config$PROFILE_COMMENT <- "default"
+        config$PROFILE_COMMENT <- DEFAULT_PROFILE_COMMENT
         profiles <- list(default = config)
     }
     profiles
