@@ -96,6 +96,9 @@ add_greater_brno <- function(districts) {
 #   (AdministrativniCleneni_v13.gdb) are stored
 # - reader ... (closure) function that reads the districts table; several of
 #   these functions are implemented above
+# - profiles ... profile
+# - shiny ... (logical scalar) if FALSE (default), the resulting sf object is
+#   in the PLANARY_PROJECTION; if TRUE, it is reprojected to WGS84
 #
 # value:
 #   none; data are written to disk
@@ -108,7 +111,8 @@ add_greater_brno <- function(districts) {
 #   coding specific; see add_greater_brno() function
 create_districts <- function(path_to_districts, path_to_raw_districts,
                              reader = read_districts_cuzk,
-                             profiles) {
+                             profiles,
+                             shiny = FALSE) {
     start_logging(log_dir())
     logging::loginfo("districts prep: checking for updates")
     if (is_behind(path_to_districts,
@@ -126,6 +130,9 @@ create_districts <- function(path_to_districts, path_to_raw_districts,
                 logging::loginfo("districts prep: removing all districts but %s",
                                  str_flatten(profiles$DISTRICTS[[1]],
                                              collapse = ", "))
+            }
+            if (shiny) {
+                districts <- st_transform(districts, crs = WGS84)
             }
             write_dir_rds(districts, file = path_to_districts)
             logging::loginfo("districts prep: districts table has been updated")

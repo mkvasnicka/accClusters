@@ -36,4 +36,5 @@ create_districts(path_to_districts = path_to_districts(),
 # make a copy for shiny
 create_districts(path_to_districts = path_to_shiny_districts(),
                  path_to_raw_districts = path_to_raw_districts(),
-                 profiles = profiles)
+                 profiles = profiles,
+                 shiny = TRUE)
