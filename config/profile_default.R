@@ -43,18 +43,6 @@ NKDE_AGG = 1
 
 
 
-# cluster parameters -----------------------------------------------------------
-
-# clusters are computed for severity quantiles
-# seq(from = CLUSTER_SEVERITY_LIMIT, to = 1, by = -CLUSTER_SEVERITY_STEP) / 1000
-CLUSTER_SEVERITY_LIMIT <- 25
-CLUSTER_SEVERITY_STEP <- 2
-
-# several lixels are added to clusters; 1:CLUSTER_STEP_LIMIT are added
-CLUSTER_STEP_LIMIT <- 10
-
-
-
 # time windows -----------------------------------------------------------------
 
 # whether to create time windows for the last complete years

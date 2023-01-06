@@ -119,18 +119,6 @@ OSMIUM_DISTRICTS_IN_ONE_GO = 10
 
 
 
-# cluster parameters -----------------------------------------------------------
-
-# clusters are computed for severity quantiles
-# seq(from = CLUSTER_SEVERITY_LIMIT, to = 1, by = -CLUSTER_SEVERITY_STEP) / 1000
-CLUSTER_SEVERITY_LIMIT = 25
-CLUSTER_SEVERITY_STEP = 2
-
-# several lixels are added to clusters; 1:CLUSTER_STEP_LIMIT are added
-CLUSTER_STEP_LIMIT = 10
-
-
-
 # districts --------------------------------------------------------------------
 
 # if only some districts should be processed, set DISTRICTS to character vector

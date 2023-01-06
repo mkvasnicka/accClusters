@@ -206,9 +206,9 @@ config_necessary_slots <- function() {
         # CLUSTER_MIN_QUANTILE = check_slot_quantile,
         # CLUSTER_ADDITIONAL_STEPS = check_slot_positive_integer,
         # VISUAL_MIN_QUANTILE = check_slot_quantile,
-        CLUSTER_SEVERITY_LIMIT = check_slot_positive_integer,
-        CLUSTER_SEVERITY_STEP = check_slot_positive_integer,
-        CLUSTER_STEP_LIMIT = check_slot_positive_integer,
+        # CLUSTER_SEVERITY_LIMIT = check_slot_positive_integer,
+        # CLUSTER_SEVERITY_STEP = check_slot_positive_integer,
+        # CLUSTER_STEP_LIMIT = check_slot_positive_integer,
         # time windows
         TIME_WINDOW_AUTO = check_slot_true_false,
         TIME_WINDOW_LENGTH = check_slot_positive_integer_vector,
@@ -260,14 +260,34 @@ profile_supported_slots <- function() {
                                "UNIT_COST_DEAD", "UNIT_COST_SERIOUS_INJURY",
                                "UNIT_COST_LIGHT_INJURY", "UNIT_COST_MATERIAL",
                                "UNIT_COST_CONST",
-                               "CLUSTER_SEVERITY_LIMIT",
-                               "CLUSTER_SEVERITY_STEP",
-                               "CLUSTER_STEP_LIMIT",
+                               # "CLUSTER_SEVERITY_LIMIT",
+                               # "CLUSTER_SEVERITY_STEP",
+                               # "CLUSTER_STEP_LIMIT",
                                "TIME_WINDOW_AUTO",
                                "TIME_WINDOW_LENGTH",
                                "TIME_WINDOW_NUMBER")],
         config_necessary_slots()[c("TIME_WINDOW")]
     )
+}
+
+
+
+# adding parameters user shouldn't change --------------------------------------
+
+# add_cluster_parameters() adds to profiles parameters needed
+# in functions_cluster_preparation.R that the user should not change because the
+# shiny would fail in such a case
+#
+# the values here are expected by the shiny app
+# they are added only when the corresponding columns do not exist
+add_cluster_parameters <- function(profiles) {
+    if (!("CLUSTER_SEVERITY_LIMIT" %in% names(profiles)))
+        profiles$CLUSTER_SEVERITY_LIMIT <- 25
+    if (!("CLUSTER_SEVERITY_STEP" %in% names(profiles)))
+        profiles$CLUSTER_SEVERITY_STEP <- 2
+    if (!("CLUSTER_STEP_LIMIT" %in% names(profiles)))
+        profiles$CLUSTER_STEP_LIMIT <- 10
+    profiles
 }
 
 
@@ -462,7 +482,8 @@ create_profiles <- function(path_to_configs = path_to_configs(),
         if (is_behind(path_to_configs(), source_files)) {
             logging::loginfo("config prep: configuration is behind---updating")
             profiles <- read_all_profiles(path_to_source_configs) |>
-                profiles_to_tibble()
+                profiles_to_tibble() |>
+                add_cluster_parameters()
             check_auto_time_windows(profiles)
             readr::write_rds(profiles, path_to_configs)
             logging::loginfo("config prep: profiles created")
