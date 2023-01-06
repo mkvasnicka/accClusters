@@ -1,4 +1,4 @@
-# mandatory profile name
+# mandatory profile name and comment string
 PROFILE_NAME <- "default"
 PROFILE_COMMENT <- "some string shown in shiny app"
 
@@ -40,23 +40,3 @@ NKDE_METHOD <- "discontinuous"
 # to which distance in meters are the accidents aggregated---for a faster
 # computation
 NKDE_AGG = 1
-
-
-
-# time windows -----------------------------------------------------------------
-
-# whether to create time windows for the last complete years
-TIME_WINDOW_AUTO <- TRUE
-
-# if so, how long should each window be (in years)
-TIME_WINDOW_LENGTH <- c(1, 3)
-
-# and how many such windows should be created
-TIME_WINDOW_NUMBER <- c(2, 2)
-
-# possible additional time windows; format: YYYY-MM-DD
-# TIME_WINDOW <- tibble::tribble(
-#     ~from_date,    ~to_date,
-#     "2019-01-01",  "2021-12-31",
-#     "2018-01-01",  "2020-12-31"
-# )
