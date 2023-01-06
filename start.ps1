@@ -1,4 +1,4 @@
-﻿[CmdletBinding()]
+﻿[CmdletBinding(PositionalBinding=$False)]
 param(
     [Parameter()] [switch] $h,
     [Parameter()] [string] $i = "acc-clusters:latest",
