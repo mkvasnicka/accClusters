@@ -16,7 +16,7 @@ usage() {
 }
 
 # implicit values
-IMAGE="acc-clusters:latest"
+IMAGE="mkvasnicka/acc-clusters:latest"
 DATAFOLDER="$(pwd)"
 CONTAINERNAME=""
 CONTAINERARGS=""
