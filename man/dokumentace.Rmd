@@ -94,6 +94,7 @@ Výpočet vyžaduje typicky cca 4,5\ GB operační paměti na jedno jádro (v\ n
 
 Jako "dedikovaná operační paměť" se chápe paměť, kterou má software k\ dispozici, tj.\ která není okupovaná operačním systémem ani jinými procesy. V\ případě virtualizace se jedná o\ operační paměť, která je vyhrazena danému kontejneru.
 
+Je doporučené používat počítač s\ rychlým SSD diskem.
 
 
 
@@ -559,6 +560,8 @@ NO_OF_WORKERS_ACCIDENTS = "auto"
 RAM_PER_CORE_GENERAL = 4.5
 RAM_PER_CORE_ACCIDENTS = 10
 ```
+
+Počet použitých jader je stanoven vždy na začátku každého kroku výpočtu, a\ to pro každý krok zvlášť. Systém se tedy dívá, jaký objem paměti je k\ dispozici v\ okamžiku, kdy je daný krok spuštěn. Pokud po spuštění tohoto kroku spustíte jiné procesy, které zaberou paměť počítače nebo paměť alokovanou pro docker, může se stát, že systém nebude mít dost paměti a zhavaruje.
 
 V\ případě potřeby může uživatel nastavit parametry `NO_OF_WORKERS` a `NO_OF_WORKERS_ACCIDENTS` přímo na počet jader, který se má použít. V\ tom případě je však zodpovědný za to, aby měl systém dost volné operační paměti. Pokud ji mít nebude, systém "spadne".
 
