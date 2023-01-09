@@ -123,7 +123,7 @@ create_districts <- function(path_to_districts, path_to_raw_districts,
             districts <- suppressMessages(reader(path_to_raw_districts))
             # this line is country and coding specific; remove if used for any
             # other country
-            districts <- add_greater_brno(districts)
+            # districts <- add_greater_brno(districts)
             if ("DISTRICTS" %in% names(profiles)) {
                 districts <- districts |>
                     dplyr::filter(district_id %in% profiles$DISTRICTS[[1]])
