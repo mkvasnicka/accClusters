@@ -565,6 +565,13 @@ Počet použitých jader je stanoven vždy na začátku každého kroku výpočt
 
 V\ případě potřeby může uživatel nastavit parametry `NO_OF_WORKERS` a `NO_OF_WORKERS_ACCIDENTS` přímo na počet jader, který se má použít. V\ tom případě je však zodpovědný za to, aby měl systém dost volné operační paměti. Pokud ji mít nebude, systém "spadne".
 
+Poslední parametr určuje, kolik okresů má software `osmium` zpracovat naráz. Při 32\ GB paměti se zdá být bezpečné zpracovávat 10\ okresů současně. K\ tomu slouží parametr 
+
+```{r, eval=FALSE}
+OSMIUM_DISTRICTS_IN_ONE_GO = 10
+```
+
+V\ případě většího množství zdrojů je možné tento parametr zvětšit; vzhledem k\ rychlosti `osmia` to však zřejmě není nutné.
 
 <!--### Parametry pro hledání klastrů-->
 <!--
