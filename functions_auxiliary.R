@@ -656,7 +656,7 @@ available_cores <- function(logical = TRUE) {
     min(
         docker_cpu_limit(),
         docker_global_cpu_limit(logical = logical),
-        parallelly::availableCores(methods = "system", logical = logical)
+        parallelly::availableCores(logical = logical)
     ) |> as.integer()
 }
 
