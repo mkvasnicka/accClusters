@@ -602,7 +602,7 @@ Profily umožňují identifikovat klastry míst s\ častými/nebezpečnými neho
 - pokud existuje `config.R` a `profile_cost.R`, pak se vytvoří pouze jeden profil vytvořený ze souboru `profile_cost.R`, a
 - pokud existuje `config.R`, `profile_cost.R` a `profile_equal.R`, pak se vytvoří dva profily, jeden z\ každého profilového souboru.
 
-Každý profilový soubor musí vždy definovat dvě proměnné: `PROFILE_NAME` a `PROFILE_COMMENT`. Parametr `PROFILE_NAME` je unikátní jméno profilu používané interně. Toto jméno se může skládat pouze z\ písmen anglické abecedy a číslic, musí začínat písmenem a musí obsahovat aspoň jedno písmeno. Parametr `PROFILE_COMMENT` identifikuje profil v\ interaktivní webové aplikace. Může obsahovat jakýkoli řetězec, který dobře popisuje obsah profilu.
+Každý profilový soubor musí vždy definovat dvě proměnné: `PROFILE_NAME` a `PROFILE_COMMENT`. Parametr `PROFILE_NAME` je unikátní jméno profilu používané interně. Toto jméno se může skládat pouze z\ písmen anglické abecedy a číslic, musí začínat písmenem a musí obsahovat aspoň jedno písmeno. Parametr `PROFILE_COMMENT` identifikuje profil v\ interaktivní webové aplikace. Může obsahovat jakýkoli řetězec, který dobře popisuje obsah profilu. (Pokud konfigurace neobsahuje profily, ale pouze `config.R`, pak tato proměnná obsahuje řetězec "základní nastavení", který se zobrazí v\ interaktivní aplikaci.)
 
 Následující příklad jednak ukazuje maximální obsah profilu, zároveň ukazuje i\ všechny parametry, které profil může modifikovat:
 
@@ -664,6 +664,29 @@ Nejbezpečnější způsob, jak měnit konfiguraci systému, je ten, že po jak�
 
 # Interpretace klastrů {#kap:interpret}
 
+Nejsložitější a výpočetně nejnáročnější je v\ systému \sw{} hledání klastrů nehodových míst. Zde se podíváme na to, jak tyto klastry interpretovat.
+
+Intuitivně je klastr nehodových míst ta část silniční sítě, na níž se nachází mnoho nehod nebo nebezpečné nehody. Technícky se klastr nehodových míst hledá tak, že se hledají ty části silniční sítě, kde je hustota pravděpodobnosti nehody obzvlášť vysoká:
+
+1. Vyberou se pouze ty části sítě, kde hustota pravděpodobnosti nehody leží nad zvolenou prahovou hodnotou\ $h$.
+1. Tyto úseky se rekurzivně spojí do zárodků klastrů tak, že se spojí ty úseky silnice, které na sebe navazují.
+1. Tyto zárodečné klastry se rekurzivně zvětší o\ $a$\ sousedních *lixelů*.
+1. Pokud se takto vzniklé klastry překrývají nebo dotýkají, spojí se.
+1. Ke každému klastru se přiřadí ty nehody, které leží té části silniční sítě, která leží v\ daném klastru.
+1. Z\ těchto nehod se spočítá závažnost daného klastru.
+
+Tento výpočet klastrů tedy stojí na dvou parametrech, prahové hodnotě\ $h$ a počtu dodatečných *lixelů*\ $a$, kde prahová hodnota\ $h$ se stanovuje z\ uživatelem určeného promile *lixelů* s\ nejvyšší hustotou pravděpodobnosti. Neexistuje však jedno "objektivně správné" nastavení těchto parametrů. Optimální nastavení se liší pro velká města a volnou krajinu, podle zdrojů, které má policie k\ dispozici k\ řešení problémových lokalit apod.
+
+Stejně tak řazení klastrů podle jejich závažnosti je pouze indikativní a závisí na zvolených parametrech\ $h$ a $a$. Pro dvě různá nastavení těchto parametrů může "nejzávažnější" klastr ležet na úplně jiných místech. Navíc nehody, které klastr vytvářejí, leží částečně mimo tento klastr (proto jsou zárodečné klastry rozšiřovány o\ $a$\ lixelů).
+
+Obě tyto skutečnosti znamenají, že klastry nehod identifikované zobrazovací aplikací v\ mapě není možné používat mechanicky jako "strojem zjevenou pravdu". Správný postup je následující:
+
+* Uživatel by měl zkoušet různá nastavení parametrů a sledovat, kde se v\ mapě objevují problémové úseky.
+* Přitom by měl sledovat i\ skutečné nehody, které v\ okolí těchto klastrů existují v\ daném období, v\ minulosti a v\ pozdějších obdobích.
+* Měl by se také podívat, jestli zde nehodový klastr existoval i\ v\ minulosti.
+* Nejdůležitější však je, aby uživatel využil svou expertní znalost lokální situace.
+
+Strojová identifikace klastrů tedy neslouží jako automatický nástroj, který by měl policii říkat, co a kde má dělat. Místo toho je upozorňuje na potenciálně problémová místa, kterým by měla policie věnovat pozornost. Při tom musí využít veškeré informace, které má k\ dispozici, ne pouze omezené informace využité při strojové identifikaci klastrů nehod.
 
 
 
