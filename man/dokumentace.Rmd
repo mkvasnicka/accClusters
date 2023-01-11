@@ -91,7 +91,7 @@ Příprava dat pro jejich vizualizaci a zejména výpočty klastrů nebezpečný
 
 Drtivá většina výpočtů běží paralelně na více jádrech. Čím větší počet jader má systém dedikovaný, tím rychleji příprava dat proběhne. Odhadovaný čas výpočtu klastrů nehod je při prvním spuštění softwaru s\ použitím procesoru třídy\ i5 se čtyřmi jádry a 32\ GB operační paměti kolem tří dnů v\ případě práce s\ nespojitými hustotami pravděpodobnosti. V\ případě práce se spojitými hustotami pravděpodobnosti lze očekávat několikanásobně delší přípravu dat. Použití modernější architektury pomůže; zvýšení počtu jader spojené se zvětšením dostupné paměti tento čas proporcionálně zkrátí.
 
-Výpočet vyžaduje typicky cca 4,5\ GB operační paměti na jedno jádro (v\ některých krocích však 10\ GB). Větší počet jader se tedy může použít pouze v\ případě, že je k\ dispozici dostatečné množství dedikované operační paměti.
+Při využití 10 a více jader vyžaduje typicky cca 4,5\ GB operační paměti na jedno jádro (v\ některých krocích však 10\ GB). Větší počet jader se tedy může použít pouze v\ případě, že je k\ dispozici dostatečné množství dedikované operační paměti. Zároveň však platí, že při paralelním výpočtu na několika málo jádrech je potřeba více paměti na jedno jádro. (Důvod je ten, že výpočet běží po okresech. Malé okresy vyžadují méně paměti, velké více a při velkém počtu jader se nároky rozumně zprůměrují. Naproti tomu při použití jednoho jádra jsou nároky na paměť určeny fakticky největším "okresem"\ -- Hlavním městem.)
 
 Jako "dedikovaná operační paměť" se chápe paměť, kterou má software k\ dispozici, tj.\ která není okupovaná operačním systémem ani jinými procesy. V\ případě virtualizace se jedná o\ operační paměť, která je vyhrazena danému kontejneru.
 
@@ -559,7 +559,7 @@ Většina přípravy dat probíhá paralelně na větším počtu jader. Paramet
 
 Doporučené je použití automatického mechanismu. Ten zohlední jednak to, kolik jader je v\ systému k\ dispozici (nebo kolik jich má alokovaný dockerový kontejner), jednak to, kolik je k\ dispozici volné operační paměti (nebo kolik jí má k\ dispozici dockerový kontejner).
 
-V\ tomto případě uživatel nastaví parametry `NO_OF_WORKERS` a `NO_OF_WORKERS_ACCIDENTS` na hodnoty `"auto"` a současně nastaví proměnné `RAM_PER_CORE_GENERAL` a `RAM_PER_CORE_ACCIDENTS` na počet GB paměti RAM, který musí být dostupný na výpočet na jedno jádro. V\ současné době jsou tyto proměnné nastavené na konzervativní úrovni 4.5 a 10\ GB respektive. Při zvětšení objemu zpracovávaných dat však může být nezbytné tyto proměnné zvětšit.
+V\ tomto případě uživatel nastaví parametry `NO_OF_WORKERS` a `NO_OF_WORKERS_ACCIDENTS` na hodnoty `"auto"` a současně nastaví proměnné `RAM_PER_CORE_GENERAL` a `RAM_PER_CORE_ACCIDENTS` na počet GB paměti RAM, který musí být dostupný na výpočet na jedno jádro. V\ současné době jsou tyto proměnné nastavené na konzervativní úrovni 4.5 a 10\ GB respektive, která funguje rozumně při celkové paměti minimálně 32\ GB. Při zvětšení objemu zpracovávaných dat však může být nezbytné tyto proměnné zvětšit.
 
 Doporučené nastavení je tedy:
 
@@ -573,6 +573,8 @@ RAM_PER_CORE_ACCIDENTS = 10
 Počet použitých jader je stanoven vždy na začátku každého kroku výpočtu, a\ to pro každý krok zvlášť. Systém se tedy dívá, jaký objem paměti je k\ dispozici v\ okamžiku, kdy je daný krok spuštěn. Pokud po spuštění tohoto kroku spustíte jiné procesy, které zaberou paměť počítače nebo paměť alokovanou pro docker, může se stát, že systém nebude mít dost paměti a zhavaruje.
 
 V\ případě potřeby může uživatel nastavit parametry `NO_OF_WORKERS` a `NO_OF_WORKERS_ACCIDENTS` přímo na počet jader, který se má použít. V\ tom případě je však zodpovědný za to, aby měl systém dost volné operační paměti. Pokud ji mít nebude, systém "spadne".
+
+Pozor: Při manuálním nastavení malého počtu jader nebo pokud je systém spuštěn na počítači s\ méně než 32\ GB operační paměti, pak je potřeba vyhradit na jedno jádro více paměti. Důvod je ten, že každé jádro zpracovává jeden okres. Přitom malé okresy vyžadují méně paměti, zatímco velké více. Při velkém počtu paralelně zpracovávaných okresů (velkém počtu použitých jader) se nároky na paměť rozumně zprůměrují. To však neplatí, pokud se kvůli nedostatku operační paměti nebo dostupných/vyhrazených jader paralelně zpracovává jen malý počet okresů. V\ extrémním případě, kdy se používá pouze jedno jádro, jsou nároky na paměť určeny fakticky největším "okresem", Hlavním městem Prahou.
 
 Poslední parametr určuje, kolik okresů má software `osmium` zpracovat naráz. Při 32\ GB paměti se zdá být bezpečné zpracovávat 10\ okresů současně. K\ tomu slouží parametr 
 
