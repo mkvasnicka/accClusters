@@ -33,6 +33,7 @@ districts <- read_districts()
 create_accidents(path_to_all_accidents = path_to_raw_accidents(),
                  raw_accidents_dir = path_to_raw_accidents_dir(),
                  profiles = profiles)
+time_to_recover_memory()
 
 
 # crop the accidents to buffered districts and snap them to selected roads---for
@@ -42,6 +43,7 @@ create_districts_accidents(districts,
                            lixel_dir = path_to_lixels_maps_dir(),
                            accident_dir = path_to_accidents_dir(),
                            profiles = profiles)
+time_to_recover_memory()
 
 
 # crop the accidents to buffered districts and snap them to selected roads---for
@@ -52,3 +54,4 @@ create_districts_accidents(districts,
                            accident_dir = path_to_shiny_accidents_dir(),
                            profiles = profiles,
                            shiny = TRUE)
+time_to_recover_memory()

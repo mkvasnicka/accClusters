@@ -35,6 +35,7 @@ create_osm_district_roads(districts,
                           path_to_osm_maps = path_to_raw_roads_osm(),
                           path_to_geojsons = path_to_map_dir(),
                           profiles = profiles)
+time_to_recover_memory()
 
 
 # for each district, create simplified sfnetwork .rds files with filtered roads
@@ -42,6 +43,7 @@ create_sf_district_roads(districts,
                          path_to_osm_maps = path_to_map_dir(),
                          path_to_sf_maps = path_to_map_dir(),
                          profiles = profiles)
+time_to_recover_memory()
 
 
 # for each district, create lixelized network
@@ -49,6 +51,7 @@ create_lixelized_roads(districts,
                        input_folder = path_to_map_dir(),
                        output_folder = path_to_lixels_maps_dir(),
                        profiles = profiles)
+time_to_recover_memory()
 
 
 # for each district, create lixel centers (samples)
@@ -56,6 +59,7 @@ create_lixel_samples_for_roads(districts,
                                input_folder = path_to_lixels_maps_dir(),
                                output_folder = path_to_lixels_maps_dir(),
                                profiles = profiles)
+time_to_recover_memory()
 
 
 # for each districts, create neighbor list objects (nb)
@@ -63,3 +67,4 @@ create_lixel_nbs(districts,
                  input_folder = path_to_lixels_maps_dir(),
                  output_folder = path_to_lixels_maps_dir(),
                  profiles)
+time_to_recover_memory()
