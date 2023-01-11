@@ -1,7 +1,7 @@
-﻿[CmdletBinding(PositionalBinding=$False)]
+[CmdletBinding(PositionalBinding=$False)]
 param(
     [Parameter()] [switch] $h,
-    [Parameter()] [string] $i = "acc-clusters:latest",
+    [Parameter()] [string] $i = "mkvasnicka/acc-clusters:latest",
     [Parameter()] [string] $n = "",
     [Parameter()] [string] $d = "$(pwd)",
     [Parameter()] [string] $p = "",
@@ -10,7 +10,7 @@ param(
     [Parameter()] [switch] $k
 #    [Parameter(ValueFromRemainingArguments)] [string] $Remaining
 )
-    
+
 function usage {
 	echo "Použití:"
 	echo "start.sh [-h] [-i <image>] [-n <container name>] [-d <data folder>] [-m] [-c] [-k]"
