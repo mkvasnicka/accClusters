@@ -83,7 +83,7 @@ Tento manuál popisuje pouze software \sw{} pro offline přípravu dat; interakt
 
 Příprava dat pro jejich vizualizaci a zejména výpočty klastrů nebezpečných míst jsou poměrně hardwarově náročné. Proto se předpokládá následující minimální konfigurace hardwaru a softwaru:
 
-- procesor minimálně třídy i5 (vyšší je lepší), minimálně 4\ jádra (větší počet jader je výhodou),
+- procesor minimálně třídy i5 (vyšší je lepší), minimálně 8\ jáder (větší počet jader je výhodou),
 - minimálně 32\ GB operační paměti dedikované pro tento software (více jader vyžaduje více operační paměti),
 - operační systém Linux nebo Windows,
 - docker a
