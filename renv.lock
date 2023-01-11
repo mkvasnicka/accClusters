@@ -1750,10 +1750,10 @@
     },
     "spNetwork": {
       "Package": "spNetwork",
-      "Version": "0.4.3.2",
+      "Version": "0.4.3.6",
       "Source": "Repository",
       "Repository": "CRAN",
-      "Hash": "4cc8e11f7294d9922920685a2b04db87",
+      "Hash": "5528ce43d0975522b0c4e0f7df7cd381",
       "Requirements": [
         "BH",
         "Rcpp",
