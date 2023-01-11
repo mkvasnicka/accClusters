@@ -1,14 +1,6 @@
 TODO
 ====
 
-Nové nápady
------------
-
-- aktualizovat data bez klastrů -- klastry se aktualizují jen jednou ročně, zatímco ten zbytek by mohli chtít častěji
-- vyhodit v update_data.R --vanilla ze skriptu spouštění Rscriptu
-    - v dockeru se nanačte .Rprofile, takže se nenačtou balíky v renv
-
-
 Now
 ---
 
@@ -19,22 +11,6 @@ Now
         neděje (tedy nic očividného)
     - opravil by to schedulling?
     - vyzkoušet na notebooku -- tam se to imho nedělo (je to možné?)
-- tvorba profilů
-    - vyhodit nepoužívané testovací funkce?
-    - vyhodit zakomentovaný kód
-
-
-
-Big Picture
------------
-- densities neloguje chyby do souboru (když spadne???)
-- fixovat parametry tvorby klastrů -- shiny je musí mít fixní, takže je uživatel
-  nemůže měnit
-- napsat nápovědu pro parametry tvorby klastrů + profily
-- zkontrolovat kód
-- napsat dokumentaci
-- docker + integrovat detekci paměti + cpu uvnitř dockeru
-    - mám kód, ale zatím ho nepoužívám
 
 
 
@@ -51,6 +27,8 @@ Refactoring
 -----------
 
 - pročistit kód
+- vyhodit zakomentovaný kód
+- vyhodit nepoužívané soubory/adresáře
 
 - vyhodit:
     - process_command_line_arguments()
@@ -65,34 +43,9 @@ Refactoring
     - nutné domluvit se Štěpánem, co z toho použije
         - data by to mělo chystat i pro něj -- aby se vzala data z guts a šoupla do shiny app
 
-- při exportu do shiny ořezat lixely a klastry na okres
+- při exportu do shiny ořezat lixely a klastry na okres -- asi už je -- zkontrolovat
     - lixely nechat jen ty, které jsou uvnitř skutečného okresu
     - klastry nechat celé, které aspoň částí zasahují do okresu
-
-- policajti můžou chtít několik různých vah nehod -- nebo koneckonců jiného nastavení
-    - návrh nového řešení -- profily, které se všechny vytvoří
-    - nově začíná řešit skript guts/functions_profiles.R
-    - moje představa je taková, že uživatel bude mít někde nějaký konfigurační soubor a profily
-    - prvně se načte guts_config, pak uživatelská konfigurace a pak profil
-        - profil tak může přepsat automatická nastavení
-        - profilů může být víc
-        - pokud žádný není, vytvoří se profil default
-        - nastavení profilů se musí exportovat do shiny souboru
-        - asi se musí vyexportovat i zvlášť, aby shiny vědělo, co má tak zhruba k dispozici
-    - všechny skripty se musí upravit tak, že se nejdřív vyexportuje seznam profilů, a pak
-        všechny skripty vytvoří nejen data pro okres nebo okres x čas, ale místo toho
-        okres x profil nebo okres x čas x profil
-        - musí se projevit je jménu výstupu
-    - co je hotové
-        - nástřel načítání a kontroly profilů
-        - zatím ale nenačítá ani guts_config, ani uživatelský konfig
-    - dodělat
-        - načítání guts_config a uživatelský config
-        - vlastní zpracování
-    - toto by mělo nahradit různé váhy nehod, které jsou v současnosti v kódu + profily
-    - PROBLÉM: různé profily se mohou lišit v různých stádiích výpočtu: v tvorbě map
-        (délka lixelů etc.), výpočtu hustot (nastavení NKDE), určení klastrů
-        - co s tím???
 
 
 
@@ -141,28 +94,3 @@ Tvorba OSM
 - osmium nechtělo pokračovat, když soubory .osm existují
     - na začátku funkce, která je má vytvořit, je třeba je vymazat
     - zatím jsem to vyřešil pomocí --overwrite
-
-
-Nehody
-------
-
-V současnosti se natahují jen soupce z tabulky nehody a z GPS se doplní souřadnice.
-- doplnit ostatní sloupce, které budou potřeba
-- vyhodit sloupce, které nejsou potřeba
-- jak počítat závažnost nehody?
-- create_districts_accidents() běží na málo jádrech, protože  vyžaduje hodně paměti -- asi kvůli kopírování velké tabulky accidents; asi by šlo zlepšit, kdyby se tabulka prvně cropem rozdělila na kusy a ty se poslaly přímo do paralelizace
-
-
-Všude
------
-
-- počet workers vzít z get_number_of_workers()
-- odstranit jména souborů z tabulky districts a všude, kde se na to odkazuje, a nahradit to funkcemi, které budou používat id z districts
-- spojit všechny prepare_*.R do jednoho souboru a přidat logování
-- najít všechna volání purrr a paralelizovat, co je možné
-
-
-Úklid na konec
---------------
-- vymazat zakomentované řádky
-- vymazat guts/test.R
