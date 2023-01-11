@@ -25,6 +25,7 @@ header-includes:
    - \tolerance=4500
    - \emergencystretch=11pt
    - \def\sw{\textsf{\textbf{accClusters}}}
+   - \renewcommand{\figurename}{Obr.}
 documentclass: scrartcl
 classoption: a4paper
 fontsize: 11pt
@@ -245,9 +246,15 @@ Příprava mapy silniční sítě probíhá v\ několika navazujících krocích
 
 Nejdůležitější a výpočetně nejnáročnější část hledání nebezpečných úseků spočívá ve výpočtu síťové jádrové hustoty (NKDE) nehod pro každý *lixel* silniční sítě reprezentovaný jeho středem. NKDE se počítají pomocí balíku **spNetwork** [@GelbRJournal; @GelbManual], který představuje nejlepší dostupnou implementaci algoritmů pro jejich výpočet.
 
-Jádrová hustota představuje jádrové vyhlazení bodového procesu na síti a fakticky odhad prostorového bodového procesu, který na síti generuje nehody. Intuice odhadu NKDE je následující: Nad každou nehodou se na silniční síti nakreslí kopeček (*jádro*; používají se jádra typu *quartic*); buď mají všechny nehody kopečky stejně velké, nebo závažnější nehody mají vyšší kopečky než méně závažné nehody. Na křižovatkách se "výška kopečků" rozděluje buď spojitě, nebo nespojitě. Pak se v\ každém bodě sítě sečte výška všech kopečků, jejichž střed (místo nehody) je od daného bodu maximálně vzdálena o\ vzdálenost\ $b$, což je vyhlazovací konstanta, tzv. *bandwidth*. Čím je vzdálenost $b$ delší, tím více bude odhad NKDE vyhlazenější. V\ okolí bodu, kde je součet výšky kopečků vysoký, existuje více nehod (nebo jsou závažnější) než v\ okolí bodu, kde je tento součet nižší. Nebezpečné úseky silniční sítě jsou tedy charakterizovány vysokou jádrovou hustotou. (Technický popis odhadu NKDE viz např.\ @GelbRJournal.)
+Jádrová hustota představuje jádrové vyhlazení bodového procesu na síti a fakticky odhad prostorového bodového procesu, který na síti generuje nehody. Intuice odhadu NKDE je následující: Nad každou nehodou se na silniční síti nakreslí kopeček (*jádro*; používají se jádra typu *quartic*); buď mají všechny nehody kopečky stejně vysoké, nebo závažnější nehody mají vyšší kopečky než méně závažné nehody. Na křižovatkách se "výška kopečků" rozděluje buď spojitě, nebo nespojitě. Pak se v\ každém bodě sítě sečte výška všech kopečků, jejichž střed (místo nehody) je od daného bodu maximálně vzdálena o\ vzdálenost\ $b$, což je vyhlazovací konstanta, tzv. *bandwidth*. Čím je vzdálenost $b$ delší, tím více bude odhad NKDE vyhlazenější. V\ okolí bodu, kde je součet výšky kopečků vysoký, existuje více nehod (nebo jsou závažnější) než v\ okolí bodu, kde je tento součet nižší. Nebezpečné úseky silniční sítě jsou tedy charakterizovány vysokou jádrovou hustotou. (Technický popis odhadu NKDE viz např.\ @GelbRJournal.)
 
-Systém \sw{} umí spočítat hustoty pravděpodobnosti mnoha různých typů, viz oddíl\ \ref{sec:pardensities}. V\ nejjednodušším případě spočítá jádrovou hustotu, při které mají všechny nehody stejnou váhu. Ve složitějším mohou mít závažnější nehody vyšší váhu než méně závažné nehody. Systém také umožňuje stanovit délku vyhlazovací konstanty (*bandwidth*)\ $b$ nebo ji nechat adaptivně upravovat tak, že bude kratší v\ regionech s\ vyšší hustotou nehod a delší v\ regionech s\ nižší hustotou nehod, viz\ @GelbManual. Umí také rozdělit "výšku kopečků" na křižovatkách nespojitě nebo spojitě, viz tamtéž.
+Systém \sw{} umí spočítat hustoty pravděpodobnosti mnoha různých typů, viz oddíl\ \ref{sec:pardensities}. V\ nejjednodušším případě spočítá jádrovou hustotu, při které mají všechny nehody stejnou váhu. Ve složitějším mohou mít závažnější nehody vyšší váhu než méně závažné nehody. Systém také umožňuje stanovit délku vyhlazovací konstanty (*bandwidth*)\ $b$ nebo ji nechat adaptivně upravovat tak, že bude kratší v\ regionech s\ vyšší hustotou nehod a delší v\ regionech s\ nižší hustotou nehod, viz\ @GelbManual.
+
+Jistá obtíž při výpočtu jádrových hustot nastává na křižovatkách. Pokud by se jádro rozlévalo na všechny strany beze změny, byl by odhad jádrové hustoty vychýlený a neintegroval by na\ 1. Systém\ \sw{} umí tento problém řešit tak, že na křižovatce rozdělí hustotu na stejné části, viz obrázek\ 1a. Výsledkem je nevychýlený odhad hustoty pravděpodobnosti, který však někomu může připadat neintuitivní, protože hustota pravděpodobnosti není spojitá. Tento způsob výpočtu síťových jádrových hustot se nazývá "nespojitý" ("discontinuous"). Alternativně je možné hustoty počítat spojitě (výpočet "continuous"). V\ tomto případě se algoritmus několikrát vrátí, aby hustoty pravděpodobnosti vyhladil, viz obrázek\ 1b. Husta pravděpodobnosti je v\ tomto případě spojitá, což může působit intuitivněji. Nevýhodou tohoto postupu je to, že je podstatně pomalejší. Více detailů viz např.\ @GelbManual nebo @McSwiggan2017.
+
+```{r, echo=FALSE, out.width="17cm", fig.cap="Rozdělení hustot pravděpodobnosti na křižovatce: (a) nespojitě, (b) spojitě. Převzato z~McSwiggan, Baddeley, and Nair~(2017)"}
+knitr::include_graphics("densities.png")
+```
 
 Odhad NKDE je zkreslen na okrajích sítě ořezané do určitého polygonu, protože se všechny silnice překračující hranice tohoto polygonu (mylně) jeví jako slepé a protože nehody za krajem ořezového polygonu nejsou vzaty v\ úvahu. Z\ tohoto důvodu je při výpočtu NKDE okres zvětšen na všechny strany o\ vzdálenost, která musí být několikrát větší než vyhlazovací konstanta\ $b$. Z\ polygonů okresů jsou také z\ výpočetních důvodů odstraněny "díry" (např.\ v\ okrese Brno venkov a Litoměřice). Tak jsou jsou využity všechny silnice a nehody nejen v\ daném okrese, i\ za jeho hranicí. Hodnoty NKDE uvnitř okresu jsou tedy spočítané správně. Po výpočtu klastrů častých nehod (viz následující oddíl) se pak klastry mimo hranice daného okresu "zahodí".
 
@@ -294,16 +301,18 @@ V\ této kapitole popíšeme blíže zdroje a strukturu vstupních dat, která s
 ## Administrativní členění ČR
 
 Jako mapový podklad pro administrativní členění se používají data ČÚZK. 
-Mapový podklad je k\ dispozici na Geoportálu ČÚZK. Jedná se o\ Soubor správních hranic a hranic katastrálních území ČR.
+Mapový podklad je k\ dispozici na Geoportálu ČÚZK. Jedná se o\ Soubor správních hranic a hranic katastrálních území ČR v\ projekti JTSK.
 
 - zdroj: https://geoportal.cuzk.cz/(S(uufahw3bishqszcklzne0nex))/Default.aspx?mode=TextMeta&side=dSady_hranice10&metadataID=CZ-CUZK-SH-V&mapid=5&head_tab=sekce-02-gp&menu=2521
 - přímý odkaz: https://geoportal.cuzk.cz/zakazky/SPH/SPH_SHP_JTSK.zip
 
 Stažený soubor rozzipujte a kompletní obsah adresáře `JTSK` překopírujte do adresáře `DIRORIGIN/rawdata/cuzk`.
 
-**POPIS, JAK DATA TEĎ VYPADAJÍ**
-
 Mapový podklad administrativního členění ČR je nutné aktualizovat po každé změně hranic okresů ČR. Po aktualizace mapy okresů je třeba aktualizovat všechna data novým spuštěním \sw.
+
+Pozor: Při aktualizaci tohoto datového souboru je třeba zkontrolovat, že nová data mají strukturu (stejné soubory, v\ nich stejné sloupce a stejnou projekci) jako původní soubory. Pokud se něco z\ toho změní, bude třeba mírně aktualizovat funkce pro načítání těchto dat v\ systému \sw.
+
+V\ současné době se používá vrstva `SPH_OKRES`, která obsahuje polygony okresů a v\ atributové tabulce sloupce `ID`, `KOD_NUTS3`, `KOD_LAU1` a `NAZEV_LAU1`. Tabulka také obsahuje Hlavní město Praha jako jeden polygon.
 
 
 ## Silniční síť ČR
@@ -490,7 +499,7 @@ Váhy zranění mohou být odvozeny od hodnoty statistického života např.\ po
 Další skupina parametrů určuje, jak se počítají hustoty pravděpodobností nehod, ze kterých se pak hledají problémová místa. Patří sem následující parametry (pro jejich detailní významy prosím konzultujte @GelbManual):
 
 - `NKDE_WEIGHTS` ... buď `"cost"` nebo `"equal"`; určuje, jaké váhy se přikládají jednotlivým nehodám: zda váhy určené parametry popsanými v\ předchozím oddílu (hodnota `"cost"`) nebo zda mají všechny nehody stejnou váhu (hodnota `"equal"`)
-- `NKDE_METHOD` ... buď `"continuous"` nebo `"discontinuous"`; určuje, jak se počítají hustoty pravděpodobnosti na křižovatkách: buď spojitě (`"continuous"`) nebo nespojitě (`"discontinuous"`); spojitý výpočet je poněkud přesnější, ale je také podstatně pomalejší
+- `NKDE_METHOD` ... buď `"continuous"` nebo `"discontinuous"`; určuje, jak se počítají hustoty pravděpodobnosti na křižovatkách: buď spojitě (`"continuous"`) nebo nespojitě (`"discontinuous"`); spojitý výpočet je poněkud přesnější, ale je také podstatně pomalejší; viz oddíl\ \ref{sec:nkdeIntro}
 - `NKDE_ADAPTIVE` ... logická hodnota; určuje, zda je použito adaptivní vyhlazovací parametr vzdálenosti $b$ (*bandwidth*) popsaný v\ oddíle\ \ref{sec:nkdeIntro} (`TRUE`), nebo zda se vždy použije fixní hodnota\ $b$ vzatá z\ parametru `NKDE_BW` (`FALSE`); při použijí adaptivního vyhlazovacího okna může být výpočet poněkud přesnější, ale je také podstatně pomalejší
 - `NKDE_BW` ... kladné číslo; určuje délku vyhlazovacího parametru\ $b$ v\ metrech při použití neadaptivního vyhlazovacího okna (při `NKDE_ADAPTIVE = FALSE`)
 - `NKDE_TRIM_BW` ... kladné číslo; určuje maximální délku vyhlazovacího parametru\ $b$ v\ metrech při použití adaptivního okna (když je `NKDE_ADAPTIVE = TRUE`)
@@ -593,7 +602,7 @@ Profily umožňují identifikovat klastry míst s\ častými/nebezpečnými neho
 - pokud existuje `config.R` a `profile_cost.R`, pak se vytvoří pouze jeden profil vytvořený ze souboru `profile_cost.R`, a
 - pokud existuje `config.R`, `profile_cost.R` a `profile_equal.R`, pak se vytvoří dva profily, jeden z\ každého profilového souboru.
 
-Každý profilový soubor musí vždy definovat dvě proměnné: `PROFILE_NAME` a `PROFILE_COMMENT`. Parametr `PROFILE_NAME` je unikátní jméno profilu používané interně. Toto jméno se může skládat pouze z\ písmen anglické abecedy a číslic, musí začínat písmenem a musí obsahovat aspoň jedno písmeno. Parametr `PROFILE_COMMENT` identifikuje profil v\ interaktivní webové aplikace. Může obsahovat jakýkoli řetězec, který dobře popisuje obsah profilu.
+Každý profilový soubor musí vždy definovat dvě proměnné: `PROFILE_NAME` a `PROFILE_COMMENT`. Parametr `PROFILE_NAME` je unikátní jméno profilu používané interně. Toto jméno se může skládat pouze z\ písmen anglické abecedy a číslic, musí začínat písmenem a musí obsahovat aspoň jedno písmeno. Parametr `PROFILE_COMMENT` identifikuje profil v\ interaktivní webové aplikace. Může obsahovat jakýkoli řetězec, který dobře popisuje obsah profilu. (Pokud konfigurace neobsahuje profily, ale pouze `config.R`, pak tato proměnná obsahuje řetězec "základní nastavení", který se zobrazí v\ interaktivní aplikaci.)
 
 Následující příklad jednak ukazuje maximální obsah profilu, zároveň ukazuje i\ všechny parametry, které profil může modifikovat:
 
@@ -655,6 +664,29 @@ Nejbezpečnější způsob, jak měnit konfiguraci systému, je ten, že po jak�
 
 # Interpretace klastrů {#kap:interpret}
 
+Nejsložitější a výpočetně nejnáročnější je v\ systému \sw{} hledání klastrů nehodových míst. Zde se podíváme na to, jak tyto klastry interpretovat.
+
+Intuitivně je klastr nehodových míst ta část silniční sítě, na níž se nachází mnoho nehod nebo nebezpečné nehody. Technícky se klastr nehodových míst hledá tak, že se hledají ty části silniční sítě, kde je hustota pravděpodobnosti nehody obzvlášť vysoká:
+
+1. Vyberou se pouze ty části sítě, kde hustota pravděpodobnosti nehody leží nad zvolenou prahovou hodnotou\ $h$.
+1. Tyto úseky se rekurzivně spojí do zárodků klastrů tak, že se spojí ty úseky silnice, které na sebe navazují.
+1. Tyto zárodečné klastry se rekurzivně zvětší o\ $a$\ sousedních *lixelů*.
+1. Pokud se takto vzniklé klastry překrývají nebo dotýkají, spojí se.
+1. Ke každému klastru se přiřadí ty nehody, které leží té části silniční sítě, která leží v\ daném klastru.
+1. Z\ těchto nehod se spočítá závažnost daného klastru.
+
+Tento výpočet klastrů tedy stojí na dvou parametrech, prahové hodnotě\ $h$ a počtu dodatečných *lixelů*\ $a$, kde prahová hodnota\ $h$ se stanovuje z\ uživatelem určeného promile *lixelů* s\ nejvyšší hustotou pravděpodobnosti. Neexistuje však jedno "objektivně správné" nastavení těchto parametrů. Optimální nastavení se liší pro velká města a volnou krajinu, podle zdrojů, které má policie k\ dispozici k\ řešení problémových lokalit apod.
+
+Stejně tak řazení klastrů podle jejich závažnosti je pouze indikativní a závisí na zvolených parametrech\ $h$ a $a$. Pro dvě různá nastavení těchto parametrů může "nejzávažnější" klastr ležet na úplně jiných místech. Navíc nehody, které klastr vytvářejí, leží částečně mimo tento klastr (proto jsou zárodečné klastry rozšiřovány o\ $a$\ lixelů).
+
+Obě tyto skutečnosti znamenají, že klastry nehod identifikované zobrazovací aplikací v\ mapě není možné používat mechanicky jako "strojem zjevenou pravdu". Správný postup je následující:
+
+* Uživatel by měl zkoušet různá nastavení parametrů a sledovat, kde se v\ mapě objevují problémové úseky.
+* Přitom by měl sledovat i\ skutečné nehody, které v\ okolí těchto klastrů existují v\ daném období, v\ minulosti a v\ pozdějších obdobích.
+* Měl by se také podívat, jestli zde nehodový klastr existoval i\ v\ minulosti.
+* Nejdůležitější však je, aby uživatel využil svou expertní znalost lokální situace.
+
+Strojová identifikace klastrů tedy neslouží jako automatický nástroj, který by měl policii říkat, co a kde má dělat. Místo toho je upozorňuje na potenciálně problémová místa, kterým by měla policie věnovat pozornost. Při tom musí využít veškeré informace, které má k\ dispozici, ne pouze omezené informace využité při strojové identifikaci klastrů nehod.
 
 
 

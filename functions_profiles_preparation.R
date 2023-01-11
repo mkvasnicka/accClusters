@@ -418,14 +418,16 @@ read_all_profiles <- function(folder) {
 # profiles_to_tibble() converts list of profiles into a tibble
 profiles_to_tibble <- function(p) {
     list_vars <- c("DISTRICTS", "SUPPORTED_ROAD_CLASSES",
-                   "TIME_WINDOW_LENGTH", "TIME_WINDOW_NUMBER")
+                   "TIME_WINDOW_LENGTH", "TIME_WINDOW_NUMBER",
+                   "TIME_WINDOW")
     p <- p |>
         purrr::map(as.list) |>
         purrr::transpose()
     list_idx <- which(names(p) %in% list_vars)
     p <- purrr::map_at(p, -list_idx, unlist) |>
         tibble::as_tibble() |>
-        dplyr::select(PROFILE_NAME, everything())
+        dplyr::select(PROFILE_NAME, everything()) |>
+        dplyr::mutate(across(everything(), ~setNames(., NULL)))
     p
 }
 
