@@ -246,6 +246,30 @@ compute_densities <- function(districts,
             c(x = xn, y = yn)
         }
 
+        # multiply_grid_shape() provides quite many alternative grid shapes
+        # around the optimal grid shape returned by grid_shape();
+        # this function exists because of a bug in spNetwork package that may
+        # have been corrected by its version 0.4.3.6;
+        # if the new code is correct, only the first (optimal) grid shape is
+        # tried and the loss of computational efficiency is negligible
+        multiply_grid_shape <- function(grid_shape) {
+            adds <- expand.grid(x = -2:2, y = -2:2) |>
+                dplyr::mutate(sum = x + y, abs_sum = abs(x) + abs(y)) |>
+                dplyr::arrange(abs_sum, desc(sum)) |>
+                dplyr::select(x, y) |>
+                as.matrix()
+            gs <- rep(grid_shape, nrow(adds)) |>
+                matrix(ncol = 2, byrow = TRUE)
+            gs <- rbind(
+                gs + adds,
+                c(grid_shape[1], grid_shape[1]),
+                c(grid_shape[2], grid_shape[2]),
+                c(10, 10)
+            ) |>
+                unique()
+            gs[gs[, 1] > 0 & gs[, 2] > 0, ]
+        }
+
         start_logging(log_dir())
         logging::loginfo("densities prep: creating %s", output_file)
         map <- readr::read_rds(map_path) |>
@@ -270,19 +294,8 @@ compute_densities <- function(districts,
         }
 
         # nkde fails with some grids; several grid are tested for this reason
-        grid_shape <- grid_shape(lixels)
-        gs <- rbind(grid_shape,
-                    grid_shape + 1,
-                    grid_shape - 1,
-                    grid_shape + 2,
-                    grid_shape - 2,
-                    c(grid_shape[1], grid_shape[1]),
-                    c(grid_shape[2], grid_shape[2]),
-                    c(10, 10)) |>
-            tibble::as_tibble(.name_repair = "universal") |>
-            dplyr::distinct() |>
-            dplyr::filter(if_any(everything(), ~. > 0)) |>
-            as.matrix()
+        gs <- grid_shape(lixels) |>
+            multiply_grid_shape()
         densities <- NULL
         for (k in seq_len(nrow(gs))) {
             tryCatch(
