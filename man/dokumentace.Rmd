@@ -85,7 +85,7 @@ Příprava dat pro jejich vizualizaci a zejména výpočty klastrů nebezpečný
 
 - procesor minimálně třídy i5 (vyšší je lepší), minimálně 8\ jáder (větší počet jader je výhodou),
 - minimálně 32\ GB operační paměti dedikované pro tento software (více jader vyžaduje více operační paměti),
-- operační systém Linux nebo Windows,
+- operační systém Linux nebo Windows v\ 64\ bitové verzi,
 - docker a
 - PowerShell (pouze na Windows).
 
@@ -188,7 +188,10 @@ Tento postup zajišťuje, že se v\ případě aktualizace vstupních dat (viz o
 
 Při prvním spuštění tedy proběhnou všechny kroky. Po následné aktualizaci dat o\ dopravních nehodách však proběhnou pouze kroky\ 1 a 5--8, takže příprava dat bude rychlejší než při prvním spuštění. Pokud uživatel aktualizuje data o\ tvaru okresů nebo data o\ silniční síti, bude aktualizován jak daný krok, tak všechny následující. Pokud uživatel změní konfigurační soubor nebo profily, budou aktualizována všechna data. (Kroky 6--8 ovšem proběhnou pouze v\ případě, že o\ ně uživatel explicitně požádá, viz oddíl\ \ref{sec:run-system}.)
 
-Jistou nevýhodou tohoto procesu je fakt, že všechny finální i\ průběžně vytvářené soubory vždy závisí na binární konfiguraci systému. Pokud se změní, proběhnou všechny výpočty vždy od začátku. Pokud změna konfigurace nezmění validitu některých souborů, je možné jejich přepočítání zabránit tak, že je datum jejich poslední modifikace nastaveno na novější čas, než jaký má soubor nově vytvořené binární konfigurace. Tento postup však výrazně nedoporučujeme.
+Jistou nevýhodou tohoto procesu je fakt, že všechny finální i\ průběžně vytvářené soubory vždy závisí na binární konfiguraci systému. Pokud se změní, proběhnou všechny výpočty vždy od začátku.
+<!--
+Pokud změna konfigurace nezmění validitu některých souborů, je možné jejich přepočítání zabránit tak, že je datum jejich poslední modifikace nastaveno na novější čas, než jaký má soubor nově vytvořené binární konfigurace. Tento postup však výrazně nedoporučujeme.
+-->
 
 
 ## Použitá adresářová struktura
