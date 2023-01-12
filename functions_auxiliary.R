@@ -18,54 +18,7 @@ library(logging, verbose = FALSE, warn.conflicts = FALSE)
 
 
 
-# parsing command-line parameters ----------------------------------------------
-
-# process_command_line_arguments() processes optional command-line parameters
-#
-# presently, the function handles:
-# - --profile=filename.R parameters---it sources them---in their order in the
-#   command line
-# - --workers=# where # is either positive integer scalar or "auto"
-#
-# inputs:
-#   none
-#
-# value:
-#   none; the function reads global (config) variables into the R working space
-#
-# WARNINGS:
-# - there must be no space in names, etc., as any white space is supposed to
-#   separate parameters
-process_command_line_arguments <- function(rdir) {
-    get_parameter <- function(params, key) {
-        stringr::str_subset(params, stringr::str_c("--", key, "=.*")) |>
-            stringr::str_remove(stringr::str_c("--", key, "="))
-    }
-
-    cl_pars <- commandArgs() |>
-        stringr::str_split("\\s+", simplify = TRUE) |>
-        t() |>
-        as.vector() |>
-        str_subset("^\\-\\-.+$")
-
-    profile <- get_parameter(cl_pars, "profile")
-    purrr::walk(profile, ~source(file.path(rdir, .)))
-
-    workers <- get_parameter(cl_pars, "workers")
-    if (length(workers) > 0) {
-        stopifnot(length(workers) == 1)
-        if (workers != "auto") {
-            workers <- as.numeric(workers)
-            stopifnot(!is.na(workers) && workers == round(workers))
-        }
-        NO_OF_WORKERS <<- workers
-    }
-}
-
-
-
 # paths to folders -------------------------------------------------------------
-
 
 # path to raw data
 raw_data_dir <- function() {
