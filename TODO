@@ -1,80 +1,50 @@
 TODO
 ====
 
-Now
----
-
-- grid_shape v NKDE dořešit s autorem balíku
-    - teď to má provizorní řešení -- tinkering s gridem
-- PWALK() zůstane někdy (při accidents?) viset -- proč?
-    - ukončí otevřené soubory, přejde na 1 jádro, tam běží na 100 %, ale nic se
-        neděje (tedy nic očividného)
-    - opravil by to schedulling?
-    - vyzkoušet na notebooku -- tam se to imho nedělo (je to možné?)
-
-
-
 Parametrizace
 -------------
-
 - najít optimální nastavení parametrů
 - podívat se, jak se liší klastry pro continuous a discontinuous
 - podívat se, co dělá adaptive
 
 
-
-Refactoring
------------
-
-- pročistit kód
-- vyhodit zakomentovaný kód
-- vyhodit nepoužívané soubory/adresáře
-
-- vyhodit:
-    - unit_cost(s)()
-
+Funkcionalita
+-------------
+- přidat ORG
+- vyzkoušet s novými balíky
 - PWALK by mělo throw exception, když selže
     - je potřeba najít všechna místa, kde se používá, a podívat se, jestli jsou v tryCatch()
+- gc() -- zjistit, jestli vrátí paměť operačnímu systému
+    - pokud ne, je potřeba v místě time_to_recover_memory() rozdělit skript na více skriptů
+        - jinak nefunguje dobře odhad workerů v PWALK()
 
-- rozmyslet, jaké sloupce by měly obsahovat tabulky nehod + ty, které používáme, standardizovat
+
+Testovat
+--------
+- jaké sloupce obsahuje tabulka nehod + ty, které používáme, standardizovat
     - pro případ, že policie sloupce přejmenuje -- není kulturní, abychom používali jejich interní značky
     - nutné domluvit se Štěpánem, co z toho použije
         - data by to mělo chystat i pro něj -- aby se vzala data z guts a šoupla do shiny app
-
 - při exportu do shiny ořezat lixely a klastry na okres -- asi už je -- zkontrolovat
     - lixely nechat jen ty, které jsou uvnitř skutečného okresu
     - klastry nechat celé, které aspoň částí zasahují do okresu
-
-
-
-Vizuální pohled na klastry
---------------------------
+- kde se u nehod bere čas pro Make-like update?
+- zkontrolovat časový výběr něhod při výpočtu hustot
+- zkontrolovat grid_shape v NKDE
+    - NKDE i v nové verzi padalo, když tam byl rok 2022
+- otestovat novou verzi densities
+- otestovat aktualizované balíky (ostatní)
+- pro všechny okresy:
+    - zkontrolovat počet souvislých podgrafů
+    - spustit kontrolu, o které psal Gelb
 - podívat se očima na klastry v guts/shiny
     - bez ohledu na název jsou všechny pro stejné období, IMHO 2019--2021
-- napsat funkci pro vizualizace ve statické mapě
 
 
-Mapy
-----
-
-Pro všechny okresy:
-- zkontrolovat počet souvislých podgrafů
-- spustit kontrolu, o které psal Gelb
-
-Funkce:
-- SF silnice v .rds jsou nově sfnetworks -- tomu se bude muset přizpůsobit kód, který na tom staví
-- vyřešit spojování blízkých bodů v sfnetworks
-    - problém:
-        - buď vyhodím nahrazené cesty, ale to vyhodí i všechny smyčky v síti,
-        - nebo nevyhodím smyčky, ale zůstanou tam i původní silnice
-    - dělá to parametr simplify na řádku
-        tidygraph::convert(sfnet, sfnetworks::to_spatial_contracted, cls, cmp,
-                           simplify = FALSE)
-- zrychlit hledání klastrů hotspotů na sf/sfnetworks/spNetwork
-- CRS všude vytahat z funkcí do jejich interface -- tam použít konstatny
-- funkce create_sf_nb() používá sf_touches() -- použít raději from -- to v lixelech?
-
-Tvorba OSM
-- osmium nechtělo pokračovat, když soubory .osm existují
-    - na začátku funkce, která je má vytvořit, je třeba je vymazat
-    - zatím jsem to vyřešil pomocí --overwrite
+Refactoring
+-----------
+- pročistit kód
+- vyhodit zakomentovaný kód
+- vyhodit nepoužívané soubory/adresáře
+- vyhodit:
+    - unit_cost(s)()
