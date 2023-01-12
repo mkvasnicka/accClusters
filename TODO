@@ -17,10 +17,14 @@ Funkcionalita
 - gc() -- zjistit, jestli vrátí paměť operačnímu systému
     - pokud ne, je potřeba v místě time_to_recover_memory() rozdělit skript na více skriptů
         - jinak nefunguje dobře odhad workerů v PWALK()
+- vyspellovat dokumentaci
 
 
 Testovat
 --------
+- zkontrolovat časový výběr nehod při výpočtu hustot
+- zkontrolovat závislosti v is_behind() a spol.
+    - zejména, kde se u nehod bere čas pro Make-like update?
 - jaké sloupce obsahuje tabulka nehod + ty, které používáme, standardizovat
     - pro případ, že policie sloupce přejmenuje -- není kulturní, abychom používali jejich interní značky
     - nutné domluvit se Štěpánem, co z toho použije
@@ -28,8 +32,6 @@ Testovat
 - při exportu do shiny ořezat lixely a klastry na okres -- asi už je -- zkontrolovat
     - lixely nechat jen ty, které jsou uvnitř skutečného okresu
     - klastry nechat celé, které aspoň částí zasahují do okresu
-- kde se u nehod bere čas pro Make-like update?
-- zkontrolovat časový výběr něhod při výpočtu hustot
 - zkontrolovat grid_shape v NKDE
     - NKDE i v nové verzi padalo, když tam byl rok 2022
 - otestovat novou verzi densities
