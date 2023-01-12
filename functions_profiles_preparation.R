@@ -68,7 +68,6 @@ check_slot_word <- function(x) {
 }
 
 # is valid path
-# TODO: kontrola, že je platná cesta
 check_slot_path <- function(x) {
     check_slot_word(x)
 }

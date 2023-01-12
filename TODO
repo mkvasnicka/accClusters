@@ -1,6 +1,9 @@
 TODO
 ====
 
++ TODO comment v R skriptech
+
+
 Parametrizace
 -------------
 - najít optimální nastavení parametrů
@@ -10,10 +13,8 @@ Parametrizace
 
 Funkcionalita
 -------------
-- přidat ORG
-- vyzkoušet s novými balíky
-- PWALK by mělo throw exception, když selže
-    - je potřeba najít všechna místa, kde se používá, a podívat se, jestli jsou v tryCatch()
+- přidat ORP
+- aktualizovat všechny balíky a vyzkoušet
 - gc() -- zjistit, jestli vrátí paměť operačnímu systému
     - pokud ne, je potřeba v místě time_to_recover_memory() rozdělit skript na více skriptů
         - jinak nefunguje dobře odhad workerů v PWALK()
@@ -41,8 +42,9 @@ Testovat
     - bez ohledu na název jsou všechny pro stejné období, IMHO 2019--2021
 
 
-Refactoring
------------
+Čištění
+-------
+- doplnit popisky souborů
 - pročistit kód
 - vyhodit zakomentovaný kód
 - vyhodit nepoužívané soubory/adresáře

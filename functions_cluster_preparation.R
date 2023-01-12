@@ -738,8 +738,9 @@ compute_clusters_for_parameters <- function(quantile, threshold,
 #   lixelized roads in individual districts are stored
 # - accidents_dir ... (character scalar) path to folder where accidents snapped
 #   to roads in individual districts are stored
-# - cluster_dir  # TODO: doplnit nápovědu
-# - profiles  # TODO: doplnit nápovědu
+# - cluster_dir ... (character scalar) path to folder where the clusters will be
+#   stored
+# - profiles ... (tibble) of profiles
 #
 # value:
 #   none; data are written to disk

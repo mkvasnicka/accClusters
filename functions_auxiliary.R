@@ -684,48 +684,6 @@ silently <- function(.f) {
     }
 }
 
-
-# # PWALK() is the same as purrr::walk() with these differences:
-# # - if workers > 1, furrr::future_walk() is run
-# # - function .f is protected, i.e., it never fails
-# # - .l must be a tibble, i.e., it cannot be a list
-# #
-# # PWALK <- function(.l, .f, workers = 1, ...) {
-# #     workers <- get_number_of_workers(workers)
-# #     .f <- purrr::possibly(.f, otherwise = NULL)
-# #     if (workers == 1) {
-# #         purrr::pwalk(.l, .f, ...)
-# #     } else {
-# #         oplan <- future::plan()
-# #         future::plan("multisession", workers = workers)
-# #         furrr::future_pwalk(.l, .f, ...,
-# #                             .options = furrr::furrr_options(seed = TRUE))
-# #         future::plan(oplan)
-# #     }
-# # }
-# #
-# # TODO: když to spadne, mělo by to throw error via stop()
-# PWALK <- function(.l, .f, workers = 1, ram_needed = NULL, ...) {
-#     if (nrow(.l) > 0) {
-#         workers <- get_number_of_workers(workers, ram_needed)
-#         .f <- silently(.f)
-#         if (workers == 1) {
-#             success <- purrr::pmap_lgl(.l, .f, ...)
-#         } else {
-#             oplan <- future::plan()
-#             future::plan("multisession", workers = workers)
-#             success <- furrr::future_pmap_lgl(.l, .f, ...,
-#                                               .options = furrr::furrr_options(seed = TRUE))
-#             future::plan(oplan)
-#         }
-#         tab <- .l[!success, ]
-#         if (nrow(tab) > 0) {
-#             logging::logerror("production failed in the following output files: %s",
-#                               str_c(tab$output_file, collapse = ", "))
-#         }
-#     }
-# }
-
 # PWALK() is the same as purrr::walk() with these differences:
 # - if workers > 1, furrr::future_walk() is run
 # - function .f is protected, i.e., it doesn't fail, and the all paralleled
@@ -735,7 +693,6 @@ silently <- function(.f) {
 #   this assumes that the data .l sent to individual processes are small while
 #   the computation itself takes a lot of time; see
 #   https://furrr.futureverse.org/articles/chunking.html
-#
 PWALK <- function(.l, .f, workers = 1, ram_needed = NULL, ...) {
     if (nrow(.l) > 0) {
         workers <- get_number_of_workers(workers, ram_needed)
