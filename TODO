@@ -31,9 +31,7 @@ Refactoring
 - vyhodit nepoužívané soubory/adresáře
 
 - vyhodit:
-    - process_command_line_arguments()
     - unit_cost(s)()
-    - handle_time_widnow()
 
 - PWALK by mělo throw exception, když selže
     - je potřeba najít všechna místa, kde se používá, a podívat se, jestli jsou v tryCatch()
@@ -54,20 +52,6 @@ Vizuální pohled na klastry
 - podívat se očima na klastry v guts/shiny
     - bez ohledu na název jsou všechny pro stejné období, IMHO 2019--2021
 - napsat funkci pro vizualizace ve statické mapě
-
-
-
-Hotspoty/klastry
-----------------
-
-- vyzkoušet výpočet NKDE paralelně s neváženými nehodami a vážnými pomocí injuries
-- PAI optimalizace parametrizace tvorby klastrů
-- jak zahrnout čas? zatím se počítá na všech nehodách. jak to udělat? možnosti:
-    - statická tabulka s rozsahy datumů, pro které se to počítá
-    - nějaký automat
-    - jen poslední klouzavé okno (např. 3 roky zpět od posledního data)
-- otázka: optimalizovat parametry klastrů globálně (tj. PAI celku, nebo po jednotlivých klastech)?
-    - pokud po klastrech, jak?
 
 
 Mapy
