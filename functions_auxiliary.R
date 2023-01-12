@@ -89,6 +89,11 @@ path_to_shiny_districts <- function() {
     file.path(output_dir(), "districts", "districts.rds")
 }
 
+# path to ORPs for shiny
+path_to_shiny_orps <- function() {
+    file.path(output_dir(), "districts", "orps.rds")
+}
+
 # path to folder where accidents in individual districts for shiny are stored
 path_to_shiny_accidents_dir <- function() {
     file.path(output_dir(), "accidents")

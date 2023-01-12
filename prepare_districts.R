@@ -33,8 +33,14 @@ create_districts(path_to_districts = path_to_districts(),
                  profiles = profiles)
 
 
-# make a copy for shiny
+# create a modified version of districts for shiny
 create_districts(path_to_districts = path_to_shiny_districts(),
                  path_to_raw_districts = path_to_raw_districts(),
                  profiles = profiles,
                  shiny = TRUE)
+
+
+# create ORPs for shiny
+create_orps(path_to_orps = path_to_shiny_orps(),
+            path_to_raw_districts = path_to_raw_districts(),
+            profiles = profiles)

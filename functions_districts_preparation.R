@@ -2,9 +2,10 @@
 # Script:   functions_districts_preparation.R
 # Author:   Michal Kvasnička
 # Purpose:  This script defines functions for reading and writing polygons
-#           of individual districts in the Czech Republic. Implicitly "okresy".
+#           of individual districts in the Czech Republic (implicitly "okresy")
+#           and ORPs, too.
 # Inputs:   none
-# Outputs:  functions
+# Outputs:  function definitions
 # Notes:
 #
 # Copyright(c) Michal Kvasnička
@@ -23,13 +24,13 @@ WGS84 <- 4326  # WGS84
 
 
 
-# read districts ---------------------------------------------------------------
+# create districts -------------------------------------------------------------
 
 # functions read_districts_*() read districts from a path and return
 # standardized sf table
 #
 # inputs:
-# - path_to_districts ... (character scalar) a path to ARCCR database
+# - path_to_districts ... (character scalar) a path to spatial database
 # - layer ... (optional, character scaler) the name of the layer
 #
 # output:
@@ -92,8 +93,8 @@ add_greater_brno <- function(districts) {
 # inputs:
 # - path_to_districts ... (character scalar) path where districts table should
 #   be written
-# - path_to_raw_districts ... (character scalar) path to folder where ARCČR data
-#   (AdministrativniCleneni_v13.gdb) are stored
+# - path_to_raw_districts ... (character scalar) path to folder where
+#   the spatial data are stored
 # - reader ... (closure) function that reads the districts table; several of
 #   these functions are implemented above
 # - profiles ... profile
@@ -116,7 +117,8 @@ create_districts <- function(path_to_districts, path_to_raw_districts,
     start_logging(log_dir())
     logging::loginfo("districts prep: checking for updates")
     if (is_behind(path_to_districts,
-                  c(path_to_raw_districts, path_to_configs()))) {
+                  c(dir(path_to_raw_districts(), full.names = TRUE),
+                    path_to_configs()))) {
         logging::loginfo(
             "districts prep: districts table is behind and will be updated")
         tryCatch({
@@ -142,5 +144,91 @@ create_districts <- function(path_to_districts, path_to_raw_districts,
             stop("districts prep failed---stopping evaluation")})
     } else {
         loginfo("districts are up-to-date---skipping")
+    }
+}
+
+
+
+# create ORPs ------------------------------------------------------------------
+
+# functions read_orps_cuzk() reads ORPs from a path and returns standardized
+# sf table
+#
+# inputs:
+# - path_to_districts ... (character scalar) a path to spatial database
+# - layer ... (optional, character scaler) the name of the layer
+#
+# output:
+# - sf table
+#
+# source of the data is CUZK
+# - web page: https://geoportal.cuzk.cz/(S(uufahw3bishqszcklzne0nex))/Default.aspx?mode=TextMeta&side=dSady_hranice10&metadataID=CZ-CUZK-SH-V&mapid=5&head_tab=sekce-02-gp&menu=2521
+# - direct link: https://geoportal.cuzk.cz/zakazky/SPH/SPH_SHP_JTSK.zip
+# - warning: projection is not declared in the layer!
+read_orps_cuzk <- function(path_to_districts, layer = "SPH_ORP") {
+    sf::st_read(path_to_districts, layer = layer, stringsAsFactors = FALSE) |>
+        sf::st_set_crs(PLANARY_PROJECTION)
+}
+
+
+# create_orps() creates/updates ORPs table
+#
+# inputs:
+# - path_to_orps ... (character scalar) path where ORPs table should
+#   be written
+# - path_to_raw_districts ... (character scalar) path to folder where spatial
+#   data are stored
+# - reader ... (closure) function that reads the ORPs table; several of
+#   these functions can be implemented
+# - profiles ... profile
+#
+# value:
+#   none; data are written to disk
+#
+# WARNINGS:
+# - it may be necessary to implement a new reader function whenever
+#   a new/updated districts/ORPs shapefile is used; it is because the providers
+#   change the variable names, projection, etc., between versions
+create_orps <- function(path_to_orps, path_to_raw_districts,
+                        reader = read_orps_cuzk,
+                        profiles) {
+    start_logging(log_dir())
+    logging::loginfo("orps prep: checking for updates")
+    if (is_behind(path_to_orps,
+                  c(dir(path_to_raw_districts(), full.names = TRUE),
+                    path_to_configs()))) {
+        logging::loginfo("orps prep: orps table is behind and will be updated")
+        tryCatch({
+            districts <- read_districts()
+            orps <- suppressMessages(reader(path_to_raw_districts)) |>
+                dplyr::select(ORP_NUTS3 = KOD_NUTS3,
+                              ORP_CODE = KOD_ORP,
+                              ORP_NAME = NAZEV_ORP)
+            suppressWarnings(
+                j <- orps |>
+                    sf::st_centroid() %>%
+                    sf::st_join(districts) |>
+                    sf::st_drop_geometry() |>
+                    dplyr::select(ORP_CODE, contains("district")) |>
+                    tibble::as_tibble()
+            )
+            orps <- dplyr::left_join(orps, j) |>
+                dplyr::select(contains("district")) |>
+                sf::st_transform(crs = WGS84)
+            if ("DISTRICTS" %in% names(profiles)) {
+                orps <- orps |>
+                    dplyr::filter(district_id %in% profiles$DISTRICTS[[1]])
+                logging::loginfo("orps prep: removing all orps but %s",
+                                 str_flatten(profiles$DISTRICTS[[1]],
+                                             collapse = ", "))
+            }
+            write_dir_rds(orps, file = path_to_orps)
+            logging::loginfo("orps prep: orps table has been updated")
+        },
+        error = function(e) {
+            logging::logerror("orps prep failed: %s", e)
+            stop("orps prep failed---stopping evaluation")})
+    } else {
+        loginfo("orps are up-to-date---skipping")
     }
 }

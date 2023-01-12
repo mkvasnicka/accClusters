@@ -13,7 +13,6 @@ Parametrizace
 
 Funkcionalita
 -------------
-- přidat ORP
 - aktualizovat všechny balíky a vyzkoušet
 - gc() -- zjistit, jestli vrátí paměť operačnímu systému
     - pokud ne, je potřeba v místě time_to_recover_memory() rozdělit skript na více skriptů
