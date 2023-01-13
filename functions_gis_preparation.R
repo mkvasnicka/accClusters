@@ -293,7 +293,7 @@ write_gis_files <- function(districts, gis_dir, shiny_dir, profiles) {
                 dplyr::rowwise() |>
                 dplyr::group_split() |>
                 purrr::walk(process_one_shiny_file, gis_dir)
-            logging::loginfo("gis prep: gis files are created")
+            logging::loginfo("gis prep: gis files have been created")
         } else {
             logging::loginfo("gis prep: everything is up-to-date---skipping")
         }
