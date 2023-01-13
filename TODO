@@ -9,11 +9,15 @@ Funkcionalita
 - skripty, kde je víc výpočetně náročných věcí rozdělit -- v místě time_to_recover_memory()
     - bash skript updata_data.sh upravit tak, že bez -k se dělají jen věci pro shiny -- zkontrolovat flow
     - vyhodit time_to_recover_memory() z definic v auxiliary
-- gc() -- zjistit, jestli vrátí paměť operačnímu systému
-    - pokud ne, je potřeba v místě time_to_recover_memory() rozdělit skript na více skriptů
-        - jinak nefunguje dobře odhad workerů v PWALK()
+    - původně:
+        - gc() -- zjistit, jestli vrátí paměť operačnímu systému
+            - pokud ne, je potřeba v místě time_to_recover_memory() rozdělit skript na více skriptů
+                - jinak nefunguje dobře odhad workerů v PWALK()
 - aktualizovat všechny balíky a vyzkoušet
 - vyspellovat dokumentaci
+- paralelizovat GIS prep??
+    - memory usage v paralelizovatelné části je pod 1 GB
+    - ale není tu moc výpočtů -- nejvíc času asi zabere prosté čtení a zapisování na disk
 
 
 Parametrizace
