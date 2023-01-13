@@ -4,20 +4,23 @@ TODO
 + TODO comment v R skriptech
 
 
+Funkcionalita
+-------------
+- skripty, kde je víc výpočetně náročných věcí rozdělit -- v místě time_to_recover_memory()
+    - bash skript updata_data.sh upravit tak, že bez -k se dělají jen věci pro shiny -- zkontrolovat flow
+    - vyhodit time_to_recover_memory() z definic v auxiliary
+- gc() -- zjistit, jestli vrátí paměť operačnímu systému
+    - pokud ne, je potřeba v místě time_to_recover_memory() rozdělit skript na více skriptů
+        - jinak nefunguje dobře odhad workerů v PWALK()
+- aktualizovat všechny balíky a vyzkoušet
+- vyspellovat dokumentaci
+
+
 Parametrizace
 -------------
 - najít optimální nastavení parametrů
 - podívat se, jak se liší klastry pro continuous a discontinuous
 - podívat se, co dělá adaptive
-
-
-Funkcionalita
--------------
-- aktualizovat všechny balíky a vyzkoušet
-- gc() -- zjistit, jestli vrátí paměť operačnímu systému
-    - pokud ne, je potřeba v místě time_to_recover_memory() rozdělit skript na více skriptů
-        - jinak nefunguje dobře odhad workerů v PWALK()
-- vyspellovat dokumentaci
 
 
 Testovat
