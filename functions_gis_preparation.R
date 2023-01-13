@@ -174,7 +174,7 @@ write_profiles <- function(profiles, folder) {
         ) |>
         dplyr::rename(FROM_DATE = from_date, TO_DATE = to_date) |>
         dplyr::select(PROFILE_NAME, FROM_DATE, TO_DATE, everything()) |>
-        dplyr::select(-DISTRICTS) |>
+        dplyr::select(-any_of("DISTRICTS")) |>
         as.data.frame()
     foreign::write.dbf(profiles, file = gis_dbf_profiles_filename(folder ))
     readr::write_csv(profiles, file = gis_csv_profiles_filename(folder))
@@ -220,6 +220,7 @@ write_gis_files <- function(districts, gis_dir, shiny_dir, profiles) {
     process_one_shiny_file <- function(row, gis_dir) {
         start_logging(log_dir())
         tryCatch({
+            fn <- row$shiny_filename
             logging::loginfo("gis prep: creating %s", row$shiny_filename)
             folder <- gis_append_folder(gis_dir, row)
             cluster_layer <- gis_clusters_filename(row)
@@ -247,8 +248,7 @@ write_gis_files <- function(districts, gis_dir, shiny_dir, profiles) {
                               density = total_density)
             write_to_shapefile(clusters, folder, cluster_layer)
             write_gis_data(accidents, folder, accident_filename)
-            logging::loginfo("gis prep: %s has been created",
-                             row$shiny_filename)
+            logging::loginfo("gis prep: %s has been created", fn)
         },
         error = function(e) {
             logging::logerror("gis prep failed: %s", e)
