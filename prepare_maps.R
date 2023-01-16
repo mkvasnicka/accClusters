@@ -1,11 +1,12 @@
 # -------------------------------------
 # Script:   prepare_maps.R
 # Author:   Michal Kvasnička
-# Purpose:
-# Inputs:   OSM map, districts, profiles, and log file.
+# Purpose:  This script creates/updates road maps in form of lixels and their
+#           centers. It filters the maps, simplifies them, and does a lot of
+#           other stuff.
+# Inputs:   OSM map, districts, profiles, and log file
 # Outputs:  files with various represetnations of OSM maps restricted to roads
 #           and to individual districts
-# Notes:
 #
 # Copyright(c) Michal Kvasnička
 # -------------------------------------

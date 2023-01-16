@@ -1,10 +1,9 @@
 # -------------------------------------
-# Script:
-# Author:
-# Purpose:
-# Inputs:
-# Outputs:
-# Notes:
+# Script:   prepare_gis.R
+# Author:   Michal Kvasnička
+# Purpose:  This script exports the clusters for the use in GIS software.
+# Inputs:   accidents, clusters, profiles, and log file
+# Outputs:  GIS files
 #
 # Copyright(c) Corporation Name
 # -------------------------------------

@@ -1,11 +1,10 @@
 # -------------------------------------
 # Script:   prepare_profiles.R
 # Author:   Michal Kvasnička
-# Purpose:  This scripts reads user config and/or profiles, checks them, and
+# Purpose:  This scripts reads user config and profiles, checks them, and
 #           stores them in a file.
-# Inputs:   At least config.R; profile_xxx.R, too, if present. Log file, too.
+# Inputs:   at least config.R; profile_xxx.R, too, if present. Log file, too
 # Outputs:  profiles.rds file
-# Notes:
 #
 # Copyright(c) Michal Kvasnička
 # -------------------------------------

@@ -3,10 +3,9 @@
 # Author:   Michal Kvasnička
 # Purpose:  This script creates/updates districts (okresy now). It reads them
 #           from a shape file(s) and transforms them to Křovák CRS.
-# Inputs:   A shape file of political districts in the Czech Republic, profiles,
-#           and log file.
+# Inputs:   a shape file of political districts in the Czech Republic, profiles,
+#           and log file
 # Outputs:  sf tibble districts (saved on disk)
-# Notes:
 #
 # Copyright(c) Michal Kvasnička
 # -------------------------------------

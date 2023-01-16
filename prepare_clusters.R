@@ -1,10 +1,9 @@
 # -------------------------------------
 # Script:   prepare_clusters.R
 # Author:   Michal Kvasnička
-# Purpose:
-# Inputs:
-# Outputs:
-# Notes:
+# Purpose:  This script creates/updates the accident clusters/hotspots.
+# Inputs:   road map, densities, profiles, and log file
+# Outputs:  files describing the clusters
 #
 # Copyright(c) Michal Kvasnička
 # -------------------------------------

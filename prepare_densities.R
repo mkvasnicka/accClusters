@@ -1,10 +1,9 @@
 # -------------------------------------
 # Script:   prepare_densities.R
 # Author:   Michal Kvasnička
-# Purpose:
-# Inputs:
-# Outputs:
-# Notes:
+# Purpose:  This script creates/updates the NKDE densities for each district.
+# Inputs:   road map, accidents, profiles, and log file
+# Outputs:  files describing the NKDE densities for each lixel
 #
 # Copyright(c) Michal Kvasnička
 # -------------------------------------

@@ -1,10 +1,10 @@
 # -------------------------------------
 # Script:   prepare_sidecars.R
 # Author:   Michal Kvasnička
-# Purpose:
-# Inputs:
-# Outputs:
-# Notes:
+# Purpose:  This script creates/updates the sidecars that the shiny app uses
+#           to find out for which time/profile it has clusters available.
+# Inputs:   clusters, profiles, and log file
+# Outputs:  sidecars files
 #
 # Copyright(c) Michal Kvasnička
 # -------------------------------------
