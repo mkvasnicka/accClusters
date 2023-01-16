@@ -68,12 +68,17 @@ functions_gis_preparation.R \
 functions_map_preparation.R \
 functions_profiles_preparation.R \
 functions_sidecars_preparation.R \
+prepare_accidents_raw.R \
 prepare_accidents.R \
+prepare_accidents_shiny.R \
 prepare_clusters.R \
 prepare_densities.R \
 prepare_districts.R \
 prepare_gis.R \
 prepare_maps.R \
+prepare_maps_lixels.R \
+prepare_maps_lixel_samples.R \
+prepare_maps_lixel_neighbors.R \
 prepare_profiles.R \
 prepare_sidecars.R \
 start_logging.R \

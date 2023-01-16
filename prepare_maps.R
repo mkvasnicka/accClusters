@@ -3,7 +3,8 @@
 # Author:   Michal Kvasnička
 # Purpose:  This script creates/updates road maps in form of lixels and their
 #           centers. It filters the maps, simplifies them, and does a lot of
-#           other stuff.
+#           other stuff. This part only filters the roads, splits them into
+#           districts, read them in in sf, and simplifies them.
 # Inputs:   OSM map, districts, profiles, and log file
 # Outputs:  files with various represetnations of OSM maps restricted to roads
 #           and to individual districts
