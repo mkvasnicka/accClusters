@@ -628,7 +628,7 @@ silently <- function(.f) {
 PWALK <- function(.l, .f, workers = 1, ram_needed = NULL, ...) {
     if (nrow(.l) > 0) {
         workers <- get_number_of_workers(workers, ram_needed)
-        logging::loginfo("PWALK: using %s worker%s", workers,
+        logging::loginfo("PWALK: using up to %s worker%s", workers,
                          if (workers > 1) "s in parallel" else " only")
         .f <- silently(.f)
         if (workers == 1) {
