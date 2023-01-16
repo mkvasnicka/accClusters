@@ -83,10 +83,10 @@ Tento manuál popisuje pouze software \sw{} pro offline přípravu dat; interakt
 
 Příprava dat pro jejich vizualizaci a zejména výpočty klastrů nebezpečných míst jsou poměrně hardwarově náročné. Proto se předpokládá následující minimální konfigurace hardwaru a softwaru:
 
-- procesor minimálně třídy i5 (vyšší je lepší), minimálně 8\ jáder (větší počet jader je výhodou),
+- procesor minimálně třídy i5 (vyšší je lepší), minimálně 8\ jader (větší počet jader je výhodou),
 - minimálně 32\ GB operační paměti dedikované pro tento software (více jader vyžaduje více operační paměti),
 - operační systém Linux nebo Windows v\ 64\ bitové verzi,
-- docker a
+- Docker a
 - PowerShell (pouze na Windows).
 
 Drtivá většina výpočtů běží paralelně na více jádrech. Čím větší počet jader má systém dedikovaný, tím rychleji příprava dat proběhne. Odhadovaný čas výpočtu klastrů nehod je při prvním spuštění softwaru s\ použitím procesoru třídy\ i5 se čtyřmi jádry a 32\ GB operační paměti kolem tří dnů v\ případě práce s\ nespojitými hustotami pravděpodobnosti. V\ případě práce se spojitými hustotami pravděpodobnosti lze očekávat několikanásobně delší přípravu dat. Použití modernější architektury pomůže; zvýšení počtu jader spojené se zvětšením dostupné paměti tento čas proporcionálně zkrátí.
@@ -139,7 +139,7 @@ kde
 - `-h` vypíše nápovědu
 - `-i <image>` umožňuje volitelně zadat jiný název použitého dockerového image
 - `-n <container name>` umožňuje volitelně zadat název spuštěného kontejneru
-- `-p <docker run parameters>` umožnuje zadat volitelné parametry předané dockeru při spuštění kontejneru
+- `-p <docker run parameters>` umožňuje zadat volitelné parametry předané dockeru při spuštění kontejneru
 - `-d <data folder>` umožňuje zadat absolutní cestu ke složce s\ daty; implicitně se předpokládá, že data jsou uložena v\ aktuálním adresáři; adresář, ve kterém jsou data uložena, je dále nazýván `DIRORIGIN`
 - `-m` při použití této volby systém uloží do adresáře s\ daty soubor s\ touto dokumentací (pokud neexistuje)
 - `-c` při použití této volby systém uloží do adresáře s\ daty adresář `config` s\ počáteční konfigurací systému (pokud neexistuje; nikdy tedy nepřepíše uživatelskou konfiguraci)
@@ -253,7 +253,7 @@ Jádrová hustota představuje jádrové vyhlazení bodového procesu na síti a
 
 Systém \sw{} umí spočítat hustoty pravděpodobnosti mnoha různých typů, viz oddíl\ \ref{sec:pardensities}. V\ nejjednodušším případě spočítá jádrovou hustotu, při které mají všechny nehody stejnou váhu. Ve složitějším mohou mít závažnější nehody vyšší váhu než méně závažné nehody. Systém také umožňuje stanovit délku vyhlazovací konstanty (*bandwidth*)\ $b$ nebo ji nechat adaptivně upravovat tak, že bude kratší v\ regionech s\ vyšší hustotou nehod a delší v\ regionech s\ nižší hustotou nehod, viz\ @GelbManual.
 
-Jistá obtíž při výpočtu jádrových hustot nastává na křižovatkách. Pokud by se jádro rozlévalo na všechny strany beze změny, byl by odhad jádrové hustoty vychýlený a neintegroval by na\ 1. Systém\ \sw{} umí tento problém řešit tak, že na křižovatce rozdělí hustotu na stejné části, viz obrázek\ 1a. Výsledkem je nevychýlený odhad hustoty pravděpodobnosti, který však někomu může připadat neintuitivní, protože hustota pravděpodobnosti není spojitá. Tento způsob výpočtu síťových jádrových hustot se nazývá "nespojitý" ("discontinuous"). Alternativně je možné hustoty počítat spojitě (výpočet "continuous"). V\ tomto případě se algoritmus několikrát vrátí, aby hustoty pravděpodobnosti vyhladil, viz obrázek\ 1b. Husta pravděpodobnosti je v\ tomto případě spojitá, což může působit intuitivněji. Nevýhodou tohoto postupu je to, že je podstatně pomalejší. Více detailů viz např.\ @GelbManual nebo @McSwiggan2017.
+Jistá obtíž při výpočtu jádrových hustot nastává na křižovatkách. Pokud by se jádro rozlévalo na všechny strany beze změny, byl by odhad jádrové hustoty vychýlený a neintegroval by na\ 1. Systém\ \sw{} umí tento problém řešit tak, že na křižovatce rozdělí hustotu na stejné části, viz obrázek\ 1a. Výsledkem je nevychýlený odhad hustoty pravděpodobnosti, který však někomu může připadat neintuitivní, protože hustota pravděpodobnosti není spojitá. Tento způsob výpočtu síťových jádrových hustot se nazývá "nespojitý" ("discontinuous"). Alternativně je možné hustoty počítat spojitě (výpočet "continuous"). V\ tomto případě se algoritmus několikrát vrátí, aby hustoty pravděpodobnosti vyhladil, viz obrázek\ 1b. Hustota pravděpodobnosti je v\ tomto případě spojitá, což může působit intuitivněji. Nevýhodou tohoto postupu je to, že je podstatně pomalejší. Více detailů viz např.\ @GelbManual nebo @McSwiggan2017.
 
 ```{r, echo=FALSE, out.width="17cm", fig.cap="Rozdělení hustot pravděpodobnosti na křižovatce: (a) nespojitě, (b) spojitě. Převzato z~McSwiggan, Baddeley, and Nair~(2017)"}
 knitr::include_graphics("densities.png")
@@ -276,7 +276,7 @@ V\ předchozím kroku se pro každý *lixel* silniční sítě spočítala husto
 Rozšíření klastrů v\ kroku\ 3 klastry zvětšuje. Pokud je např.\ klastr tvořen čistě lineárním úsekem silniční sítě (např.\ částí jednoho směru dálnice daleko od nájezdů a exitů), znamená zvětšení o\ $4$ *lixely* to že se vybraný segment dálnice prodlouží v\ obou směrech cca o\ 20\ metrů (4\ *lixely* po cca\ 5\ metrech délky). Pokud je klastr tvořen např.\ několika silnicemi, které se potkávají na křižovatce, je stejným způsobem prodloužena každá ze silnic, které tvoří klastr.
 Toto rozšiřování klastrů nehod je důležité proto, že klastr je generován nejen nehodami, kterou jsou ke klastru přiřazeny v\ kroku\ 2, ale také nehodami, které leží za "okrajem" klastru. Také tyto nehody totiž do jisté míry přispívají k\ hodnotě NKDE v\ *lixelech*, které klastr tvoří. V\ extrémním případě by se bez rozšíření klastru mohlo stát, že budou existovat krátké klastry nehodových úseků, kterým nebude přiřazena žádná nehoda, a\ nehody, které tento klastr vytvořily budou ležet plně mimo jeho okraje.
 
-Neexistuje jedno jasné kritérium, jak stanovit "správné" hodnoty parametrů $h$ a $a$. Promile nejproblematičtějších úseků silniční sítě, které může chtít analytik vidět, totiž závisí na mnoha faktorech, zejména na objemu zdrojů, které má k\ dispozici na řešení problémů, např.\ na přebudování problémových komunikací nebo umístění policejních hlídek. Software \sw{} proto identifikuje nehodové klastry pro mnoho různých kombinací hodnot\ $h$ a $a$. Uživatel si pak ve webovém vizualizačním nástroji může podle stvých potřeb nastavit, kolik promile nejhorších úseků se mu zobrazí a\ o\ kolik *lixelů* se výsledné klastry zvětší. Více o\ interpretaci klastrů úseků častých nehod viz\ oddíl\ \ref{kap:interpret}.
+Neexistuje jedno jasné kritérium, jak stanovit "správné" hodnoty parametrů $h$ a $a$. Promile nejproblematičtějších úseků silniční sítě, které může chtít analytik vidět, totiž závisí na mnoha faktorech, zejména na objemu zdrojů, které má k\ dispozici na řešení problémů, např.\ na přebudování problémových komunikací nebo umístění policejních hlídek. Software \sw{} proto identifikuje nehodové klastry pro mnoho různých kombinací hodnot\ $h$ a $a$. Uživatel si pak ve webovém vizualizačním nástroji může podle svých potřeb nastavit, kolik promile nejhorších úseků se mu zobrazí a\ o\ kolik *lixelů* se výsledné klastry zvětší. Více o\ interpretaci klastrů úseků častých nehod viz\ oddíl\ \ref{kap:interpret}.
 
 
 ## Klastry nehodových úseků ve formátu pro GIS
@@ -304,7 +304,7 @@ V\ této kapitole popíšeme blíže zdroje a strukturu vstupních dat, která s
 ## Administrativní členění ČR
 
 Jako mapový podklad pro administrativní členění se používají data ČÚZK. 
-Mapový podklad je k\ dispozici na Geoportálu ČÚZK. Jedná se o\ Soubor správních hranic a hranic katastrálních území ČR v\ projekti JTSK.
+Mapový podklad je k\ dispozici na Geoportálu ČÚZK. Jedná se o\ Soubor správních hranic a hranic katastrálních území ČR v\ projekci JTSK.
 
 - zdroj: https://geoportal.cuzk.cz/(S(uufahw3bishqszcklzne0nex))/Default.aspx?mode=TextMeta&side=dSady_hranice10&metadataID=CZ-CUZK-SH-V&mapid=5&head_tab=sekce-02-gp&menu=2521
 - přímý odkaz: https://geoportal.cuzk.cz/zakazky/SPH/SPH_SHP_JTSK.zip
@@ -361,7 +361,7 @@ Data o\ nehodách v\ tomto formátu překopírujte do adresáře `DIRORIGIN/rawd
 
 Po aktualizaci vstupních dat nejdříve zkontrolujte, že odpovídají formátu popsanému výše; nejlépe také zkontrolujte, že mají stejnou strukturu jako data používaná dříve.
 
-Potom vymažte obsah adresáře `DIRORIGIN/output` a znovu spusťe software \sw{}, který vytvoří novu verzi výstupních dat.
+Potom vymažte obsah adresáře `DIRORIGIN/output` a znovu spusťte software \sw{}, který vytvoří novu verzi výstupních dat.
 
 
 
@@ -528,11 +528,11 @@ Pokud by bylo cílem sestavit klastry nehod tak, že by všechny nehody měly st
 Hustoty pravděpodobnosti se počítají na zjednodušené silniční síti. Další skupina parametrů určuje, jak se tato síť zpracuje. Pokud k\ tomu nemáte velmi silný důvod, nechte tyto parametry v\ doporučeném (základním) nastavení.
 
 U\ vlastních mapových podkladů je třeba nastavit čtyři parametry.
-Parametr `SUPPORTED_ROAD_CLASSES` určuje, které typy cest se zařadí do silniční použité sítě. Podkladová mapa OpenStreetMaps totiž obsahuje cesty mnoha typů, z\ nichž mnohé nejsou určeny pro motorová vozidla. Při výpočtu hustot je třeba tyto typy cest ignorovat. Do proměnné `SUPPORTED_ROAD_CLASSES` zadejte výčet všech typů cest (jako vektor řetězců), které se mají použít. Jména typů cest musejí odpovídat kódování OpenStreetMaps. V\ současné době je v\ základním nastavení skriptu `config.R` výčet všech typů cest, které OpenStreetMaps nyní používají, s\ tím, že nevhodné typy jsou odstraněny pomocí komentářů. Seznam podporavných typů je dostupný na adrese https://wiki.openstreetmap.org/wiki/Key:highway.
+Parametr `SUPPORTED_ROAD_CLASSES` určuje, které typy cest se zařadí do silniční použité sítě. Podkladová mapa OpenStreetMaps totiž obsahuje cesty mnoha typů, z\ nichž mnohé nejsou určeny pro motorová vozidla. Při výpočtu hustot je třeba tyto typy cest ignorovat. Do proměnné `SUPPORTED_ROAD_CLASSES` zadejte výčet všech typů cest (jako vektor řetězců), které se mají použít. Jména typů cest musejí odpovídat kódování OpenStreetMaps. V\ současné době je v\ základním nastavení skriptu `config.R` výčet všech typů cest, které OpenStreetMaps nyní používají, s\ tím, že nevhodné typy jsou odstraněny pomocí komentářů. Seznam podporovaných typů je dostupný na adrese https://wiki.openstreetmap.org/wiki/Key:highway.
 
 Všechny výpočty probíhají po jednotlivých okresech. Aby nedocházelo ke zkreslením na hranicích okresu, je po dobu výpočtu třeba zahrnout i\ silnice a nehody, které leží nedaleko za hranicí okresu (na konci výpočtu budou údaje ležící za hranicí okresu opět odříznuty). Proměnná `DISTRICT_BUFFER_SIZE` určuje o\ kolik metrů se má pro potřeby výpočtu posunout hranice okresu. Hodnota této proměnné musí být dostatečně větší než hodnota proměnných `NKDE_BW` (a\ `NKDE_TRIM_BW`, pokud je  hodnota `NKDE_ADAPTIVE` nastavena na `TRUE`).
 
-Pro účely výpočtů hustot pravděpodobností nehody je třeba rozdělit silniční síť do krátkých (*lixelů*). Tyto lixely musejí být tak krátké, aby byly v\ rámci silniční sítě velmi podobně dlouhé; zároveň však platí, že čím jsou kratší, tím je jich více a výpočet běží pomaleji a vyžaduje vyšší zdroje. Typickou délku *lixelů* v\ metrech nastavuje parametr `LIXEL_SIZE`. Parametr `LIXEL_MIN_DIST` určuje minimální délku *lixelu* v\ metrech; kratší lixely budou připojeny k\ někerému sousednímu *lixelu*.
+Pro účely výpočtů hustot pravděpodobností nehody je třeba rozdělit silniční síť do krátkých (*lixelů*). Tyto *lixely* musejí být tak krátké, aby byly v\ rámci silniční sítě velmi podobně dlouhé; zároveň však platí, že čím jsou kratší, tím je jich více a výpočet běží pomaleji a vyžaduje vyšší zdroje. Typickou délku *lixelů* v\ metrech nastavuje parametr `LIXEL_SIZE`. Parametr `LIXEL_MIN_DIST` určuje minimální délku *lixelu* v\ metrech; kratší lixely budou připojeny k\ některému sousednímu *lixelu*.
 
 Některé nehody mohou být geolokovány velmi nepřesně\ -- daleko od silniční sítě. V\ takovém případě se při výpočtu rizikových míst ignorují. Parametr `ACCIDENT_TO_ROAD_MAX_DISTANCE` určuje maximální vzdálenost od silniční sítě v\ metrech, při které jsou nehody použity při hledání rizikových oblastí.
 
@@ -558,7 +558,7 @@ Doporučený výběr silnic (parametr `SUPPORTED_ROAD_CLASSES`) obsahuje i\ siln
 
 
 ### Nastavení paralelních výpočtů
-Většina přípravy dat probíhá paralelně na větším počtu jader. Parametry uvedné v\ tomto oddíle určují, kolik jader může být paralelně využito. Jsou zde dvě možnosti: Buď uživatel nastaví počet jader sám, nebo dovolí systému, aby počet jader odhadl. 
+Většina přípravy dat probíhá paralelně na větším počtu jader. Parametry uvedené v\ tomto oddíle určují, kolik jader může být paralelně využito. Jsou zde dvě možnosti: Buď uživatel nastaví počet jader sám, nebo dovolí systému, aby počet jader odhadl. 
 
 Doporučené je použití automatického mechanismu. Ten zohlední jednak to, kolik jader je v\ systému k\ dispozici (nebo kolik jich má alokovaný dockerový kontejner), jednak to, kolik je k\ dispozici volné operační paměti (nebo kolik jí má k\ dispozici dockerový kontejner).
 
@@ -671,7 +671,7 @@ Nejbezpečnější způsob, jak měnit konfiguraci systému, je ten, že po jak�
 
 Nejsložitější a výpočetně nejnáročnější je v\ systému \sw{} hledání klastrů nehodových míst. Zde se podíváme na to, jak tyto klastry interpretovat.
 
-Intuitivně je klastr nehodových míst ta část silniční sítě, na níž se nachází mnoho nehod nebo nebezpečné nehody. Technícky se klastr nehodových míst hledá tak, že se hledají ty části silniční sítě, kde je hustota pravděpodobnosti nehody obzvlášť vysoká:
+Intuitivně je klastr nehodových míst ta část silniční sítě, na níž se nachází mnoho nehod nebo nebezpečné nehody. Technicky se klastr nehodových míst hledá tak, že se hledají ty části silniční sítě, kde je hustota pravděpodobnosti nehody obzvlášť vysoká:
 
 1. Vyberou se pouze ty části sítě, kde hustota pravděpodobnosti nehody leží nad zvolenou prahovou hodnotou\ $h$.
 1. Tyto úseky se rekurzivně spojí do zárodků klastrů tak, že se spojí ty úseky silnice, které na sebe navazují.
@@ -729,7 +729,7 @@ Příklad obsahu adresáře `DIRORIGIN/data/output/gis`:
 
 ## Shapefily nebezpečných míst
 
-Adresář pro každý okres obsahuje všechny typy nebezpečných míst spočítaných v\ průběhu přípravy dat pro webovou aplikaci. Jednotlivé shapefily mají vždy jméno `clusters_NUTS4_PROFILENAME_YYYY-MM-DD_YYYY-MM-DD`, kde `NUTS4` je kódové jméno okresu, `PROFILENAME` je jméno profilu a `YYYY-MM-DD` označuje den počátku a konce období, pro které byly nebezpečné úseky identifikovány.
+Adresář pro každý okres obsahuje všechny typy nebezpečných míst spočítaných v\ průběhu přípravy dat pro webovou aplikaci. Jednotlivé *shapefily* mají vždy jméno `clusters_NUTS4_PROFILENAME_YYYY-MM-DD_YYYY-MM-DD`, kde `NUTS4` je kódové jméno okresu, `PROFILENAME` je jméno profilu a `YYYY-MM-DD` označuje den počátku a konce období, pro které byly nebezpečné úseky identifikovány.
 
 Atributová tabulka těchto shapefilů obsahuje následující proměnné:
 
@@ -742,10 +742,10 @@ Atributová tabulka těchto shapefilů obsahuje následující proměnné:
 - `add_lix` ... o\ kolik *lixelů* byly klastry do všech stran rozšířeny,
 - `cluster` ... identifikační číslo daného klastru pro dané hodnoty `dst_id`, `dst_name`, `start`, `end`, `profile`, `severity` a `add_lix`,
 - `length` ... délka identifikovaného klastru v\ metrech,
-- `density` ... součet hustoty idenfikovaného klastru a
+- `density` ... součet hustoty identifikovaného klastru a
 - `cost` ... celkové náklady všech nehod v\ klastru v\ milionech Kč.
 
-Každý shapefile tedy obsahuje nehodové úseky spočítané pro daný okres, profil a časové okno a mnoho různých nastavení hodnot `severity` a `add_lixel`. To má několik důsledků:
+Každý *shapefile* tedy obsahuje nehodové úseky spočítané pro daný okres, profil a časové okno a mnoho různých nastavení hodnot `severity` a `add_lixel`. To má několik důsledků:
 
 1. Při analytické práci je třeba v\ GISu vyfiltrovat zvolené hodnoty `severity` a `add_lixel`.
 2. Identifikace klastru pomocí jeho čísla `cluster` není jednoznačná. Úplný klíč k\ identifikaci klastru tvoří kombinace sloupců `dst_id`, `start`, `end`, `profile`, `severity`, `add_lix` a `cluster`. Stejné číslo klastru může existovat pro různé kombinace hodnot `dst_id`, `dst_name`, `start`, `end`, `profile`, `severity` a `add_lix`, ale mezi těmito klastry neexistuje žádný vztah.
@@ -771,7 +771,7 @@ Atributová tabulka zde obsahuje jen nejnutnější údaje:
 - `cluster` ... identifikační číslo daného klastru a
 - `cost` ... celkové náklady všech nehod v\ klastru v\ milionech Kč.
 
-Sloupce `dst_id`, `start`, `end`, `profile`, `severity`,  `add_lix` a `cluster` tvoří klíč ke spárování nehody s\ klastry v\ shapefilech. Sloupec `acc_id` tvoří klíč pro spárování nehody v\ policejní databázi. Proměnná `cost` obsahuje cenu nehody v\ milionech Kč spočítanou podle daného profilu.
+Sloupce `dst_id`, `start`, `end`, `profile`, `severity`,  `add_lix` a `cluster` tvoří klíč ke spárování nehody s\ klastry v\ *shapefilech*. Sloupec `acc_id` tvoří klíč pro spárování nehody v\ policejní databázi. Proměnná `cost` obsahuje cenu nehody v\ milionech Kč spočítanou podle daného profilu.
 
 Předpokládá se, že při potřebě analyzovat jednotlivé nehody, budou tyto nehody načteny z\ policejní databáze a spárovány pomocí klíče `acc_id`.
 
@@ -787,7 +787,7 @@ Informace o\ nastavení použitých profilů jsou uloženy v\ adresáři `DIRORI
 
 Ostatní sloupce  odpovídají jednotlivým parametrům zadaným v\ konfiguračních profilech. 
 
-To znamená, že např.\ shapefilu `clusters_CZ0100_equal_2019-01-01_2021-12-31` odpovídá profil, který má ve sloupci `PROFILE_NAME` hodnotu "equal" a ve sloupcích `FROM_DATE` a `TO_DATE` hodnoty "2019-01-01" a "2021-12-31" respektive.
+To znamená, že např.\ *shapefilu* `clusters_CZ0100_equal_2019-01-01_2021-12-31` odpovídá profil, který má ve sloupci `PROFILE_NAME` hodnotu "equal" a ve sloupcích `FROM_DATE` a `TO_DATE` hodnoty "2019-01-01" a "2021-12-31" respektive.
 
 Tam, kde může daný parametr obsahovat vektor, jsou jednotlivé hodnoty tohoto vektoru převedeny na řetězec a spojeny do jednoho řetězce; jsou odděleny znaky "\  |\ " (mezera, trubka a mezera).
 
