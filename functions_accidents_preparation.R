@@ -1,12 +1,11 @@
 # -------------------------------------
 # Script:   functions_accidents_preparation.R
-# Author:
-# Purpose:
-# Inputs:
-# Outputs:
-# Notes:
+# Author:   Michal Kvasnička
+# Purpose:  This script defines functions for preparation data on accidents.
+# Inputs:   none
+# Outputs:  function definitions
 #
-# Copyright(c) Corporation Name
+# Copyright(c) Michal Kvasnička
 # -------------------------------------
 
 
@@ -123,38 +122,6 @@ read_raw_outcomes_files <- function(path, skip) {
 }
 
 
-# read_raw_age_files() reads age files
-#
-# inputs:
-# - path ... (character vector) paths to files with major age tables in CSV
-# - skip ... (round nonnegative numeric scalar) how many first rows in CSV
-#   should be skipped
-#
-# value:
-#    tibble
-# read_raw_age_files <- function(path, skip) {
-#     readr::read_csv(path,
-#                     skip = 6,
-#                     col_types = readr::cols(
-#                         .default = col_integer(),
-#                         p1 = col_character()
-#                     )) |>
-#         # the first vehicle only
-#         dplyr::filter(id_vozidla == 1) |>
-#         # data for drivers only
-#         dplyr::filter(p59a == 1) |>
-#         dplyr::mutate(
-#             vek = ifelse(
-#                 p59d <= (year(today()) - 2000),
-#                 2000 + p59e,
-#                 1900 + p59e
-#             ),
-#             vek = vek - year(p2)
-#         ) |>
-#         dplyr::select(p1,driver_age = vek)
-# }
-
-
 # read_raw_pedestrians_files() reads pedestrians files
 #
 # inputs:
@@ -197,24 +164,6 @@ read_raw_vehicles_files <- function(path, skip) {
                         p1 = col_character()
                     )
     )
-
-    # readr::read_csv(path,
-    #                 skip = skip,
-    #                 col_types = cols(
-    #                     .default = col_integer(),
-    #                     p1 = col_character()
-    #                 )
-    # ) |>
-    #     dplyr::mutate(
-    #         vehicle_bike = p44 == 13,
-    #         vehicle_motobike = p44 %in% c(0,1,2)
-    #     ) |>
-    #     dplyr::group_by(p1) |>
-    #     dplyr::summarise(
-    #         involved_bike = any(vehicle_bike),
-    #         involved_motobike = any(vehicle_motobike),
-    #         .groups = "drop"
-    #     )
 }
 
 
@@ -367,11 +316,6 @@ read_raw_accidents <- function(folder, profiles) {
             involved_motobike = any(vehicle_motobike),
             .groups = "drop"
         )
-
-    # accidents <-
-    #     dplyr::left_join(accidents, gps, by = "p1") |>
-    #     dplyr::filter(!is.na(coord_x), !is.na(coord_y)) |>
-    #     dplyr::distinct()
 
     accidents <- list(
         accidents,
@@ -602,134 +546,6 @@ snap_points_to_lines <- function(points, lines, dist = 100,
 # - remaining accident are snapped to roads, i.e., their position is changed
 #   such that they lie on a road---they are moved to their closest points on
 #   their closest line
-# create_districts_accidents <- function(districts,
-#                                        path_to_accidents,
-#                                        lixel_dir,
-#                                        accident_dir,
-#                                        profiles) {
-#     one_file <- function(input_file, output_file, accidents, max_distance) {
-#         start_logging(log_dir())
-#         logging::loginfo("district accidents prep: creating %s", output_file)
-#         lines <- readr::read_rds(input_file)
-#         snapped_points <- snap_points_to_lines(accidents, lines,
-#                                                dist = max_distance)
-#         write_dir_rds(snapped_points, output_file)
-#         logging::loginfo("district accidents prep: %s has been created",
-#                          output_file)
-#     }
-#
-#     start_logging(log_dir())
-#     logging::loginfo("district accidents prep: checking for uppdates")
-#
-#     tryCatch({
-#         accidents <- readr::read_rds(path_to_accidents)
-#         districts <- districts_behind(districts,
-#                                       target_fun = accidents_file_name,
-#                                       source_fun = lixel_file_name,
-#                                       target_folder = accident_dir,
-#                                       source_folder = lixel_dir,
-#                                       other_files = c(path_to_districts(),
-#                                                       path_to_accidents))
-#         txt <- dplyr::if_else(nrow(districts) == 0, "---skipping", " in parallel")
-#         logging::loginfo(
-#             "district accidents prep: %d districts will be uppdated%s",
-#             nrow(districts), txt)
-#         tab <- tibble::tibble(
-#             input_file = lixel_file_name(districts, lixel_dir),
-#             output_file = accidents_file_name(districts, accident_dir))
-#         PWALK(tab, one_file,
-#               workers = profiles$NO_OF_WORKERS_ACCIDENTS[[1]],
-#               ram_needed = profiles$RAM_PER_CORE_ACCIDENTS[[1]],
-#               accidents = accidents,
-#               max_distance = profiles$ACCIDENT_TO_ROAD_MAX_DISTANCE[[1]]
-#               )
-#         logging::loginfo(
-#             "district accidents prep: district accidents have been updated")
-#     },
-#     error = function(e) {
-#         logging::logerror("district accidents prep failed: %s", e)
-#         stop("district accidents prep failed---stopping evaluation")})
-# }
-# create_districts_accidents <- function(districts,
-#                                        path_to_accidents,
-#                                        lixel_dir,
-#                                        accident_dir,
-#                                        profiles,
-#                                        shiny = FALSE) {
-#     one_file <- function(geometry,
-#                          input_file,
-#                          output_file,
-#                          shiny,
-#                          accidents,
-#                          max_distance) {
-#         start_logging(log_dir())
-#         logging::loginfo("district accidents prep: creating %s", output_file)
-#         lines <- readr::read_rds(input_file)
-#         accidents <- accidents[sf::st_intersects(accidents,
-#                                                  geometry,
-#                                                  sparse = FALSE), ]
-#         snapped_points <- snap_points_to_lines(accidents, lines,
-#                                                dist = max_distance,
-#                                                all_points = shiny)
-#         # if the output is not for shiny, only a subset of necessary variables
-#         # is kept
-#         if (!shiny)
-#             snapped_points <- snapped_points |>
-#             select(accident_id, accident_date, accident_dead,
-#                    accident_serious_injury, accident_light_injury,
-#                    accident_material_cost, lixel_id)
-#         # if the output is for shiny, it must be re-projected to WGS84
-#         snapped_points <- sf::st_transform(snapped_points,
-#                                            crs = ifelse(shiny,
-#                                                         WGS84,
-#                                                         PLANARY_PROJECTION))
-#         write_dir_rds(snapped_points, output_file)
-#         logging::loginfo("district accidents prep: %s has been created",
-#                          output_file)
-#     }
-#
-#     start_logging(log_dir())
-#     logging::loginfo("district accidents prep: checking for uppdates")
-#
-#     tryCatch({
-#         accidents <- readr::read_rds(path_to_accidents)
-#         districts <- districts_behind(districts,
-#                                       target_fun = accidents_file_name,
-#                                       source_fun = lixel_file_name,
-#                                       target_folder = accident_dir,
-#                                       source_folder = lixel_dir,
-#                                       other_files = c(path_to_districts(),
-#                                                       path_to_accidents,
-#                                                       path_to_configs()))
-#         txt <- dplyr::if_else(nrow(districts) == 0, "---skipping", " in parallel")
-#         logging::loginfo(
-#             "district accidents prep: %d districts will be uppdated%s",
-#             nrow(districts), txt)
-#         # accidents are cropped to districts; if the output is not for shiny,
-#         # districts must be buffered
-#         if (!shiny)
-#             districts <- sf::st_buffer(districts,
-#                                        dist = profiles$DISTRICT_BUFFER_SIZE[[1]])
-#         tab <- districts |>
-#             dplyr::select() |>
-#             dplyr::mutate(
-#                 input_file = lixel_file_name(districts, lixel_dir),
-#                 output_file = accidents_file_name(districts, accident_dir),
-#                 shiny = shiny
-#             )
-#         PWALK(tab, one_file,
-#               workers = profiles$NO_OF_WORKERS_ACCIDENTS[[1]],
-#               ram_needed = profiles$RAM_PER_CORE_ACCIDENTS[[1]],
-#               accidents = accidents,
-#               max_distance = profiles$ACCIDENT_TO_ROAD_MAX_DISTANCE[[1]]
-#         )
-#         logging::loginfo(
-#             "district accidents prep: district accidents have been updated")
-#     },
-#     error = function(e) {
-#         logging::logerror("district accidents prep failed: %s", e)
-#         stop("district accidents prep failed---stopping evaluation")})
-# }
 create_districts_accidents <- function(districts,
                                        path_to_accidents,
                                        lixel_dir,
