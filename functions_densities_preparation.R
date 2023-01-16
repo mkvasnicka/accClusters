@@ -332,8 +332,6 @@ compute_densities <- function(districts,
     logging::loginfo("densities prep: checking for updates")
 
     tryCatch({
-    # time_window <- handle_time_window(time_window)
-
     districts <- districts |>
         bind_cols(profiles |>
                       dplyr::select(PROFILE_NAME, TIME_WINDOW,
@@ -354,23 +352,6 @@ compute_densities <- function(districts,
                          from_date = districts$from_date,
                          to_date = districts$to_date,
                          profile_name = districts$PROFILE_NAME)
-
-    # districts <- purrr::map2(
-    #     time_window$from_date, time_window$to_date,
-    #     ~districts_behind(districts |>
-    #                           mutate(from_date = .x, to_date = .y),
-    #                       target_fun = densities_file_name,
-    #                       source_fun = list(sf_file_name, lixel_file_name,
-    #                                         lixel_sample_file_name,
-    #                                         accidents_file_name),
-    #                       target_folder = density_dir,
-    #                       source_folder = list(maps_dir, lixel_dir,
-    #                                            sample_dir, accidents_dir),
-    #                       other_files = path_to_districts(),
-    #                       from_date = .x, to_date = .y,
-    #                       profile_name = profile_name)
-    # ) |>
-    #     dplyr::bind_rows()
     tab <- tibble::tibble(
         map_path = sf_file_name(districts, maps_dir),
         lixel_path = lixel_file_name(districts, lixel_dir),
