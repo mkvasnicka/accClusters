@@ -35,4 +35,3 @@ compute_clusters(districts,
                  accidents_dir = path_to_accidents_dir(),
                  cluster_dir = shiny_dir(),
                  profiles)
-time_to_recover_memory()

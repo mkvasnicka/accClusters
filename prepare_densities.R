@@ -36,4 +36,3 @@ compute_densities(districts,
                   accidents_dir = path_to_accidents_dir(),
                   density_dir = path_to_densities_dir(),
                   profiles = profiles)
-time_to_recover_memory()

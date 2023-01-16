@@ -908,18 +908,3 @@ add_damage_cost <- function(accidents,
         accidents <- accidents |> filter(!is.na(accident_cost))
     accidents
 }
-
-
-
-# recover memory ---------------------------------------------------------------
-
-# time_to_recover_memory() has one goal: give the system time to recover the
-# memory alocated by previous computation; the reason is this: when automatic
-# number of cores is used, it detects the available memory; if it is not freed
-# yet, it uses (possibly for many hours/days) too low number of cores;
-# therefore, it seems better to slow the process at some point to free the
-# memory
-time_to_recover_memory <- function(time = 5) {
-    gc()
-    Sys.sleep(time)
-}
