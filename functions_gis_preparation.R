@@ -50,7 +50,7 @@ gis_suffix <- function(tab) {
 # a folder name and a suffix
 gis_add_folder_and_suffix <- function(base, folder, suffix) {
     if (!is.null(suffix))
-        base <- stringr::str_c(base, ".shp")
+        base <- stringr::str_c(base, suffix)
     if (!is.null(folder))
         base <- file.path(folder, base)
     base
@@ -216,6 +216,20 @@ write_profiles <- function(profiles, folder) {
 #   therefore, attribute names are shortened and accents are removed; see
 #   write_to_shapefile()
 write_gis_files <- function(districts, gis_dir, shiny_dir, profiles) {
+    gis_files_behind <- function(tab) {
+        l <- tab |>
+            rowwise() |>
+            group_split() |>
+            map_lgl(~is_behind(
+                target = c(
+                    gis_clusters_filename(., gis_dir, suffix = ".shp"),
+                    gis_clustered_accidents_filename(., gis_dir,
+                                                     suffix = ".dbf")
+                ),
+                source = c(.$shiny_filename, path_to_configs())))
+        tab[l, ]
+    }
+
     process_one_shiny_file <- function(row, gis_dir) {
         start_logging(log_dir())
         tryCatch({
@@ -275,26 +289,30 @@ write_gis_files <- function(districts, gis_dir, shiny_dir, profiles) {
                                                            to_date = to_date)) |>
             dplyr::select(district_id, district_name, from_date, to_date,
                           profile_name, shiny_filename)
+        create_dir_for_file(gis_csv_profiles_filename(gis_dir))
         if (is_behind(
             target = c(
-                    gis_clusters_filename(tab, gis_dir, suffix = ".shp"),
-                    gis_clustered_accidents_filename(tab, gis_dir,
-                                                     suffix = ".dbf"),
-                    gis_dbf_profiles_filename(gis_dir),
-                    gis_csv_profiles_filename(gis_dir)
+                gis_dbf_profiles_filename(gis_dir),
+                gis_csv_profiles_filename(gis_dir)
             ),
-            source = tab$shiny_filename)) {
+            source = c(tab$shiny_filename, path_to_configs()))) {
+            logging::loginfo("gis prep: gis profiles are behind; creating them")
+            write_profiles(profiles, gis_dir)
+            logging::loginfo("gis prep: gis profiles have been created")
+        } else {
+            logging::loginfo("gis prep: gis profiles are up-to-date---skipping")
+        }
+        tab <- gis_files_behind(tab)
+        if (nrow(tab) > 0) {
             logging::loginfo("gis prep: gis files are behind; processing %i shiny files",
                              nrow(tab))
-            create_dir_for_file(gis_csv_profiles_filename(gis_dir))
-            write_profiles(profiles, gis_dir)
             tab |>
                 dplyr::rowwise() |>
                 dplyr::group_split() |>
                 purrr::walk(process_one_shiny_file, gis_dir)
             logging::loginfo("gis prep: gis files have been created")
         } else {
-            logging::loginfo("gis prep: everything is up-to-date---skipping")
+            logging::loginfo("gis prep: gis files are up-to-date---skipping")
         }
     },
     error = function(e) {
