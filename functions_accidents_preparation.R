@@ -120,75 +120,6 @@ read_raw_outcomes_files <- function(path, skip) {
                         .default = col_integer(),
                         p1 = col_character()
                     ))
-        # dplyr::filter(p59g == 1) |>
-        # dplyr::left_join(., data_vozidla_type, by = c("p1", "id_vozidla") ) |>
-        # dplyr::mutate(
-        #     type = dplyr::case_when(
-        #         p44 %in% c(0,1,2) ~ "motobike",
-        #         p44 == 13 ~ "bike",
-        #         p44 %in% c(3,4) ~ "car",
-        #         p44 %in% c(5,6,7) ~ "truck",
-        #         TRUE ~ "other"
-        #     ),
-        #     driver = ifelse(p59a == 1, "driver", "crew")
-        # ) |>
-        # dplyr::group_by(p1, type, driver) %>%
-        # dplyr::summarise(
-        #     obs = n(),
-        #     .groups = "drop"
-        # ) |>
-        # tidyr::pivot_wider(
-        #     names_from = c(type, driver),
-        #     values_from = obs,
-        #     id_cols = p1,
-        #     names_sep = "_",
-        #     names_prefix = "casualties_",
-        #     values_fill = 0
-        # )
-
-
-    # TODO: vlastní funkce! + není duplicita dále?
-    # data_vozidla_type <-
-    #     readr::read_csv(path,
-    #                     skip = skip,
-    #                     col_types = cols(
-    #                         .default = col_integer(),
-    #                         p1 = col_character()
-    #                     )
-    #     ) |>
-    #     dplyr::distinct(p1, id_vozidla, p44)
-
-    # readr::read_csv(path,
-    #                 skip = skip,
-    #                 col_types = readr::cols(
-    #                     .default = col_integer(),
-    #                     p1 = col_character()
-    #                 )) |>
-    #     dplyr::filter(p59g == 1) |>
-    #     dplyr::left_join(., data_vozidla_type, by = c("p1", "id_vozidla") ) |>
-    #     dplyr::mutate(
-    #         type = dplyr::case_when(
-    #             p44 %in% c(0,1,2) ~ "motobike",
-    #             p44 == 13 ~ "bike",
-    #             p44 %in% c(3,4) ~ "car",
-    #             p44 %in% c(5,6,7) ~ "truck",
-    #             TRUE ~ "other"
-    #         ),
-    #         driver = ifelse(p59a == 1, "driver", "crew")
-    #     ) |>
-    #     dplyr::group_by(p1, type, driver) %>%
-    #     dplyr::summarise(
-    #         obs = n(),
-    #         .groups = "drop"
-    #     ) |>
-    #     tidyr::pivot_wider(
-    #         names_from = c(type, driver),
-    #         values_from = obs,
-    #         id_cols = p1,
-    #         names_sep = "_",
-    #         names_prefix = "casualties_",
-    #         values_fill = 0
-    #     )
 }
 
 
@@ -319,8 +250,6 @@ read_raw_vehicles_files <- function(path, skip) {
 #
 # notes:
 # - the CSVs can be extracted from XLS by prepare_raw_accidents.sh script
-#
-# TODO: standardizovat názvy polí nehodách
 read_raw_accidents <- function(folder, profiles) {
 
     accidents <- purrr::map(
