@@ -1,7 +1,7 @@
 TODO
 ====
 
-+ TODO comment v R skriptech
++ TODO comment v functions_map_preparation.R
 
 
 Funkcionalita
@@ -14,10 +14,6 @@ Funkcionalita
             - pokud ne, je potřeba v místě time_to_recover_memory() rozdělit skript na více skriptů
                 - jinak nefunguje dobře odhad workerů v PWALK()
 - aktualizovat všechny balíky a vyzkoušet
-- vyspellovat dokumentaci
-- paralelizovat GIS prep??
-    - memory usage v paralelizovatelné části je pod 1 GB
-    - ale není tu moc výpočtů -- nejvíc času asi zabere prosté čtení a zapisování na disk
 
 
 Parametrizace
@@ -29,9 +25,7 @@ Parametrizace
 
 Testovat
 --------
-- zkontrolovat časový výběr nehod při výpočtu hustot
-- zkontrolovat závislosti v is_behind() a spol.
-    - zejména, kde se u nehod bere čas pro Make-like update?
+- zkontrolovat závislosti v is_behind() a districts_behind()
 - jaké sloupce obsahuje tabulka nehod + ty, které používáme, standardizovat
     - pro případ, že policie sloupce přejmenuje -- není kulturní, abychom používali jejich interní značky
     - nutné domluvit se Štěpánem, co z toho použije
@@ -42,7 +36,6 @@ Testovat
 - zkontrolovat grid_shape v NKDE
     - NKDE i v nové verzi padalo, když tam byl rok 2022
 - otestovat novou verzi densities
-- otestovat aktualizované balíky (ostatní)
 - pro všechny okresy:
     - zkontrolovat počet souvislých podgrafů
     - spustit kontrolu, o které psal Gelb
