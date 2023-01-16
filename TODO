@@ -45,9 +45,8 @@ Testovat
 
 Čištění
 -------
-- doplnit popisky souborů
 - pročistit kód
-- vyhodit zakomentovaný kód
 - vyhodit nepoužívané soubory/adresáře
 - vyhodit:
     - unit_cost(s)()
+- vyhodit testovací kód z functions_map_preparation.R

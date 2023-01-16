@@ -432,7 +432,7 @@ optimize_cluster_parameters <- function(lixels, nb, accidents,
 
 # cluster preparation ----------------------------------------------------------
 
-#
+# TODO: přidat dokumentaci funkce
 compute_clusters_for_parameters <- function(quantile, threshold,
                                             cluster_steps,
                                             lixels, accidents, nb, geometry) {
