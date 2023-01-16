@@ -317,54 +317,6 @@ write_dir_rdata <- function(..., file) {
 
 
 
-# handling time windows --------------------------------------------------------
-
-# read_time_window_file(path) reads in table with time windows for which
-# accidnets cluster should be computed
-#
-# inputs:
-# - path ... (character scalar) path to the file defining time windows;
-#   - file must be TSV, i.e., TAB separated textual file
-#   - its header must be from-date and to-date
-#   - dates must be in format YYYY-MM-DD
-#
-# value:
-#   tibble with two Date columns (from_date and to_date)
-read_time_window_file <- function(path) {
-    read_tsv(path, col_types = cols(.default = col_date(format = "%Y-%m-%d")))
-}
-
-
-# handle_time_window(time_window) checks and prepares time windows
-#
-# inputs:
-# - time_window ... (either character scalar or tibble with two columns)
-#   - if time_window is character scalar, it is a path to TSV file where time
-#       window is stored; see help for read_time_window_file()
-#   - if time_window is tibble, it must have two columns (from_date and to_date)
-#       which includes Dates or character vectors in YYYY-MM-DD format
-#       convertible to Dates
-#
-# value:
-#   tibble with two Dates columns (from_date, to_date)
-handle_time_window <- function(time_window) {
-    if (is.character(time_window))
-        time_window <- read_time_window_file(time_window)
-    stopifnot(tibble::is_tibble(time_window),
-              nrow(time_window) > 0,
-              all(c("from_date", "to_date") %in% names(time_window)))
-    time_window <- time_window |>
-        dplyr::mutate(from_date = as.Date(from_date),
-                      to_date = as.Date(to_date)) |>
-        dplyr::distinct()
-    stopifnot(all(!is.na(time_window$from_date)),
-              all(!is.na(time_window$to_date)),
-              all(time_window$from_date <= time_window$to_date))
-    time_window
-}
-
-
-
 # updating files ---------------------------------------------------------------
 
 # is_behind(target, source) returns TRUE if any target files is older than any
