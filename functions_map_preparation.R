@@ -1,10 +1,9 @@
 # -------------------------------------
 # Script:   map_preparation_functions.R
 # Author:   Michal Kvasnička
-# Purpose:  This script defines functions to read in road from OpenStreetMaps.
+# Purpose:  This script defines functions to read in roads from OpenStreetMaps.
 # Inputs:   none
-# Outputs:  functions
-# Notes:
+# Outputs:  function definitions
 #
 # Copyright(c) Michal Kvasnička
 # -------------------------------------
@@ -105,57 +104,6 @@ filter_osm_roads <- function(input_path, output_path, road_types = NULL) {
                        "--overwrite"))
     }
 }
-
-
-# # function filter_district_roads() reads an osm map from input_path and create
-# # one osm file for each district
-# #
-# # DEPRACATED: use filter_all_osm_district_roads() instead!
-# #
-# # inputs:
-# # - district/districts ... (sf) must include at least district_id and geometry;
-# #   if district, then it must include only one row
-# # - input_path ... (character scalar) a path to an OSM map; it is expected that
-# #   it includes only selected roads, i.e. is prefiltered with filter_osm_roads()
-# # - folder ... a folder where geojsons are present and where the function should
-# #   write the individual osm(s)
-# # - verbose ... (logical, default FALSE) whether progress bar is created
-# # - pb ... don't use; just for internal purposes
-# #
-# # output:
-# # - none ... the functions only write the individual osm(s)
-# #
-# # notes:
-# # - osmium uses strategy "complete_ways" which secures that all necessary nodes
-# #   are included in the map, i.e. it is reference-complete, see
-# #   https://osmcode.org/osmium-tool/manual.html#creating-geographic-extracts;
-# #   the price for this is that the source file is read twice for each resulting
-# #   map; the time can be saved by switching the strategy to "simple"; in such a
-# #   case, however, the osmar_to_linnet() function would have to be augmented;
-# #   moreover, it may work only when the buffer is large enough
-# # - maybe the time could be saved if all extractions are done in one geojson
-# #   file---perhaps osmium could process all districts at once---check it!
-# filter_osm_one_district_roads <- function(district, input_path, folder, pb = NULL) {
-#     geojson <- file.path(folder, glue("district_{district$district_id}.geojson"))
-#     outfile <- file.path(folder, glue("district_{district$district_id}.osm"))
-#     system(glue("osmium extract -p {geojson} {input_path} -o {outfile} ",
-#                 "--overwrite"))
-#     if (!is.null(pb))
-#         pb$tick(1)
-# }
-# filter_osm_district_roads <- function(districts, input_path, folder,
-#                                       verbose = FALSE) {
-#     if (verbose) {
-#         message("Extracting districts...")
-#         pb <- progress_bar$new(format = "  creating osm [:bar] :current/:total in :elapsed eta: :eta",
-#                                total = nrow(districts), clear = FALSE, width = 60)
-#         pb$tick(0)
-#     } else {
-#         pb <- NULL
-#     }
-#     purrr::walk(seq_len(nrow(districts)),
-#                 ~filter_osm_one_district_roads(districts[., ], input_path, folder, pb))
-# }
 
 
 # function create_json_do_file() creates a json config file for osmium so that
