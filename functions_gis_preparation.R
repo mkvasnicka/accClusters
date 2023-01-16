@@ -1,10 +1,9 @@
 # -------------------------------------
 # Script:   functions_gis_preparation.R
 # Author:   Michal Kvasnička
-# Purpose:
-# Inputs:
-# Outputs:
-# Notes:
+# Purpose:  This script defines functions used for exporting clusters to GIS.
+# Inputs:   none
+# Outputs:  function definitions
 #
 # Copyright(c) Michal Kvasnička
 # -------------------------------------

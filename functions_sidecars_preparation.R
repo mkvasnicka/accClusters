@@ -1,12 +1,12 @@
 # -------------------------------------
-# Script:
-# Author:
-# Purpose:
-# Inputs:
-# Outputs:
-# Notes:
+# Script:   functions_sidecars_preparation.R
+# Author:   Michal Kvasnička
+# Purpose:  This scripts defines functions for exporting sidecars for cluster
+#           files.
+# Inputs:   none
+# Outputs:  functions
 #
-# Copyright(c) Corporation Name
+# Copyright(c) Michal Kvasnička
 # -------------------------------------
 
 # load packages

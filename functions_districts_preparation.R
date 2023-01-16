@@ -6,7 +6,6 @@
 #           and ORPs, too.
 # Inputs:   none
 # Outputs:  function definitions
-# Notes:
 #
 # Copyright(c) Michal Kvasnička
 # -------------------------------------

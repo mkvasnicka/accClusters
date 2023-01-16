@@ -5,7 +5,6 @@
 #           reading, checking, and storing.
 # Inputs:   none
 # Outputs:  functions
-# Notes:
 #
 # Copyright(c) Michal Kvasnička
 # -------------------------------------
