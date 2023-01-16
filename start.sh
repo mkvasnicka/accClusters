@@ -4,7 +4,7 @@ usage() {
 	echo "Použití:"
 	echo "start.sh [-h] [-i <image>] [-n <container name>] [-d <data folder>] [-m] [-c] [-k]"
 	echo "  -h ... vypíše nápovědu"
-	echo "  -i <image> ... volitelný název použitého docker image; implicitně acc-clusters:latest"
+	echo "  -i <image> ... volitelný název použitého docker image; implicitně mkvasnicka/acc-clusters:latest"
 	echo "  -n <container name> ... volitelný název kontejneru"
     echo "  -p <docker run parameters> ... volitelné parametry předané dockeru při spuštění kontejneru"
 	echo "  -d <data folder> ... volitelná cesta ke složce s daty; implicitně aktuální adresář"
