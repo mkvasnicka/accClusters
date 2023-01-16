@@ -1,10 +1,9 @@
 # -------------------------------------
 # Script:   auxiliary_functions.R
 # Author:   Michal Kvasnička
-# Purpose:
+# Purpose:  This script defines various auxiliary functions.
 # Inputs:   none
-# Outputs:  functions
-# Notes:
+# Outputs:  function definitions
 #
 # Copyright(c) Michal Kvasnička
 # -------------------------------------
@@ -597,30 +596,6 @@ get_number_of_workers <- function(workers, ram_needed) {
         workers <- min(no_of_cores, floor(ram / ram_needed))}
     workers
 }
-
-
-# # silently(.f) wrappes function .f in such a way that runs and returns TRUE when
-# # it succeeds and FALSE when it fails; it should be used with functions that
-# # return no value but are run for their side effects; it is used in PWALK()
-# #
-# # inputs:
-# # - .f ... (clusure) a function that returns nothing and is run for its side
-# #   effects
-# #
-# # value:
-# #   logical: FALSE when .f fails and TRUE otherwise
-# silently <- function(.f) {
-#     .f <- purrr::as_mapper(.f)
-#     function(...) {
-#         val <- TRUE
-#         tryCatch(.f(...), error = function(e) {
-#             val <<- FALSE
-#         }, interrupt = function(e) {
-#             stop("Terminated by user", call. = FALSE)
-#         })
-#         val
-#     }
-# }
 
 
 # silently(.f) wrappes function .f in such a way that runs and returns TRUE when
