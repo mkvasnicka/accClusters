@@ -41,6 +41,7 @@ Testovat
     - spustit kontrolu, o které psal Gelb
 - podívat se očima na klastry v guts/shiny
     - bez ohledu na název jsou všechny pro stejné období, IMHO 2019--2021
+- Brno-venkov -- kdy se vyhodí Brno město? budou tam pak vůbec nějaké klastry?
 
 
 Čištění
@@ -49,3 +50,4 @@ Testovat
 - vyhodit:
     - unit_cost(s)()
 - vyhodit testovací kód z functions_map_preparation.R
+- do hlaviček prepare_*.R přidat, který soubory to vyžaduje a které vytváří
