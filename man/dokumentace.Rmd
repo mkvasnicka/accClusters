@@ -296,7 +296,7 @@ Systém \sw{} umí spočítat hustoty pravděpodobnosti mnoha různých typů, v
 
 Jistá obtíž při výpočtu jádrových hustot nastává na křižovatkách. Pokud by se jádro rozlévalo na všechny strany beze změny, byl by odhad jádrové hustoty vychýlený a neintegroval by na\ 1. Systém\ \sw{} umí tento problém řešit tak, že na křižovatce rozdělí hustotu na stejné části, viz obrázek\ 1a. Výsledkem je nevychýlený odhad hustoty pravděpodobnosti, který však někomu může připadat neintuitivní, protože hustota pravděpodobnosti není spojitá. Tento způsob výpočtu síťových jádrových hustot se nazývá "nespojitý" ("discontinuous"). Alternativně je možné hustoty počítat spojitě (výpočet "continuous"). V\ tomto případě se algoritmus několikrát vrátí, aby hustoty pravděpodobnosti vyhladil, viz obrázek\ 1b. Hustota pravděpodobnosti je v\ tomto případě spojitá, což může působit intuitivněji. Nevýhodou tohoto postupu je to, že je podstatně pomalejší. Více detailů viz např.\ @GelbManual nebo @McSwiggan2017.
 
-```{r, echo=FALSE, out.width="17cm", fig.cap="Rozdělení hustot pravděpodobnosti na křižovatce: (a) nespojitě, (b) spojitě. Převzato z~McSwiggan, Baddeley, and Nair~(2017)"}
+```{r, echo=FALSE, out.width="17cm", fig.cap="Rozdělení hustot pravděpodobnosti na křižovatce: (a) nespojitě, (b) spojitě. Převzato z~McSwiggan, Baddeley, and Nair~(2017)."}
 knitr::include_graphics("densities.png")
 ```
 
