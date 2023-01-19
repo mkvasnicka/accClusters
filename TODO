@@ -19,6 +19,7 @@ Funkcionalita
 Parametrizace
 -------------
 - najít optimální nastavení parametrů
+    - rozmyslet si i délku období -- jsou 3 roky dost? -- klastry se mezi obdobími dost liší (Brno venkov)
 - podívat se, jak se liší klastry pro continuous a discontinuous
 - podívat se, co dělá adaptive
 
@@ -39,9 +40,9 @@ Testovat
 - pro všechny okresy:
     - zkontrolovat počet souvislých podgrafů
     - spustit kontrolu, o které psal Gelb
-- podívat se očima na klastry v guts/shiny
-    - bez ohledu na název jsou všechny pro stejné období, IMHO 2019--2021
 - Brno-venkov -- kdy se vyhodí Brno město? budou tam pak vůbec nějaké klastry?
+    - podívat se, jak se počítá
+    - klastrů je tam při současném nastavení docela dost
 
 
 Čištění
