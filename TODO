@@ -14,14 +14,18 @@ Funkcionalita
         - get_number_of_workers(profiles$NO_OF_WORKERS[1], profiles$RAM_PER_CORE_GENERAL[1])
         - get_number_of_workers(profiles$NO_OF_WORKERS_ACCIDENTS[1], profiles$RAM_PER_CORE_ACCIDENTS[1])
 - aktualizovat všechny balíky a vyzkoušet
+- PWALK logging: změnit počet workerů v logu z počtu nastavených workerů na min. z nich a počtu úkolů (prvků .l)
 
 
 Parametrizace
 -------------
 - najít optimální nastavení parametrů
+    - podívat se, jak se liší klastry pro continuous a discontinuous
+    - podívat se, co dělá adaptive
+    - podívat se, co dělá bandwidth
+    - podívat se, co dělá cost
+    - podívat se, jak se liší klastry mezi obdobími pro různá nastavení (stabilnější je asi lepší)
     - rozmyslet si i délku období -- jsou 3 roky dost? -- klastry se mezi obdobími dost liší (Brno venkov)
-- podívat se, jak se liší klastry pro continuous a discontinuous
-- podívat se, co dělá adaptive
 
 
 Testovat
