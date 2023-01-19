@@ -162,6 +162,47 @@ Zbývající složka `gis` (vytvořená/aktualizovaná pouze v\ případě, že 
 
 
 
+## Typická spouštění systému
+
+### První spuštění systému
+
+Při prvním spuštění nahrajte vstupní data do patřičných adresářů (viz oddíl\ \ref{kap:input-data}). Předpokládáme, že data obsahují kompletní seznam nehod za celý minulý rok. V\ terminálu se přepněte do adresáře, kde jsou umístěné složky s\ potřebnými daty a spusťte (můžete přidat další parametry, viz výše)
+
+```
+./start.sh -k   # na Linuxu nebo
+./start.ps1 -k  # na Windows
+```
+
+Připravte se na několikadenní výpočet, který připraví všechna potřebná data, včetně dat o\ silniční síti, nehodách a klastrech těchto nehod. Příslušná data přesuňte do patřičných adresářů vizualizační aplikace. Žádná data nemažte, protože se budou používat při pozdějších aktualizacích dat. Pokud je smažete, pak bude muset příprava dat proběhnout znovu a výpočet tak bude trvat zbytečně dlouho.
+
+
+### Aktualizace dat o\ nehodách
+
+Po každé aktualizaci dat o\ nehodách můžete aktualizovat běžná data pro vizualizační aplikaci tak, že se se v\ terminálu přepnete do adresáře s\ daty, aktualizujete data o\ nehodách a spustíte hlavní skript *bez* přepínače `-k`:
+
+```
+./start.sh   # na Linuxu nebo
+./start.ps1  # na Windows
+```
+
+Tak se aktualizují pouze běžná data o\ nehodách, ale ne klastry nehod. Ty dává smysl aktualizovat pouze jednou ročně ve chvíli, kdy máte v\ systému údaje o\ všech nehodách za celý minulý rok i za všechny ostatní roky, které se k\ hledání klastrů nehod používají.
+
+Pokud jste si nesmazali průběžná data vytvořená při prvním spuštění systému, pak výpočet proběhne poměrně rychle (do několika hodin).
+
+
+### Aktualizace klastrů nehod 
+
+Aktualizace klastrů nehod má smysl aktualizovat pouze jednou ročně, typicky po začátku roku\ -- ve chvíli, kdy máte v\ systému údaje o\ všech nehodách za celý minulý rok i za všechny ostatní roky, které se k\ hledání klastrů nehod používají. Pokud potřebná data o\ nehodách nemáte k\ dispozici, pak nemůžete použít výpočet klastrů s\ pomocí automatických časových oken (viz oddíl\ \ref{sec:time-windows}). Výpočet by v\ takovém případě v\ lepším případě spadl, v\ horším případě by dával zavádějící výsledky.
+
+Tuto aktualizaci provedete stejně jako při prvním spuštění systému, tj.\ s\ použitím přepínače\ `-k`. Pokud jste si nesmazali průběžná data vytvořená při prvním spuštění systému, pak výpočet proběhne rychleji než při prvním spuštění systému, i\ tak však bude trvat poměrně dlouho, protože výpočty jádrových hustot a z\ nich odvozené hledání klastrů nehod je poměrně výpočetně náročná operace.
+
+
+### Aktualizace nastavení systému nebo mapových podkladů
+
+Pokud změníte nastavení systému (viz oddíl\ \ref{kap:konfigurace}), mapové podklady o\ tvarech okresů nebo o\ tvaru silniční sítě, musí výpočet proběhnout stejně jako při prvním spuštění systému (a\ bude tedy trvat poměrně dlouho, protože se musejí přepočítat všechna data, která jsou normálně předkešovaná). Klastry nehod je v\ tomto případě možné aktualizovat pomocí automatických časových oken  (viz oddíl\ \ref{sec:time-windows}) pouze v\ případě, že máte k\ dispozici data o\ nehodách za všechny potřebné minulé roky včetně dat za celý poslední ukončený rok.
+
+
+
 # Jak systém funguje
 
 V\ tomto oddílu popíšeme, jak systém \sw{} funguje jako celek. V\ dalších oddílech pak podrobněji vysvětlíme strukturu použitých vstupů, konfiguraci softwaru, interpretaci nehodových klastrů a použití výstupu pro GIS.
@@ -255,7 +296,7 @@ Systém \sw{} umí spočítat hustoty pravděpodobnosti mnoha různých typů, v
 
 Jistá obtíž při výpočtu jádrových hustot nastává na křižovatkách. Pokud by se jádro rozlévalo na všechny strany beze změny, byl by odhad jádrové hustoty vychýlený a neintegroval by na\ 1. Systém\ \sw{} umí tento problém řešit tak, že na křižovatce rozdělí hustotu na stejné části, viz obrázek\ 1a. Výsledkem je nevychýlený odhad hustoty pravděpodobnosti, který však někomu může připadat neintuitivní, protože hustota pravděpodobnosti není spojitá. Tento způsob výpočtu síťových jádrových hustot se nazývá "nespojitý" ("discontinuous"). Alternativně je možné hustoty počítat spojitě (výpočet "continuous"). V\ tomto případě se algoritmus několikrát vrátí, aby hustoty pravděpodobnosti vyhladil, viz obrázek\ 1b. Hustota pravděpodobnosti je v\ tomto případě spojitá, což může působit intuitivněji. Nevýhodou tohoto postupu je to, že je podstatně pomalejší. Více detailů viz např.\ @GelbManual nebo @McSwiggan2017.
 
-```{r, echo=FALSE, out.width="17cm", fig.cap="Rozdělení hustot pravděpodobnosti na křižovatce: (a) nespojitě, (b) spojitě. Převzato z~McSwiggan, Baddeley, and Nair~(2017)"}
+```{r, echo=FALSE, out.width="17cm", fig.cap="Rozdělení hustot pravděpodobnosti na křižovatce: (a) nespojitě, (b) spojitě. Převzato z~McSwiggan, Baddeley, and Nair~(2017)."}
 knitr::include_graphics("densities.png")
 ```
 
@@ -402,7 +443,7 @@ V\ některých případech mohou být povolené hodnoty dále omezeny; některé
 V\ tomto oddíle popíšeme všechny proměnné, které musejí být obsaženy v\ základním konfiguračním skriptu `config.R`. Pro přehlednost je rozdělíme do několika kategorií. (Stejným způsobem jsou tyto proměnné rozděleny i\ ve vzorovém souboru `config.R`.)
 
 
-### Časová okna
+### Časová okna {#sec:time-windows}
 
 Nejdříve je třeba nastavit, pro jaká období se mají spočítat klastry míst s\ častými/nebezpečnými nehodami. To je možné udělat dvěma způsoby: buď období generovat automaticky, nebo je zadat ručně. Oba způsoby je možné kombinovat.
 
