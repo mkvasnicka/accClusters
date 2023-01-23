@@ -57,6 +57,11 @@ path_to_districts <- function() {
     file.path(data_dir(), "districts", "districts.rds")
 }
 
+# path to state polygon
+path_to_state_polygon <- function() {
+    file.path(data_dir(), "districts", "state_polygon.rds")
+}
+
 # path to filtered/converted maps folder
 path_to_map_dir <- function() {
     file.path(data_dir(), "maps")

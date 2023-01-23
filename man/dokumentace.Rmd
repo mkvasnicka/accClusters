@@ -398,6 +398,8 @@ kde sloupec `p1` představuje klíčový sloupec, který jednoznačně identifik
 
 Data o\ nehodách v\ tomto formátu překopírujte do adresáře `DIRORIGIN/rawdata/accidents`.
 
+Nehody, které nemají zadané souřadnice nebo leží mimo Českou republiku, jsou ze zpracování vyřazeny. Jejich počet je uveden v\ logu.
+
 
 ## Aktualizace dat
 

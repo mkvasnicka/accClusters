@@ -32,6 +32,7 @@ districts <- read_districts()
 # read in all accidents data
 create_accidents(path_to_all_accidents = path_to_raw_accidents(),
                  raw_accidents_dir = path_to_raw_accidents_dir(),
+                 path_to_state_polygon = path_to_state_polygon(),
                  profiles = profiles)
 time_to_recover_memory()
 

@@ -231,3 +231,66 @@ create_orps <- function(path_to_orps, path_to_raw_districts,
         loginfo("orps are up-to-date---skipping")
     }
 }
+
+
+# create state shapefile -------------------------------------------------------
+
+# functions read_state_polygon_cuzk() reads the whole state's polygonfrom a path
+# and returns standardized sf table
+#
+# inputs:
+# - path_to_districts ... (character scalar) a path to spatial database
+# - layer ... (optional, character scaler) the name of the layer
+#
+# output:
+# - sf table
+#
+# source of the data is CUZK
+# - web page: https://geoportal.cuzk.cz/(S(uufahw3bishqszcklzne0nex))/Default.aspx?mode=TextMeta&side=dSady_hranice10&metadataID=CZ-CUZK-SH-V&mapid=5&head_tab=sekce-02-gp&menu=2521
+# - direct link: https://geoportal.cuzk.cz/zakazky/SPH/SPH_SHP_JTSK.zip
+# - warning: projection is not declared in the layer!
+read_state_polygon_cuzk <- function(path_to_districts, layer = "SPH_STAT") {
+    sf::st_read(path_to_districts, layer = layer, stringsAsFactors = FALSE) |>
+        sf::st_set_crs(PLANARY_PROJECTION)
+}
+
+
+# create_state_polygon() creates/updates the whole state's polygon table
+#
+# inputs:
+# - path_to_state_polygon ... (character scalar) path where the state polygon
+#   table should be written
+# - path_to_raw_districts ... (character scalar) path to folder where spatial
+#   data are stored
+# - reader ... (closure) function that reads the ORPs table; several of
+#   these functions can be implemented
+# - profiles ... profile
+#
+# value:
+#   none; data are written to disk
+#
+# WARNINGS:
+# - it may be necessary to implement a new reader function whenever
+#   a new/updated districts/ORPs shapefile is used; it is because the providers
+#   change the variable names, projection, etc., between versions
+create_state_polygon <- function(path_to_state_polygon, path_to_raw_districts,
+                                 reader = read_state_polygon_cuzk,
+                                 profiles) {
+    start_logging(log_dir())
+    logging::loginfo("state polygon prep: checking for updates")
+    if (is_behind(path_to_state_polygon,
+                  c(dir(path_to_raw_districts(), full.names = TRUE),
+                    path_to_configs()))) {
+        logging::loginfo("state polygon prep: state polygon table is behind and will be updated")
+        tryCatch({
+            state_polygon <- suppressMessages(reader(path_to_raw_districts))
+            write_dir_rds(state_polygon, file = path_to_state_polygon)
+            logging::loginfo("state polygon prep: state polygon table has been updated")
+        },
+        error = function(e) {
+            logging::logerror("state polygon prep failed: %s", e)
+            stop("state polygon prep failed---stopping evaluation")})
+    } else {
+        loginfo("state polygon are up-to-date---skipping")
+    }
+}
