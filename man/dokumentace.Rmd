@@ -85,6 +85,7 @@ Příprava dat pro jejich vizualizaci a zejména výpočty klastrů nebezpečný
 
 - procesor minimálně třídy i5 (vyšší je lepší), minimálně 8\ jader (větší počet jader je výhodou),
 - minimálně 32\ GB operační paměti dedikované pro tento software (více jader vyžaduje více operační paměti),
+- minimálně 500\ GB volné diskové kapacity (v\ případě výpočtu většího počtu profilů nebo pro větší počet období může být potřeba i\ více),
 - operační systém Linux nebo Windows v\ 64\ bitové verzi,
 - Docker a
 - PowerShell (pouze na Windows).
