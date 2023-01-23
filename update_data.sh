@@ -103,11 +103,16 @@ if [[ $WHATTODO == *update* ]]; then
     runRscript "prepare_profiles"
     runRscript "prepare_districts"
     runRscript "prepare_maps"
-    runRscript "prepare_accidents"
+    runRscript "prepare_maps_lixels"
+    runRscript "prepare_accidents_raw"
+    runRscript "prepare_accidents_shiny"
 fi
 
 # update clusters
 if [[ $WHATTODO == *clusters* ]]; then
+    runRscript "prepare_maps_lixel_samples"
+    runRscript "prepare_maps_lixel_neighbors"
+    runRscript "prepare_accidents"
     runRscript "prepare_densities"
     runRscript "prepare_clusters"
     runRscript "prepare_sidecars"

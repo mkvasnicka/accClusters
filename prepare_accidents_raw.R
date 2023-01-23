@@ -1,9 +1,9 @@
 # -------------------------------------
-# Script:   prepare_accidents.R
+# Script:   prepare_accidents_raw.R
 # Author:   Michal Kvasnička
 # Purpose:  This script creates/updates the information about the accident for
-#           each district. It filters the accidents for each districts and
-#           prepares the data for the cluster computation.
+#           each district. It prepares the raw accidents for the fugure
+#           filtering.
 # Inputs:   road map, accidents provided by the police, profiles, and log file
 # Outputs:  files describing the accidents in each district
 #
@@ -30,10 +30,8 @@ profiles <- read_profiles()
 districts <- read_districts()
 
 
-# crop the accidents to buffered districts and snap them to selected roads---for
-# density computation
-create_districts_accidents(districts,
-                           path_to_accidents = path_to_raw_accidents(),
-                           lixel_dir = path_to_lixels_maps_dir(),
-                           accident_dir = path_to_accidents_dir(),
-                           profiles = profiles)
+# read in all accidents data
+create_accidents(path_to_all_accidents = path_to_raw_accidents(),
+                 raw_accidents_dir = path_to_raw_accidents_dir(),
+                 path_to_state_polygon = path_to_state_polygon(),
+                 profiles = profiles)
