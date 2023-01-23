@@ -15,6 +15,10 @@ Funkcionalita
         - get_number_of_workers(profiles$NO_OF_WORKERS_ACCIDENTS[1], profiles$RAM_PER_CORE_ACCIDENTS[1])
 - aktualizovat všechny balíky a vyzkoušet
 - PWALK logging: změnit počet workerů v logu z počtu nastavených workerů na min. z nich a počtu úkolů (prvků .l)
+- tvorba nehod: přidat kontrolu, že nehody leží v ČR
+    - vypsat varování, kolik nehod má souřadnice NA a kolik neleží v ČR
+    - zahodit
+    - vyžaduje mít shapefile celé republiky
 
 
 Parametrizace
@@ -30,6 +34,7 @@ Parametrizace
 
 Testovat
 --------
+- znovu se aktualizovaly nehody -- má dobře závislosti?
 - zkontrolovat závislosti v is_behind() a districts_behind()
 - jaké sloupce obsahuje tabulka nehod + ty, které používáme, standardizovat
     - pro případ, že policie sloupce přejmenuje -- není kulturní, abychom používali jejich interní značky
@@ -47,6 +52,13 @@ Testovat
 - Brno-venkov -- kdy se vyhodí Brno město? budou tam pak vůbec nějaké klastry?
     - podívat se, jak se počítá
     - klastrů je tam při současném nastavení docela dost
+
+
+Nehody 2022
+-----------
+- zkontrolovat nehody za 2022
+    - souřadnice + zbytek CSV
+    - .rds
 
 
 Čištění
