@@ -4,17 +4,40 @@ TODO
 + TODO comment v functions_map_preparation.R
 
 
+Bugs
+----
+- u adaptivního výpočtu NKDE je někde problém -- zapisuje to nesmyslně velká data (stovky GB místo stovek MB)
+    - přitom by to mělo být bez komprese vždycky stejně velké bez ohledu na způsob výpočtu NKDE
+        - liší se jen hodnoty double hustot, ale jejich počet a všechno ostatní by mělo být stejné
+            - načítá se to z lixelů, jejich středů apod.
+
+
 Funkcionalita
 -------------
-- čištění paměti po velkých výpočtech, aby se používal optimální počet jader (jinak nefunguje dobře odhad workerů v PWALK()) -- možnosti:
-    - skripty, kde je víc výpočetně náročných věcí rozdělit -- v místě time_to_recover_memory()
-        - bash skript updata_data.sh upravit tak, že bez -k se dělají jen věci pro shiny -- zkontrolovat flow
-        - vyhodit time_to_recover_memory() z definic v auxiliary
-    - použít gc a čas + zjistit počet jader na začátku, a pak ho předat následujícím funkcím
-        - get_number_of_workers(profiles$NO_OF_WORKERS[1], profiles$RAM_PER_CORE_GENERAL[1])
-        - get_number_of_workers(profiles$NO_OF_WORKERS_ACCIDENTS[1], profiles$RAM_PER_CORE_ACCIDENTS[1])
-- aktualizovat všechny balíky a vyzkoušet
-- PWALK logging: změnit počet workerů v logu z počtu nastavených workerů na min. z nich a počtu úkolů (prvků .l)
+- balancování zátěže
+    - buď v PWALK, nebo před to
+    - seřadit okresy tak, aby se jel vždycky celý profil dohromady, pak podle data, ... -- aby se nikdy nejel stejný okres naráz 2x
+    - okresy seřadit podle jejich velikosti (počtu lixelů)
+    - to vyžaduje se někam uložil počet lixelů
+        - buď se musí načít všechny tabulky lixelů a uložit to z toho
+        - nebo při tvorbě lixelů změni PWALK na PMAP a uložit to
+        - nebo mít někde nějaké pišvejcovy konstanty
+        - nebo vzít už z velikosti mapy
+- hotovo -- zkontrolovat:
+    - čištění paměti po velkých výpočtech, aby se používal optimální počet jader (jinak nefunguje dobře odhad workerů v PWALK()) -- možnosti:
+        - skripty, kde je víc výpočetně náročných věcí rozdělit -- v místě time_to_recover_memory()
+            - bash skript updata_data.sh upravit tak, že bez -k se dělají jen věci pro shiny -- zkontrolovat flow
+            - vyhodit time_to_recover_memory() z definic v auxiliary
+        - použít gc a čas + zjistit počet jader na začátku, a pak ho předat následujícím funkcím
+            - get_number_of_workers(profiles$NO_OF_WORKERS[1], profiles$RAM_PER_CORE_GENERAL[1])
+            - get_number_of_workers(profiles$NO_OF_WORKERS_ACCIDENTS[1], profiles$RAM_PER_CORE_ACCIDENTS[1])
+    - aktualizovat všechny balíky a vyzkoušet
+    - PWALK logging: změnit počet workerů v logu z počtu nastavených workerů na min. z nich a počtu úkolů (prvků .l)
+    - tvorba nehod: přidat kontrolu, že nehody leží v ČR
+        - vypsat varování, kolik nehod má souřadnice NA a kolik neleží v ČR
+        - zahodit
+        - vyžaduje mít shapefile celé republiky
+    - komprimovat .rds -- zatím jen to, co jde do tmp, tj. ne output (někdy = !shiny)
 
 
 Parametrizace
@@ -30,6 +53,7 @@ Parametrizace
 
 Testovat
 --------
+- znovu se aktualizovaly nehody -- má dobře závislosti?
 - zkontrolovat závislosti v is_behind() a districts_behind()
 - jaké sloupce obsahuje tabulka nehod + ty, které používáme, standardizovat
     - pro případ, že policie sloupce přejmenuje -- není kulturní, abychom používali jejich interní značky
@@ -47,6 +71,13 @@ Testovat
 - Brno-venkov -- kdy se vyhodí Brno město? budou tam pak vůbec nějaké klastry?
     - podívat se, jak se počítá
     - klastrů je tam při současném nastavení docela dost
+
+
+Nehody 2022
+-----------
+- zkontrolovat nehody za 2022
+    - souřadnice + zbytek CSV
+    - .rds
 
 
 Čištění

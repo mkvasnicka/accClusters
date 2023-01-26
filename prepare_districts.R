@@ -43,3 +43,9 @@ create_districts(path_to_districts = path_to_shiny_districts(),
 create_orps(path_to_orps = path_to_shiny_orps(),
             path_to_raw_districts = path_to_raw_districts(),
             profiles = profiles)
+
+
+# create the whole state polygon
+create_state_polygon(path_to_state_polygon = path_to_state_polygon(),
+                     path_to_raw_districts = path_to_raw_districts(),
+                     profiles = profiles)

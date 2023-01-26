@@ -57,6 +57,11 @@ path_to_districts <- function() {
     file.path(data_dir(), "districts", "districts.rds")
 }
 
+# path to state polygon
+path_to_state_polygon <- function() {
+    file.path(data_dir(), "districts", "state_polygon.rds")
+}
+
 # path to filtered/converted maps folder
 path_to_map_dir <- function() {
     file.path(data_dir(), "maps")
@@ -292,9 +297,10 @@ create_dir_for_file <- function(file) {
 # usage:
 #   write_dir_rds(districts, "/tmp/boo.rds")
 #   districts <- readr::read_rds("/tmp/boo.rds")
-write_dir_rds <- function(object, file) {
+write_dir_rds <- function(object, file, compress = FALSE) {
+    compress <- if (compress) "gz" else "none"
     create_dir_for_file(file)
-    readr::write_rds(object, file = file, compress = "none")
+    readr::write_rds(object, file = file, compress = compress)
 }
 
 

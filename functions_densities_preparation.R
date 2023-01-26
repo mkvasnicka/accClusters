@@ -160,7 +160,7 @@ compute_densities <- function(districts,
         if (is.null(densities))
             stop("nkde failed with all grid shapes")
         lixels$density <- densities
-        write_dir_rds(lixels, output_file)
+        write_dir_rds(lixels, output_file, compress = TRUE)
         logging::loginfo("densities prep: %s has been created", output_file)
     }
 

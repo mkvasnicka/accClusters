@@ -171,8 +171,7 @@ read_raw_vehicles_files <- function(path, skip) {
 #
 # inputs:
 # - folder ... (character scalar) path to folder where the data are stored
-# - skip ... (integer scalar) number of first row in each CSV file that should
-#   be skipped
+# - state_polygon ... (sf) shape of the whole country (polygon)
 #
 # value:
 #   sf tibble of all accidents
@@ -199,7 +198,7 @@ read_raw_vehicles_files <- function(path, skip) {
 #
 # notes:
 # - the CSVs can be extracted from XLS by prepare_raw_accidents.sh script
-read_raw_accidents <- function(folder, profiles) {
+read_raw_accidents <- function(folder, state_polygon, profiles) {
 
     accidents <- purrr::map(
         list.files(path = folder,
@@ -248,16 +247,45 @@ read_raw_accidents <- function(folder, profiles) {
 
 
     # Data transformations
-    accidents <- gps |>
-        # Remove missing observations with missing coordinates
-        tidyr::drop_na(starts_with("coord")) |>
-        # Remove duplicities (keeps the first recrod)
-        dplyr::distinct(p1, .keep_all = TRUE) |>
-        # Join accidents data
-        dplyr::right_join(accidents, by = "p1") |>
-        # Remove unmatched coordinates and accidents without ID
+    # accidents <- gps |>
+    #     # Remove missing observations with missing coordinates
+    #     tidyr::drop_na(starts_with("coord")) |>
+    #     # Remove duplicities (keeps the first recrod)
+    #     dplyr::distinct(p1, .keep_all = TRUE) |>
+    #     # Join accidents data
+    #     dplyr::right_join(accidents, by = "p1") |>
+    #     # Remove unmatched coordinates and accidents without ID
+    #     tidyr::drop_na(p1, starts_with("coord")) |>
+    #     # Remove duplicities (keeps first record)
+    #     dplyr::distinct(p1, .keep_all = TRUE)
+
+    gps_missing_coords <- gps |>
+        dplyr::filter(if_any(starts_with("coord"), is.na)) |>
+        nrow()
+    gps_duplicated_ids <- sum(duplicated(gps$p1))
+    if (gps_missing_coords > 0)
+        logwarn("accidents prep: removing %i row(s) in *GPS.csv with missing coordinates",
+                gps_missing_coords)
+    if (gps_duplicated_ids > 0 )
+        logwarn("accidents prep: removing %i row(s) in *GPS.csv with duplicated ids",
+                gps_duplicated_ids)
+    gps <- gps |>
+            tidyr::drop_na(starts_with("coord")) |>
+            dplyr::distinct(p1, .keep_all = TRUE)
+
+    accidents <- dplyr::left_join(accidents, gps, by = "p1")
+    accidents_missing_coords <- accidents |>
+        dplyr::filter(if_any(starts_with("coord"), is.na)) |>
+        nrow()
+    accidents_duplicated_ids <- sum(duplicated(accidents$p1))
+    if (accidents_missing_coords)
+        logwarn("accidents prep: removing %i row(s) in *nehody.csv with missing coordinates",
+                accidents_missing_coords)
+    if (accidents_duplicated_ids)
+        logwarn("accidents prep: removing %i row(s) in *nehody.csv with duplicated id",
+                accidents_duplicated_ids)
+    accidents <- accidents |>
         tidyr::drop_na(p1, starts_with("coord")) |>
-        # Remove duplicities (keeps first record)
         dplyr::distinct(p1, .keep_all = TRUE)
 
     casualties <- outcomes |>
@@ -354,6 +382,13 @@ read_raw_accidents <- function(folder, profiles) {
         sf::st_as_sf(coords = c("coord_x", "coord_y"),
                      crs = PLANARY_PROJECTION)
 
+    inside_state <- sf::st_intersects(accidents, state_polygon, sparse = FALSE)
+    accidents_outside_state <- sum(!inside_state)
+    if (accidents_outside_state > 0)
+        logwarn("accidents prep: removing %i accidents that are outside the country",
+                accidents_outside_state)
+    accidents <- accidents[inside_state, ]
+
     accidents |>
         dplyr::mutate(
             accident_date = as.Date(p2),
@@ -391,6 +426,8 @@ read_raw_accidents <- function(folder, profiles) {
 #   accidents will be stored
 # - raw_accidents_dir ... (character scalar) path to folder where input CSVs on
 #   accidents are stored
+# - path_to_state_polygon ... (character scalar) path to file where the whole
+#   state's polygon is stored
 #
 # value:
 #   none, it writes data to disk
@@ -398,17 +435,21 @@ read_raw_accidents <- function(folder, profiles) {
 # notes:
 # - for assumptions on input files, see help for read_raw_accidents()
 create_accidents <- function(path_to_all_accidents, raw_accidents_dir,
-                             profiles) {
+                             path_to_state_polygon, profiles) {
     start_logging(log_dir())
     logging::loginfo("accidents prep: checking for updates")
     if (is_behind(path_to_all_accidents,
                   c(list.files(raw_accidents_dir, pattern = "csv",
                              full.names = TRUE),
+                    path_to_state_polygon,
                     path_to_configs()))) {
         logging::loginfo("accidents prep: accidents data are behind---updating")
         tryCatch({
-            accidents <- read_raw_accidents(raw_accidents_dir, profiles)
-            write_dir_rds(accidents, path_to_all_accidents)
+            state_polygon <- readr::read_rds(path_to_state_polygon)
+            accidents <- read_raw_accidents(raw_accidents_dir,
+                                            state_polygon,
+                                            profiles)
+            write_dir_rds(accidents, path_to_all_accidents, compress = TRUE)
             logging::loginfo(
                 "accidents prep: data on all accidents have been updated")
         },
@@ -584,7 +625,7 @@ create_districts_accidents <- function(districts,
                        accident_serious_injury, accident_light_injury,
                        accident_material_cost, lixel_id)
         }
-        write_dir_rds(accidents, output_file)
+        write_dir_rds(accidents, output_file, compress = !shiny)
         logging::loginfo("district accidents prep: %s has been created",
                          output_file)
     }
