@@ -23,7 +23,6 @@ Funkcionalita
         - nebo při tvorbě lixelů změni PWALK na PMAP a uložit to
         - nebo mít někde nějaké pišvejcovy konstanty
         - nebo vzít už z velikosti mapy
-- komprimovat .rds -- buď jen v tmp, nebo i v output
 - hotovo -- zkontrolovat:
     - čištění paměti po velkých výpočtech, aby se používal optimální počet jader (jinak nefunguje dobře odhad workerů v PWALK()) -- možnosti:
         - skripty, kde je víc výpočetně náročných věcí rozdělit -- v místě time_to_recover_memory()
@@ -38,6 +37,7 @@ Funkcionalita
         - vypsat varování, kolik nehod má souřadnice NA a kolik neleží v ČR
         - zahodit
         - vyžaduje mít shapefile celé republiky
+    - komprimovat .rds -- zatím jen to, co jde do tmp, tj. ne output (někdy = !shiny)
 
 
 Parametrizace

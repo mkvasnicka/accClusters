@@ -135,7 +135,7 @@ create_districts <- function(path_to_districts, path_to_raw_districts,
             if (shiny) {
                 districts <- st_transform(districts, crs = WGS84)
             }
-            write_dir_rds(districts, file = path_to_districts)
+            write_dir_rds(districts, file = path_to_districts, compress = !shiny)
             logging::loginfo("districts prep: districts table has been updated")
         },
         error = function(e) {
@@ -284,7 +284,8 @@ create_state_polygon <- function(path_to_state_polygon, path_to_raw_districts,
         logging::loginfo("state polygon prep: state polygon table is behind and will be updated")
         tryCatch({
             state_polygon <- suppressMessages(reader(path_to_raw_districts))
-            write_dir_rds(state_polygon, file = path_to_state_polygon)
+            write_dir_rds(state_polygon, file = path_to_state_polygon,
+                          compress = TRUE)
             logging::loginfo("state polygon prep: state polygon table has been updated")
         },
         error = function(e) {

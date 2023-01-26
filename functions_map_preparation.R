@@ -620,7 +620,7 @@ create_sf_district_roads <- function(districts,
             remove_sfnetwork_minor_components() |>
             simplify_sfnetwork(max_distance = max_distance,
                                dTolerance = dTolerance)
-        write_dir_rds(map, output_file)
+        write_dir_rds(map, output_file, compress = TRUE)
         logging::loginfo("road sfnetwork prep: %s has been created",
                          output_file)
     }
@@ -688,7 +688,7 @@ create_lixelized_roads <- function(districts, input_folder, output_folder,
                                             mindist = mindist)
         lixels$len <- sf::st_length(lixels)
         lixels$lixel_id <- seq_len(nrow(lixels))
-        write_dir_rds(lixels, output_file)
+        write_dir_rds(lixels, output_file, compress = TRUE)
         logging::loginfo("lixel prep: %s has been created", output_file)
     }
 
@@ -741,7 +741,7 @@ create_lixel_samples_for_roads <- function(districts,
         logging::loginfo("lixel samples prep: creating %s", output_file)
         network <- readr::read_rds(input_file)
         samples <- spNetwork::lines_center(network)
-        write_dir_rds(samples, output_file)
+        write_dir_rds(samples, output_file, compress = TRUE)
         logging::loginfo("lixel samples prep: %s has been created", output_file)
     }
 
@@ -831,7 +831,7 @@ create_lixel_nbs <- function(districts, input_folder, output_folder,
         logging::loginfo("lixel nbs prep: creating %s", output_file)
         lixels <- readr::read_rds(input_file)
         nb <- create_sf_nb(lixels)
-        write_dir_rds(nb, output_file)
+        write_dir_rds(nb, output_file, compress = TRUE)
         logging::loginfo("lixel nbs prep: %s has been created", output_file)
     }
 
