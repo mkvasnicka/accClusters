@@ -4,8 +4,26 @@ TODO
 + TODO comment v functions_map_preparation.R
 
 
+Bugs
+----
+- u adaptivního výpočtu NKDE je někde problém -- zapisuje to nesmyslně velká data (stovky GB místo stovek MB)
+    - přitom by to mělo být bez komprese vždycky stejně velké bez ohledu na způsob výpočtu NKDE
+        - liší se jen hodnoty double hustot, ale jejich počet a všechno ostatní by mělo být stejné
+            - načítá se to z lixelů, jejich středů apod.
+
+
 Funkcionalita
 -------------
+- balancování zátěže
+    - buď v PWALK, nebo před to
+    - seřadit okresy tak, aby se jel vždycky celý profil dohromady, pak podle data, ... -- aby se nikdy nejel stejný okres naráz 2x
+    - okresy seřadit podle jejich velikosti (počtu lixelů)
+    - to vyžaduje se někam uložil počet lixelů
+        - buď se musí načít všechny tabulky lixelů a uložit to z toho
+        - nebo při tvorbě lixelů změni PWALK na PMAP a uložit to
+        - nebo mít někde nějaké pišvejcovy konstanty
+        - nebo vzít už z velikosti mapy
+- komprimovat .rds -- buď jen v tmp, nebo i v output
 - hotovo -- zkontrolovat:
     - čištění paměti po velkých výpočtech, aby se používal optimální počet jader (jinak nefunguje dobře odhad workerů v PWALK()) -- možnosti:
         - skripty, kde je víc výpočetně náročných věcí rozdělit -- v místě time_to_recover_memory()
