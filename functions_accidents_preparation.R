@@ -449,7 +449,7 @@ create_accidents <- function(path_to_all_accidents, raw_accidents_dir,
             accidents <- read_raw_accidents(raw_accidents_dir,
                                             state_polygon,
                                             profiles)
-            write_dir_rds(accidents, path_to_all_accidents)
+            write_dir_rds(accidents, path_to_all_accidents, compress = TRUE)
             logging::loginfo(
                 "accidents prep: data on all accidents have been updated")
         },
@@ -625,7 +625,7 @@ create_districts_accidents <- function(districts,
                        accident_serious_injury, accident_light_injury,
                        accident_material_cost, lixel_id)
         }
-        write_dir_rds(accidents, output_file)
+        write_dir_rds(accidents, output_file, compress = !shiny)
         logging::loginfo("district accidents prep: %s has been created",
                          output_file)
     }

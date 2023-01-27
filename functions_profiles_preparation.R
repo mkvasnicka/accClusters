@@ -490,7 +490,7 @@ create_profiles <- function(path_to_configs = path_to_configs(),
                 profiles_to_tibble() |>
                 add_cluster_parameters()
             check_auto_time_windows(profiles)
-            readr::write_rds(profiles, path_to_configs)
+            write_dir_rds(profiles, path_to_configs, compress = TRUE)
             logging::loginfo("config prep: profiles created")
         } else {
             logging::loginfo("config prep: configuration is uptodate---skipping")
