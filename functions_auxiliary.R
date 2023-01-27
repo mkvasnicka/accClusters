@@ -402,7 +402,11 @@ districts_behind <- function(districts, target_fun, source_fun,
     if (is.null(other_files)) {
         mother <- -Inf
     } else{
-        mother <- max(file.mtime(other_files))
+        mother <- file.mtime(other_files)
+        if (any(is.na(mother)))
+            stop("Some sources don't exist: ",
+                 str_c(other_files[is.na(mother)], collapse = ", "))
+        mother <- max(mother)
     }
 
     if (any(is.na(msource)))
