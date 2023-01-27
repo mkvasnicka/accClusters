@@ -6,7 +6,7 @@ TODO
 
 Bugs
 ----
-- accidents se aktualizují pokaždé -- asi chyba v závislostech
+- accidents se aktualizují pokaždé -- asi chyba v závislostech -- v kódu chybu nevidím -- ještě ověřit, až doběhne
 - u adaptivního výpočtu NKDE je někde problém -- zapisuje to nesmyslně velká data (stovky GB místo stovek MB)
     - přitom by to mělo být bez komprese vždycky stejně velké bez ohledu na způsob výpočtu NKDE
         - liší se jen hodnoty double hustot, ale jejich počet a všechno ostatní by mělo být stejné
