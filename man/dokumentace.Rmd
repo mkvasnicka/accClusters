@@ -20,7 +20,7 @@ header-includes:
    - \renewcaptionname{czech}{\contentsname}{Obsah}
    - \addtokomafont{section}{\clearpage}
    - \let\OriMakeTitle\maketitle
-   - \def\maketitle{\OriMakeTitle\vskip1\baselineskip\includegraphics[width=\linewidth]{title_fig.pdf}\vskip11\baselineskip Software byl vytvořen týmem Masarykovy univerzity s~podporou grantu TAČR CK01000049 {\em Tvorba pokročilých nástrojů pro analýzu dopravních nehod pro Policii ČR}.\thispagestyle{empty}}
+   - \def\maketitle{\OriMakeTitle\vskip1\baselineskip\includegraphics[width=\linewidth]{title_fig.pdf}\vskip11\baselineskip Software byl vytvořen ve spolupráci Ekonomicko{-}správní fakulty Masarykovy Univerzity, Právnické fakulty Univerzity Karlovy a Ředitelství služby dopravní policie. Financován byl s podporou grantu TAČR CK01000049 {\em Tvorba pokročilých nástrojů pro analýzu dopravních nehod pro Policii ČR}.\\\\Kontaktní osoba{:} Michal Kvasnička, michal.kvasnicka@econ.muni.cz.\thispagestyle{empty}}
    - \pagestyle{empty}
    - \tolerance=4500
    - \emergencystretch=11pt
@@ -564,6 +564,8 @@ NKDE_AGG = 1
 ```
 
 V\ tomto případě se parametr `NKDE_TRIM_BW` ignoruje (musí však být přítomen). Agregují se pouze nehody do vzájemné vzdálenosti 1\ metr (po silnici).
+
+<!-- Pozor! Adaptivní *bandwidth* vyžaduje extrémně velké množství paměti i\ úložného prostoru! -->
 
 Pokud by bylo cílem sestavit klastry nehod tak, že by všechny nehody měly stejnou váhu, stačilo by změnit první parametr na `NKDE_WEIGHTS = "equal"`. Podobně při změně metody na nespojitou by stačilo změnit na druhém řádku `NKDE_METHOD = "continuous"`. Adaptivní vyhlazovací okno by se zapnulo nastavením `NKDE_ADAPTIVE = TRUE`. V\ takovém případě by se vyhlazovací okno našlo automaticky tak, že jeho největší délka by byla 600\ metrů. Parametr `NKDE_BW` by se v\ takovém případě ignoroval (ale musí být přítomen).
 
