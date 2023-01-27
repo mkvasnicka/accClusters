@@ -20,7 +20,7 @@ header-includes:
    - \renewcaptionname{czech}{\contentsname}{Obsah}
    - \addtokomafont{section}{\clearpage}
    - \let\OriMakeTitle\maketitle
-   - \def\maketitle{\OriMakeTitle\vskip1\baselineskip\includegraphics[width=\linewidth]{title_fig.pdf}\vskip11\baselineskip Software byl s~podporou grantu TAČR CK01000049 {\em Tvorba pokročilých nástrojů pro analýzu dopravních nehod pro Policii ČR}.\\\\Kontaktní osoba{:} Michal Kvasnička, michal.kvasnicka@econ.muni.cz.\thispagestyle{empty}}
+   - \def\maketitle{\OriMakeTitle\vskip1\baselineskip\includegraphics[width=\linewidth]{title_fig.pdf}\vskip11\baselineskip Software byl vytvořen ve spolupráci Ekonomicko{-}správní fakulty Masarykovy Univerzity, Právnické fakulty Univerzity Karlovy a Ředitelství služby dopravní policie. Financován byl s podporou grantu TAČR CK01000049 {\em Tvorba pokročilých nástrojů pro analýzu dopravních nehod pro Policii ČR}.\\\\Kontaktní osoba{:} Michal Kvasnička, michal.kvasnicka@econ.muni.cz.\thispagestyle{empty}}
    - \pagestyle{empty}
    - \tolerance=4500
    - \emergencystretch=11pt
