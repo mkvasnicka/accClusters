@@ -290,15 +290,20 @@ create_dir_for_file <- function(file) {
 # inputs:
 # - object ... any kind of object
 # - file ... (character scalar) a path to the object
+# - compress ... (logical scalar) if TRUE, .rds file would be compressed, if
+#   FALSE, it wouldn't be compressed
 #
 # value:
-#   none
+#   none; it writes an .rds file to disk
+#
+# WARNING: it always compresses the writtent files now!
 #
 # usage:
 #   write_dir_rds(districts, "/tmp/boo.rds")
 #   districts <- readr::read_rds("/tmp/boo.rds")
 write_dir_rds <- function(object, file, compress = FALSE) {
-    compress <- if (compress) "gz" else "none"
+    # compress <- if (compress) "gz" else "none"
+    compress <- "gz"
     create_dir_for_file(file)
     readr::write_rds(object, file = file, compress = compress)
 }

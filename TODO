@@ -38,7 +38,7 @@ Funkcionalita
         - vypsat varování, kolik nehod má souřadnice NA a kolik neleží v ČR
         - zahodit
         - vyžaduje mít shapefile celé republiky
-    - komprimovat .rds -- zatím jen to, co jde do tmp, tj. ne output (někdy = !shiny) -- větev compress_data
+    - komprimovat .rds -- nyní se komprimují všechny .rds soubory
 
 
 Parametrizace
