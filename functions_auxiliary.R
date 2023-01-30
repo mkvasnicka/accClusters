@@ -774,6 +774,8 @@ district_sizes <- function(ids) {
 #
 # value: the same tibble with reshuffled rows
 balance_load <- function(tab) {
+    # this function alternates the biggest one and the smallest one, then the
+    # second biggest one and the second smallest one, etc.
     myx <- function(x) {
         x <- order(x, decreasing = TRUE)
         n <- length(x)
@@ -783,6 +785,28 @@ balance_load <- function(tab) {
         mat <- matrix(c(x1, x2, if (n %% 2 == 1) NA), nrow = 2, byrow = TRUE)
         dim(mat) <- NULL
         order(mat[!is.na(mat)])
+    }
+    # this function starts with the biggest one, then takes all the smallest
+    # ones that are in sum smaller than the biggest one, then take the second
+    # biggest one nad proceeds with the smallest unused that sum up to the
+    # second biggest one, etc.
+    myx <- function(x) {
+        tab <- tibble(id = seq_along(x), x = x) |> arrange(desc(x))
+        ord <- integer(0)
+        start <- 1
+        end <- nrow(tab)
+        while (start < end) {
+            ord <- c(ord, tab$id[start])
+            val <- tab$x[start]
+            sval <- 0
+            while (start < end && val > sval) {
+                ord <- c(ord, tab$id[end])
+                sval <- sval + tab$x[end]
+                end <- end - 1
+            }
+            start <- start + 1
+        }
+        unique(c(ord, tab$id[start:end]))
     }
     present <- function(name) name %in% names(tab)
     pn <- present("profile_name")
