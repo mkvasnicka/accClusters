@@ -159,6 +159,13 @@ compute_densities <- function(districts,
         }
         if (is.null(densities))
             stop("nkde failed with all grid shapes")
+        # nkde() returns a list for adaptive densities; we need to extract k
+        # which is the density evaluated at sample points
+        if (is.list(densities)) {
+            if (!("k" %in% names(densities)))
+                stop("nkde failed---densities are list but there is no k slot")
+            densities <- densities$k
+        }
         lixels$density <- densities
         write_dir_rds(lixels, output_file, compress = TRUE)
         logging::loginfo("densities prep: %s has been created", output_file)
