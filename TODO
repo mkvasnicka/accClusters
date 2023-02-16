@@ -2,15 +2,13 @@ TODO
 ====
 
 + TODO comment v functions_map_preparation.R
++ TODO comment v functions_cluster_preparation.R
 
 
 Bugs
 ----
 - accidents se aktualizují pokaždé -- asi chyba v závislostech -- v kódu chybu nevidím -- ještě ověřit, až doběhne
-- u adaptivního výpočtu NKDE je někde problém -- zapisuje to nesmyslně velká data (stovky GB místo stovek MB)
-    - přitom by to mělo být bez komprese vždycky stejně velké bez ohledu na způsob výpočtu NKDE
-        - liší se jen hodnoty double hustot, ale jejich počet a všechno ostatní by mělo být stejné
-            - načítá se to z lixelů, jejich středů apod.
+    - asi verze pro shiny
 
 
 Funkcionalita
@@ -25,20 +23,7 @@ Funkcionalita
         - nebo mít někde nějaké pišvejcovy konstanty
         - nebo vzít už z velikosti mapy
 - hotovo -- zkontrolovat:
-    - čištění paměti po velkých výpočtech, aby se používal optimální počet jader (jinak nefunguje dobře odhad workerů v PWALK()) -- možnosti:
-        - skripty, kde je víc výpočetně náročných věcí rozdělit -- v místě time_to_recover_memory()
-            - bash skript updata_data.sh upravit tak, že bez -k se dělají jen věci pro shiny -- zkontrolovat flow
-            - vyhodit time_to_recover_memory() z definic v auxiliary
-        - použít gc a čas + zjistit počet jader na začátku, a pak ho předat následujícím funkcím
-            - get_number_of_workers(profiles$NO_OF_WORKERS[1], profiles$RAM_PER_CORE_GENERAL[1])
-            - get_number_of_workers(profiles$NO_OF_WORKERS_ACCIDENTS[1], profiles$RAM_PER_CORE_ACCIDENTS[1])
     - aktualizovat všechny balíky a vyzkoušet
-    - PWALK logging: změnit počet workerů v logu z počtu nastavených workerů na min. z nich a počtu úkolů (prvků .l)
-    - tvorba nehod: přidat kontrolu, že nehody leží v ČR
-        - vypsat varování, kolik nehod má souřadnice NA a kolik neleží v ČR
-        - zahodit
-        - vyžaduje mít shapefile celé republiky
-    - komprimovat .rds -- nyní se komprimují všechny .rds soubory
 
 
 Parametrizace
@@ -54,7 +39,6 @@ Parametrizace
 
 Testovat
 --------
-- zkontrolovat závislosti v is_behind() a districts_behind()
 - jaké sloupce obsahuje tabulka nehod + ty, které používáme, standardizovat
     - pro případ, že policie sloupce přejmenuje -- není kulturní, abychom používali jejich interní značky
     - nutné domluvit se Štěpánem, co z toho použije
@@ -64,7 +48,6 @@ Testovat
     - klastry nechat celé, které aspoň částí zasahují do okresu
 - zkontrolovat grid_shape v NKDE
     - NKDE i v nové verzi padalo, když tam byl rok 2022
-- otestovat novou verzi densities
 - pro všechny okresy:
     - zkontrolovat počet souvislých podgrafů
     - spustit kontrolu, o které psal Gelb
