@@ -613,7 +613,7 @@ create_sf_district_roads <- function(districts,
                                      crs = PLANARY_PROJECTION,
                                      max_distance = 0.5, dTolerance = 5,
                                      workers = profiles$NO_OF_WORKERS[[1]]) {
-    one_file <- function(input_file, output_file) {
+    one_file <- function(district_id, input_file, output_file) {
         start_logging(log_dir())
         logging::loginfo("road sfnetwork prep: creating %s", output_file)
         map <- read_osm_to_sfnetwork(input_file, crs = crs) |>
@@ -639,6 +639,7 @@ create_sf_district_roads <- function(districts,
                      nrow(districts), txt)
     tryCatch({
         tab <- tibble::tibble(
+            district_id = districts$district_id,
             input_file = osm_file_name(districts, path_to_osm_maps),
             output_file = sf_file_name(districts, path_to_sf_maps)
         )
@@ -678,7 +679,7 @@ create_sf_district_roads <- function(districts,
 #   none; files are writen to disk
 create_lixelized_roads <- function(districts, input_folder, output_folder,
                                    profiles) {
-    one_file <- function(input_file, output_file, lx_length, mindist) {
+    one_file <- function(district_id, input_file, output_file, lx_length, mindist) {
         start_logging(log_dir())
         logging::loginfo("lixel prep: creating %s", output_file)
         network <- readr::read_rds(input_file) |>
@@ -706,6 +707,7 @@ create_lixelized_roads <- function(districts, input_folder, output_folder,
                      nrow(districts), txt)
     tryCatch({
         tab <- tibble(
+            district_id = districts$district_id,
             input_file = sf_file_name(districts, input_folder),
             output_file = lixel_file_name(districts, output_folder)
         )
@@ -736,7 +738,7 @@ create_lixelized_roads <- function(districts, input_folder, output_folder,
 create_lixel_samples_for_roads <- function(districts,
                                            input_folder, output_folder,
                                            profiles) {
-    one_file <- function(input_file, output_file) {
+    one_file <- function(district_id, input_file, output_file) {
         start_logging(log_dir())
         logging::loginfo("lixel samples prep: creating %s", output_file)
         network <- readr::read_rds(input_file)
@@ -759,6 +761,7 @@ create_lixel_samples_for_roads <- function(districts,
                      nrow(districts), txt)
     tryCatch({
         tab <- tibble(
+            district_id = districts$district_id,
             input_file = lixel_file_name(districts, input_folder),
             output_file = lixel_sample_file_name(districts, output_folder)
         )
@@ -826,7 +829,7 @@ create_sf_nb <- function(sf) {
 #   none, data are written to disk
 create_lixel_nbs <- function(districts, input_folder, output_folder,
                              profiles) {
-    one_district <- function(input_file, output_file) {
+    one_district <- function(district_id, input_file, output_file) {
         start_logging(log_dir())
         logging::loginfo("lixel nbs prep: creating %s", output_file)
         lixels <- readr::read_rds(input_file)
@@ -849,6 +852,7 @@ create_lixel_nbs <- function(districts, input_folder, output_folder,
                      nrow(districts), txt)
     tryCatch({
         tab <- tibble::tibble(
+            district_id = districts$district_id,
             input_file = lixel_file_name(districts, input_folder),
             output_file = lixel_nb_file_name(districts, output_folder)
         )

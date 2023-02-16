@@ -50,7 +50,8 @@ compute_densities <- function(districts,
                               accidents_dir,
                               density_dir,
                               profiles) {
-    one_district <- function(map_path, lixel_path, sample_path, accidents_path,
+    one_district <- function(district_id,
+                             map_path, lixel_path, sample_path, accidents_path,
                              output_file,
                              from_date, to_date,
                              weights, bw, adaptive, trim_bw, method, agg,
@@ -196,6 +197,7 @@ compute_densities <- function(districts,
                          to_date = districts$to_date,
                          profile_name = districts$PROFILE_NAME)
     tab <- tibble::tibble(
+        district_id = districts$district_id,
         map_path = sf_file_name(districts, maps_dir),
         lixel_path = lixel_file_name(districts, lixel_dir),
         sample_path = lixel_sample_file_name(districts, sample_dir),

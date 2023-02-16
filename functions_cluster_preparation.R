@@ -545,7 +545,8 @@ compute_clusters <- function(districts,
                              accidents_dir,
                              cluster_dir,
                              profiles) {
-    one_district <- function(geometry,
+    one_district <- function(district_id,
+                             geometry,
                              densities_file,
                              lixel_nb_file,
                              accident_file,
@@ -620,7 +621,7 @@ compute_clusters <- function(districts,
             "clusters prep: %d districts x times will be uppdated%s",
             nrow(districts), txt)
         tab <- districts |>
-            dplyr::select() |>
+            dplyr::select(district_id) |>
             dplyr::mutate(
                 densities_file = densities_file_name(districts, densities_dir,
                                                      from_date = districts$from_date,
