@@ -8,6 +8,7 @@ TODO
 Bugs
 ----
 - accidents se aktualizují pokaždé -- asi chyba v závislostech -- v kódu chybu nevidím -- ještě ověřit, až doběhne
+    - asi verze pro shiny
 
 
 Funkcionalita
@@ -47,7 +48,6 @@ Testovat
     - klastry nechat celé, které aspoň částí zasahují do okresu
 - zkontrolovat grid_shape v NKDE
     - NKDE i v nové verzi padalo, když tam byl rok 2022
-- otestovat novou verzi densities
 - pro všechny okresy:
     - zkontrolovat počet souvislých podgrafů
     - spustit kontrolu, o které psal Gelb
