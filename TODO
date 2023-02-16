@@ -13,16 +13,8 @@ Bugs
 
 Funkcionalita
 -------------
-- balancování zátěže
-    - buď v PWALK, nebo před to
-    - seřadit okresy tak, aby se jel vždycky celý profil dohromady, pak podle data, ... -- aby se nikdy nejel stejný okres naráz 2x
-    - okresy seřadit podle jejich velikosti (počtu lixelů)
-    - to vyžaduje se někam uložil počet lixelů
-        - buď se musí načít všechny tabulky lixelů a uložit to z toho
-        - nebo při tvorbě lixelů změni PWALK na PMAP a uložit to
-        - nebo mít někde nějaké pišvejcovy konstanty
-        - nebo vzít už z velikosti mapy
 - hotovo -- zkontrolovat:
+    - balancování zátěže
     - aktualizovat všechny balíky a vyzkoušet
 
 
