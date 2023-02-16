@@ -82,6 +82,7 @@ prepare_maps_lixel_neighbors.R \
 prepare_profiles.R \
 prepare_sidecars.R \
 start_logging.R \
+district_weights.R \
 update_data.sh \
 .
 
