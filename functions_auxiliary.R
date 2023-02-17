@@ -635,29 +635,30 @@ balance_load <- function(tab, workers) {
     # https://www.r-bloggers.com/2020/12/going-parallel-understanding-load-balancing-in-r/
     # it performs the better the more cores are used
     myx <- function(weight, workers){
-        tab <- tibble(id = seq_along(weight), x = weight) |>
-            arrange(desc(weight))
+        tab <- tibble::tibble(id = seq_along(weight), x = weight) |>
+            dplyr::arrange(desc(weight))
         sortvec <- rep(c(seq(1, workers), seq(workers, 1)),
                        length = length(weight)) |>
             order()
         tab[sortvec, ] |>
-            mutate(order = seq_along(weight)) |>
-            arrange(id) |>
-            pull(order)
+            dplyr::mutate(order = seq_along(weight)) |>
+            dplyr::arrange(id) |>
+            dplyr::pull(order)
     }
     present <- function(name) name %in% names(tab)
     pn <- present("profile_name")
     fd <- present("from_date")
     td <- present("to_date")
     tab |>
-        mutate(.order = myx(district_sizes(district_id), workers = workers)) |>
+        dplyr::mutate(.order = myx(district_sizes(district_id),
+                                   workers = workers)) |>
         dplyr::arrange(
             if (pn) profile_name else NULL,
             if (fd) from_date else NULL,
             if (td) to_date else NULL,
             .order
         ) |>
-        select(-.order)
+        dplyr::select(-.order)
 }
 
 
