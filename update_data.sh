@@ -121,4 +121,4 @@ fi
 
 # if it gets here, all is ok
 echo
-echo "All updates finished (no errors)."
+echo "All updates of basic statistics $NICESTRING finished (no errors)."
