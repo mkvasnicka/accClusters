@@ -85,7 +85,7 @@ while getopts 'hmckr:b:' opt; do
 done
 shift "$(($OPTIND -1))"
 
-# show configuration
+# welcome string
 if [[ $WHATTODO == *update* ]]; then
     NICESTRING="only"
     if [[ $WHATTODO == *clusters* ]]; then
@@ -94,7 +94,7 @@ if [[ $WHATTODO == *update* ]]; then
     echo "Updating data on traffic accidents for shiny app"
     echo "================================================"
     echo "Updating basic statistics $NICESTRING."
-    echo "Using RSCRIPTDIR=\"$RSCRIPTDIR\", DIR_ORIGIN=\"$DIRORIGIN\"."
+    # echo "Using RSCRIPTDIR=\"$RSCRIPTDIR\", DIR_ORIGIN=\"$DIRORIGIN\"."
 fi
 
 # update basic statistics
@@ -110,6 +110,7 @@ fi
 
 # update clusters
 if [[ $WHATTODO == *clusters* ]]; then
+    echo "Updating cluster statistics."
     runRscript "prepare_maps_lixel_samples"
     runRscript "prepare_maps_lixel_neighbors"
     runRscript "prepare_accidents"
@@ -118,3 +119,7 @@ if [[ $WHATTODO == *clusters* ]]; then
     runRscript "prepare_sidecars"
     runRscript "prepare_gis"
 fi
+
+# if it gets here, all is ok
+echo
+echo "All updates finished."

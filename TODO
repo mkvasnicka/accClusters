@@ -57,6 +57,7 @@ Nehody 2022
 
 Čištění
 -------
+- odstranit nepotřebné balíky v renv
 - vyhodit nepoužívané soubory/adresáře
 - vyhodit:
     - unit_cost(s)()
