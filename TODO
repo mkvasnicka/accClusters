@@ -7,8 +7,7 @@ TODO
 
 Bugs
 ----
-- accidents se aktualizují pokaždé -- asi chyba v závislostech -- v kódu chybu nevidím -- ještě ověřit, až doběhne
-    - asi verze pro shiny
+- nehody pro výpočet se zbyteně aktualizují
 
 
 Funkcionalita
@@ -27,6 +26,25 @@ Parametrizace
     - podívat se, co dělá cost
     - podívat se, jak se liší klastry mezi obdobími pro různá nastavení (stabilnější je asi lepší)
     - rozmyslet si i délku období -- jsou 3 roky dost? -- klastry se mezi obdobími dost liší (Brno venkov)
+- co se zdá:
+    - continuous / non-continuous
+        - když jsou váhy podle VSL, pak continuous dělá míň nepatrně větších klastrů + sem tan nějaký navíc oproti non-continuous
+        - když jsou váhy equal, tak se to ale dost liší
+        - jako smysluplnější vidím continuous
+    - váhy
+        - když jsou váhy equal, hledá to parkoviště a jiné bezvýznamné věci
+        - když jsou váhy podle VSL, je to strašně vychýlené směrem ke smrťákům a těžkým zraněním
+        - přitom škoda je asi do jisté míry náhodná
+        - navíc některé nehody mají materiální škodu 0, takže se při výpočtu vůbec nepočítají
+        - co z toho plyne:
+            - asi je potřeba dát všem nehodám nějakou konstatní váhu
+            - je potřeba nějak nivelizovat důsledky (jejich váhy) oproti VSL
+            - možnosti: Pišvejcova čísla
+            - Štěpánův návrh mít jen dvě váhy:
+                - autonomní váhu pro škody na plechu u každé nehody
+                - jednu váhu pro jakýkoli typ zranění odvozený od VSL -- podle toho, jaká se stane škoda a
+                  podle jejich frekvence mezi nehodami -- viz skript tmp/find_weights.R
+
 
 
 Testovat
