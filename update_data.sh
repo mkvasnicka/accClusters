@@ -110,7 +110,6 @@ fi
 
 # update clusters
 if [[ $WHATTODO == *clusters* ]]; then
-    echo "Updating cluster statistics."
     runRscript "prepare_maps_lixel_samples"
     runRscript "prepare_maps_lixel_neighbors"
     runRscript "prepare_accidents"
@@ -122,4 +121,4 @@ fi
 
 # if it gets here, all is ok
 echo
-echo "All updates finished."
+echo "All updates finished (no errors)."
