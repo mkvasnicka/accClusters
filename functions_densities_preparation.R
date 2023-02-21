@@ -184,7 +184,8 @@ compute_densities <- function(districts,
         bind_cols(profiles |>
                       dplyr::select(PROFILE_NAME, TIME_WINDOW,
                                     starts_with("NKDE_"),
-                                    starts_with("UNIT_COST_")) |>
+                                    starts_with("UNIT_COST_"),
+                                    starts_with("CONST_COST_")) |>
                       tidyr::unnest(TIME_WINDOW) |>
                       tidyr::nest(data = everything())) |>
         tidyr::unnest(data)
