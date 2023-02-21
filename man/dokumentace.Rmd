@@ -507,29 +507,69 @@ Stanovení časových období se týká pouze hledání klastrů lokalit s\ čas
 
 
 ### Váhy nehod
-Jednotlivé nehody se liší svou závažností. Při hledání klastrů nebezpečných míst je proto užitečné vážit jednotlivé nehody podle jejich závažnosti. Hodnota nehody je rovna 
+Jednotlivé nehody se liší svou závažností. Při hledání nebezpečných míst je proto užitečné vážit jednotlivé nehody podle jejich závažnosti. Hodnota nehody je rovna 
 
-$$\textrm{cost} = d \times D + s \times S + l \times L + m \times M + c,$$
+$$
+\begin{array}{lcl}
+    \textrm{cost} &=& d_1 \times D + s_1 \times S + l_1 \times L + m_1 \times M +\\
+        && d_2 \times 1(W = D) + s_2 \times 1(W = S) + l_2 \times 1(W = L) +
+        m_2 \times 1(W = M) +\\
+        && c,
+\end{array}
+$$
 
-kde $D$\ je počet lidí, kteří při nehodě zahynuli, $S$\ je počet vážně zraněných, $L$\ je počet lehce zraněných a $M$\ je hodnota materiální škody v\ milionech\ Kč. Uživatel může zadat konstanty $d$, $s$, $l$, $m$ a $c$, kde $d$, $s$, $l$ a $m$ určují, jaká váha se přikládá smrtelnému, těžkému a lehkému zranění respektive a jaká materiálním škodám. 
+kde $D$\ je počet lidí, kteří při nehodě zahynuli, $S$\ je počet vážně zraněných, $L$\ je počet lehce zraněných a $M$\ je hodnota materiální škody v\ milionech\ Kč. Funkce $1(W=X)$ nabývá hodnoty\ 1, pokud je nejhorší škoda v\ dané nehodě $X$, a\ 0\ jinak. To znamená, že $1(W=D)$ nabývá hodnoty\ 1 u\ nehod, kde je nejhorší škodou smrt; $1(W=S)$ u\ nehod, kde je nejhorší škodou těžké zranění atd. Uživatel může zadat konstanty $d_1$, $d_2$, $s_1$ atd., které určují, jaká váha se přikládá jednotlivým typům škod.
 
-Tyto koeficienty je možné nastavit pomocí proměnných 
+Tyto konstanty jsou dvou typů: První typ (označený spodním indexem\ 1) násobí *počet* škod v\ nehodě: např.\ $d_1$ se násobí počtem zemřelých v\ dané nehodě. Druhý typ (označený spodním indexem\ 2) násobí nejhorší škodu bez ohledu na počet. Uvažme např. nehodu, při které nikdo nezahynul ($D=0$), dva lidé se zranili těžce ($S=2$), tři lidé lehce ($L=3$) a nastala materiální škoda $M$. Váha této nehody pak bude
 
-- `UNIT_COST_DEAD` ... nezáporné číslo, váha smrtelného zranění ($d$),
-- `UNIT_COST_SERIOUS_INJURY` ... nezáporné číslo, váha těžkého zranění ($s$),
-- `UNIT_COST_LIGHT_INJURY` ... nezáporné číslo, váha lehkého zranění ($l$),
-- `UNIT_COST_MATERIAL` ... nezáporné číslo, váha materiální škody v\ milionech\ Kč ($m$) a
-- `UNIT_COST_CONST` ... nezáporné číslo, konstanta připočítaná k\ hodnotě každé nehody ($c$).
+$$
+2 \times s_1 + 3 \times l_1 + m_1 \times M + c + s_2,
+$$
+
+protože z\ koeficientů z\ první skupiny se zahrne dvakrát $s_1$ za dva těžce zraněné, třikrát $l_1$ za tři lehce zraněné a $m_1 \times M + c_1$ za materiální škodu; ze druhé skupiny se zahrne jedenkrát $s_2$, protože nejtěžší škoda je těžké zranění.
+
+Všimněte si také rozdílu mezi $c$, $m_1$ a $m_2$:
+
+- $c$ je paušální částka v\ mil. Kč, která se přidá ke *každé* nehodě,
+- $m_1$ je koeficient, kterým se vynásobí materiální škoda, a
+- $m_2$ je paušální částka v\ mil.\ Kč, která se přidá pouze k\ nehodám, kde nikdo nezemřel a ani se nezranil.
+
+
+Tyto konstanty je možné nastavit pomocí proměnných 
+
+- `UNIT_COST_DEAD` ... nezáporné číslo, váha každého smrtelného zranění ($d_1$),
+- `UNIT_COST_SERIOUS_INJURY` ... nezáporné číslo, váha každého těžkého zranění ($s_1$),
+- `UNIT_COST_LIGHT_INJURY` ... nezáporné číslo, váha každého lehkého zranění ($l_1$),
+- `UNIT_COST_MATERIAL` ... nezáporné číslo, váha materiální škody v\ milionech\ Kč ($m_1$),
+- `CONST_COST_DEAD` ... nezáporné číslo, paušální částka v\ mil. Kč, která se přidá ke každé nehodě, kde došlo k\ úmrtí ($d_2$),
+- `CONST_COST_SERIOUS_INJURY` ... nezáporné číslo, paušální částka v\ mil.\ Kč, která se přidá ke každé nehodě, kde je nejhorší škoda těžké zranění ($s_2$),
+- `CONST_COST_LIGHT_INJURY` ... nezáporné číslo, paušální částka v\ mil.\ Kč, která se přidá ke každé nehodě, kde je nejhorší škoda lehké zranění ($l_2$),
+- `CONST_COST_MATERIAL` ... nezáporné číslo, paušální částka v\ mil.\ Kč, která se přidá ke každé nehodě, kde nedošlo k\ žádnému úmrtí ani zranění ($m_2$),
+- `UNIT_COST_CONST` ... nezáporné číslo, konstanta připočítaná k\ hodnotě každé nehody ($c$),
 
 Příklad nastavení, kde se hodnota smrtelného zranění nastaví na hodnotu 12\ milionů\ Kč, hodnota těžkého zranění čtvrtinu této částky, hodnota lehkého zranění na 3\ promile této částky a materiální škoda se zahrne ve své skutečné výši:
 
 ```{r, eval=FALSE}
+# cost of each deceased persion in mil. CZK
 UNIT_COST_DEAD = 12
-UNIT_COST_SERIOUS_INJURY = UNIT_COST_DEAD * 0. 25
-UNIT_COST_LIGHT_INJURY = UNIT_COST_DEAD * 0.003
+# cost of each seriously injured person in mil. CZK
+UNIT_COST_SERIOUS_INJURY = 3
+# cost of each lightly injured person in mil. CZK
+UNIT_COST_LIGHT_INJURY = 12 * 0.003
+# material cost (in mil. CZK) is multiplied by the following coefficient
 UNIT_COST_MATERIAL = 1
+# the following coefficient (in mil. CZK) is added to each accidents' cost
 UNIT_COST_CONST = 0
-
+# a fixed cost in mil. CZK added to accidents where someone lost her life
+CONST_COST_DEAD = 0
+# a fixed cost in mil. CZK added to accidents where the worst damage was serious
+# injury
+CONST_COST_SERIOUS_INJURY = 0
+# a fixed cost in mil. CZK added to accidents where the worst damage was light
+# injury
+CONST_COST_LIGHT_INJURY = 0
+# a fixed cost in mil. CZK added to accidents with material cost only
+CONST_COST_MATERIAL = 0
 ```
 
 Hodnota nehod se při výpočtu rizikových oblastí používá pouze v\ případě, kdy je proměnná `NKDE_WEIGHTS` nastavena na hodnotu `"cost"`, viz dále. Je však dobré nastavit tyto parametry vždy. I\ když chceme najít nehodové klastry, které váží všechny nehody stejně, nastavení těchto parametrů pak umožní říct, které klastry jsou spojeny s\ větší škodou.
