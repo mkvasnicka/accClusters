@@ -941,10 +941,22 @@ read_districts <- function() {
 #
 # inputs:
 # - accidents ... (tibble) accidents table
-# - accident_dead ... (integer) number of the dead in the accident
-# - accident_serious_injury ... (integer) number of the seriously injured
-# - accident_light_injury ... (integer) number of the light injured
-# - accident_material_cost ... (double) material cost in mil. CZK
+# - unit_cost_dead ... (double scalar) cost of each deceased persion in mil. CZK
+# - unit_cost_serious_injury ... (double scalar) cost of each seriously injured
+#   person in mil. CZK
+# - unit_cost_light_injury ... (double scalar) cost of each lightly injured
+#   person in mil. CZK
+# - unit_cost_material ... (double scalar) multiplier of the material cost
+# - unit_cost_const ... (double scalar) a fixed cost in mil. CZK added to each
+#   accident
+# - const_cost_dead ... (double scalar) a fixed cost in mil. CZK added to
+#   accidents where someone lost her life
+# - const_cost_serious_injury ... (double scalar) a fixed cost in mil. CZK added
+#   to accidents where the worst damage was serious injury
+# - const_cost_light_injury ... (double scalar) a fixed cost in mil. CZK added
+#   to accidents where the worst damage was light injury
+# - const_cost_material ... (double scalar) a fixed cost in mil. CZK added to
+#   accidents with material cost only
 # - na_zero ... (logical scalar) if TRUE (default), NAs in costs are replaced
 #   with 0s; if FALSE, all rows in accidents that have any NA cost are removed
 #
@@ -955,20 +967,31 @@ add_damage_cost <- function(accidents,
                             unit_cost_serious_injury,
                             unit_cost_light_injury,
                             unit_cost_material,
-                            unit_cost_const, na_zero = TRUE) {
+                            unit_cost_const,
+                            const_cost_dead,
+                            const_cost_serious_injury,
+                            const_cost_light_injury,
+                            const_cost_material,
+                            na_zero = TRUE) {
     zero_na <- function(x, na_zero)
         ifelse(is.na(x) & na_zero, 0, x)
 
     accidents <- accidents |>
-        mutate(accident_cost =
-                   zero_na(accident_dead, na_zero) * unit_cost_dead +
-                   zero_na(accident_serious_injury, na_zero) *
-                   unit_cost_serious_injury +
-                   zero_na(accident_light_injury, na_zero) *
-                   unit_cost_light_injury +
-                   zero_na(accident_material_cost, na_zero) *
-                   unit_cost_material +
-                   unit_cost_const
+        dplyr::mutate(accident_cost =
+                          zero_na(accident_dead, na_zero) * unit_cost_dead +
+                          zero_na(accident_serious_injury, na_zero) *
+                          unit_cost_serious_injury +
+                          zero_na(accident_light_injury, na_zero) *
+                          unit_cost_light_injury +
+                          zero_na(accident_material_cost, na_zero) *
+                          unit_cost_material +
+                          unit_cost_const +
+                          dplyr::case_when(
+                              zero_na(accident_dead, na_zero) > 0 ~ const_cost_dead,
+                              zero_na(accident_serious_injury, na_zero) > 0 ~ const_cost_serious_injury,
+                              zero_na(accident_light_injury, na_zero) > 0 ~ const_cost_light_injury,
+                              TRUE ~ const_cost_material
+                          )
         )
 
     if (!na_zero)

@@ -1,13 +1,10 @@
 # -------------------------------------
-# Script:   guts_config.R
+# Script:   config.R
 # Author:   Michal Kvasnička
-# Purpose:
-# Inputs:   none
-# Outputs:  constatns and paths
-# Notes:
-#
-# Copyright(c) Michal Kvasnička
+# Purpose:  This script defines the implicit values for road accident hotspots
+#           detection.
 # -------------------------------------
+
 
 # time windows -----------------------------------------------------------------
 
@@ -15,7 +12,7 @@
 TIME_WINDOW_AUTO = TRUE
 
 # if so, how long should each window be (in years)
-TIME_WINDOW_LENGTH = c(1, 3)
+TIME_WINDOW_LENGTH = 3
 
 # and how many such windows should be created
 TIME_WINDOW_NUMBER = 2
@@ -31,16 +28,26 @@ TIME_WINDOW_NUMBER = 2
 
 # damage costs -----------------------------------------------------------------
 
-# cost of various damages in mil. CZK: dead people, serious, and light injuries
+# cost of each deceased persion in mil. CZK
 UNIT_COST_DEAD = 12
+# cost of each seriously injured person in mil. CZK
 UNIT_COST_SERIOUS_INJURY = UNIT_COST_DEAD * 0.25
+# cost of each lightly injured person in mil. CZK
 UNIT_COST_LIGHT_INJURY = UNIT_COST_DEAD * 0.003
-
-# material cost (in mil. CZK) is multiplied by this coefficient
+# material cost (in mil. CZK) is multiplied by the following coefficient
 UNIT_COST_MATERIAL = 1
-
 # the following coefficient (in mil. CZK) is added to each accidents' cost
 UNIT_COST_CONST = 0
+# a fixed cost in mil. CZK added to accidents where someone lost her life
+CONST_COST_DEAD = 0
+# a fixed cost in mil. CZK added to accidents where the worst damage was serious
+# injury
+CONST_COST_SERIOUS_INJURY
+# a fixed cost in mil. CZK added to accidents where the worst damage was light
+# injury
+CONST_COST_LIGHT_INJURY
+# a fixed cost in mil. CZK added to accidents with material cost only
+CONST_COST_MATERIAL
 
 
 
@@ -51,7 +58,7 @@ NKDE_WEIGHTS = "cost"
 
 # NKDE method---either "continuous" or "discontinuous"; "discontinuous" is less
 # precise but much faster
-NKDE_METHOD = "discontinuous"
+NKDE_METHOD = "continuous"
 
 # NKDE bandwidth in meters
 NKDE_BW = 300
@@ -116,11 +123,3 @@ RAM_PER_CORE_ACCIDENTS = 10
 # if the amount of available memory is lower, you should lower the constant; if
 # it is higher, you can raise it
 OSMIUM_DISTRICTS_IN_ONE_GO = 10
-
-
-
-# districts --------------------------------------------------------------------
-
-# if only some districts should be processed, set DISTRICTS to character vector
-# of their ids; otherwise, comment it
-# DISTRICTS = c("CZ0642", "CZ0643")

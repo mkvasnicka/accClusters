@@ -57,7 +57,9 @@ compute_densities <- function(districts,
                              weights, bw, adaptive, trim_bw, method, agg,
                              unit_cost_dead, unit_cost_serious_injury,
                              unit_cost_light_injury, unit_cost_material,
-                             unit_cost_const) {
+                             unit_cost_const, const_cost_dead,
+                             const_cost_serious_injury, const_cost_light_injury,
+                             const_cost_material) {
         start_logging(log_dir())
 
         # grid_shape() is a heuristics that guesses how to split districts for
@@ -119,7 +121,9 @@ compute_densities <- function(districts,
                           accident_date <= to_date) |>
             add_damage_cost(unit_cost_dead, unit_cost_serious_injury,
                             unit_cost_light_injury, unit_cost_material,
-                            unit_cost_const)
+                            unit_cost_const, const_cost_dead,
+                            const_cost_serious_injury, const_cost_light_injury,
+                            const_cost_material)
 
         if (!(is.character(weights) && length(weights) == 1 &&
                weights %in% c("cost", "equal")))
@@ -218,7 +222,11 @@ compute_densities <- function(districts,
         unit_cost_serious_injury = districts$UNIT_COST_SERIOUS_INJURY,
         unit_cost_light_injury = districts$UNIT_COST_LIGHT_INJURY,
         unit_cost_material = districts$UNIT_COST_MATERIAL,
-        unit_cost_const = districts$UNIT_COST_CONST
+        unit_cost_const = districts$UNIT_COST_CONST,
+        const_cost_dead = districts$CONST_COST_DEAD,
+        const_cost_serious_injury = districts$CONST_COST_SERIOUS_INJURY,
+        const_cost_light_injury = districts$CONST_COST_LIGHT_INJURY,
+        const_cost_material = districts$CONST_COST_MATERIAL
     )
 
     txt <- dplyr::if_else(nrow(districts) == 0, "---skipping", " in parallel")
