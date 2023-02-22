@@ -11,6 +11,8 @@ The project is supported by the grant CK01000049 funded by [Technology Agency of
 
 ## Why the project is useful
 
+We hope this project will help the Police to improve her resource allocation, and hence reduce the number of serious traffic accidents.
+
 ## How users can get started with the project
 
 The easiest way to run the project is build a docker image and use it. For this, use
