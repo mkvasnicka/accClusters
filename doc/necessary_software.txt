@@ -1,4 +1,0 @@
-The list of software needed
-===========================
-
-- unoconv ... to convert police XLS to CSV (no R package can read these files)

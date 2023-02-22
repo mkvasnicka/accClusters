@@ -1,8 +1,0 @@
-rawdata:
-accidents -> '/home/qasar/Insync/847@muni.cz/OneDrive Biz/data/police_project/accidents/'
-accidents_processed -> '/home/qasar/Insync/847@muni.cz/OneDrive Biz/data/police_project/hotspots/accidents/'
-maps -> '/home/qasar/Insync/847@muni.cz/OneDrive Biz/data/police_project/hotspots/maps/'
-
-
-data:
-data -> '/home/qasar/Insync/847@muni.cz/OneDrive Biz/data/police_project/vytvarena_data'
