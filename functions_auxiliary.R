@@ -16,6 +16,10 @@ library(memuse, verbose = FALSE, warn.conflicts = FALSE)
 library(logging, verbose = FALSE, warn.conflicts = FALSE)
 
 
+# get district weights function
+source(file.path(RSCRIPTDIR, "district_weights.R"))
+
+
 
 # paths to folders -------------------------------------------------------------
 
@@ -613,6 +617,51 @@ get_number_of_workers <- function(workers, ram_needed) {
 }
 
 
+# balance_load() balances load for PWALK(); it sorts the rows of tab in such
+# a way that each combination of  profile and time window is processed together
+# (if possible) and within this, the districts are processed in such a way that
+# the biggest one is paired with the smallest one, the second biggest one with
+# the second smallest one, and so on
+#
+# inputs:
+# - tab ... (tibble) a tibble with columns district_id and possibly also
+#   profile_name, from_date, and to_date
+# - workers ... (integer scalar) number of cores to be used
+#
+# value: the same tibble with reshuffled rows
+balance_load <- function(tab, workers) {
+    # myx() returns the order based on sizes to balance the load; the balancing
+    # algorithm is based on zizgaz_sort() from
+    # https://www.r-bloggers.com/2020/12/going-parallel-understanding-load-balancing-in-r/
+    # it performs the better the more cores are used
+    myx <- function(weight, workers){
+        tab <- tibble::tibble(id = seq_along(weight), x = weight) |>
+            dplyr::arrange(desc(weight))
+        sortvec <- rep(c(seq(1, workers), seq(workers, 1)),
+                       length = length(weight)) |>
+            order()
+        tab[sortvec, ] |>
+            dplyr::mutate(order = seq_along(weight)) |>
+            dplyr::arrange(id) |>
+            dplyr::pull(order)
+    }
+    present <- function(name) name %in% names(tab)
+    pn <- present("profile_name")
+    fd <- present("from_date")
+    td <- present("to_date")
+    tab |>
+        dplyr::mutate(.order = myx(district_sizes(district_id),
+                                   workers = workers)) |>
+        dplyr::arrange(
+            if (pn) profile_name else NULL,
+            if (fd) from_date else NULL,
+            if (td) to_date else NULL,
+            .order
+        ) |>
+        dplyr::select(-.order)
+}
+
+
 # silently(.f) wrappes function .f in such a way that runs and returns TRUE when
 # it succeeds and simpleError when it fails; it should be used with functions
 # that return no value but are run for their side effects; it is used in PWALK()
@@ -653,6 +702,8 @@ PWALK <- function(.l, .f, workers = 1, ram_needed = NULL, ...) {
             oplan <- future::plan()
             on.exit(future::plan(oplan))
             future::plan("multisession", workers = workers)
+            # balance the load
+            .l <- balance_load(.l, workers)
             success <- furrr::future_pmap(
                 .l, .f, ...,
                 .options = furrr::furrr_options(seed = TRUE,
@@ -890,10 +941,22 @@ read_districts <- function() {
 #
 # inputs:
 # - accidents ... (tibble) accidents table
-# - accident_dead ... (integer) number of the dead in the accident
-# - accident_serious_injury ... (integer) number of the seriously injured
-# - accident_light_injury ... (integer) number of the light injured
-# - accident_material_cost ... (double) material cost in mil. CZK
+# - unit_cost_dead ... (double scalar) cost of each deceased persion in mil. CZK
+# - unit_cost_serious_injury ... (double scalar) cost of each seriously injured
+#   person in mil. CZK
+# - unit_cost_light_injury ... (double scalar) cost of each lightly injured
+#   person in mil. CZK
+# - unit_cost_material ... (double scalar) multiplier of the material cost
+# - unit_cost_const ... (double scalar) a fixed cost in mil. CZK added to each
+#   accident
+# - const_cost_dead ... (double scalar) a fixed cost in mil. CZK added to
+#   accidents where someone lost her life
+# - const_cost_serious_injury ... (double scalar) a fixed cost in mil. CZK added
+#   to accidents where the worst damage was serious injury
+# - const_cost_light_injury ... (double scalar) a fixed cost in mil. CZK added
+#   to accidents where the worst damage was light injury
+# - const_cost_material ... (double scalar) a fixed cost in mil. CZK added to
+#   accidents with material cost only
 # - na_zero ... (logical scalar) if TRUE (default), NAs in costs are replaced
 #   with 0s; if FALSE, all rows in accidents that have any NA cost are removed
 #
@@ -904,20 +967,31 @@ add_damage_cost <- function(accidents,
                             unit_cost_serious_injury,
                             unit_cost_light_injury,
                             unit_cost_material,
-                            unit_cost_const, na_zero = TRUE) {
+                            unit_cost_const,
+                            const_cost_dead,
+                            const_cost_serious_injury,
+                            const_cost_light_injury,
+                            const_cost_material,
+                            na_zero = TRUE) {
     zero_na <- function(x, na_zero)
         ifelse(is.na(x) & na_zero, 0, x)
 
     accidents <- accidents |>
-        mutate(accident_cost =
-                   zero_na(accident_dead, na_zero) * unit_cost_dead +
-                   zero_na(accident_serious_injury, na_zero) *
-                   unit_cost_serious_injury +
-                   zero_na(accident_light_injury, na_zero) *
-                   unit_cost_light_injury +
-                   zero_na(accident_material_cost, na_zero) *
-                   unit_cost_material +
-                   unit_cost_const
+        dplyr::mutate(accident_cost =
+                          zero_na(accident_dead, na_zero) * unit_cost_dead +
+                          zero_na(accident_serious_injury, na_zero) *
+                          unit_cost_serious_injury +
+                          zero_na(accident_light_injury, na_zero) *
+                          unit_cost_light_injury +
+                          zero_na(accident_material_cost, na_zero) *
+                          unit_cost_material +
+                          unit_cost_const +
+                          dplyr::case_when(
+                              zero_na(accident_dead, na_zero) > 0 ~ const_cost_dead,
+                              zero_na(accident_serious_injury, na_zero) > 0 ~ const_cost_serious_injury,
+                              zero_na(accident_light_injury, na_zero) > 0 ~ const_cost_light_injury,
+                              TRUE ~ const_cost_material
+                          )
         )
 
     if (!na_zero)

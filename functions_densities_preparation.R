@@ -50,13 +50,16 @@ compute_densities <- function(districts,
                               accidents_dir,
                               density_dir,
                               profiles) {
-    one_district <- function(map_path, lixel_path, sample_path, accidents_path,
+    one_district <- function(district_id,
+                             map_path, lixel_path, sample_path, accidents_path,
                              output_file,
                              from_date, to_date,
                              weights, bw, adaptive, trim_bw, method, agg,
                              unit_cost_dead, unit_cost_serious_injury,
                              unit_cost_light_injury, unit_cost_material,
-                             unit_cost_const) {
+                             unit_cost_const, const_cost_dead,
+                             const_cost_serious_injury, const_cost_light_injury,
+                             const_cost_material) {
         start_logging(log_dir())
 
         # grid_shape() is a heuristics that guesses how to split districts for
@@ -118,7 +121,9 @@ compute_densities <- function(districts,
                           accident_date <= to_date) |>
             add_damage_cost(unit_cost_dead, unit_cost_serious_injury,
                             unit_cost_light_injury, unit_cost_material,
-                            unit_cost_const)
+                            unit_cost_const, const_cost_dead,
+                            const_cost_serious_injury, const_cost_light_injury,
+                            const_cost_material)
 
         if (!(is.character(weights) && length(weights) == 1 &&
                weights %in% c("cost", "equal")))
@@ -159,6 +164,13 @@ compute_densities <- function(districts,
         }
         if (is.null(densities))
             stop("nkde failed with all grid shapes")
+        # nkde() returns a list for adaptive densities; we need to extract k
+        # which is the density evaluated at sample points
+        if (is.list(densities)) {
+            if (!("k" %in% names(densities)))
+                stop("nkde failed---densities are list but there is no k slot")
+            densities <- densities$k
+        }
         lixels$density <- densities
         write_dir_rds(lixels, output_file, compress = TRUE)
         logging::loginfo("densities prep: %s has been created", output_file)
@@ -172,7 +184,8 @@ compute_densities <- function(districts,
         bind_cols(profiles |>
                       dplyr::select(PROFILE_NAME, TIME_WINDOW,
                                     starts_with("NKDE_"),
-                                    starts_with("UNIT_COST_")) |>
+                                    starts_with("UNIT_COST_"),
+                                    starts_with("CONST_COST_")) |>
                       tidyr::unnest(TIME_WINDOW) |>
                       tidyr::nest(data = everything())) |>
         tidyr::unnest(data)
@@ -189,6 +202,7 @@ compute_densities <- function(districts,
                          to_date = districts$to_date,
                          profile_name = districts$PROFILE_NAME)
     tab <- tibble::tibble(
+        district_id = districts$district_id,
         map_path = sf_file_name(districts, maps_dir),
         lixel_path = lixel_file_name(districts, lixel_dir),
         sample_path = lixel_sample_file_name(districts, sample_dir),
@@ -209,7 +223,11 @@ compute_densities <- function(districts,
         unit_cost_serious_injury = districts$UNIT_COST_SERIOUS_INJURY,
         unit_cost_light_injury = districts$UNIT_COST_LIGHT_INJURY,
         unit_cost_material = districts$UNIT_COST_MATERIAL,
-        unit_cost_const = districts$UNIT_COST_CONST
+        unit_cost_const = districts$UNIT_COST_CONST,
+        const_cost_dead = districts$CONST_COST_DEAD,
+        const_cost_serious_injury = districts$CONST_COST_SERIOUS_INJURY,
+        const_cost_light_injury = districts$CONST_COST_LIGHT_INJURY,
+        const_cost_material = districts$CONST_COST_MATERIAL
     )
 
     txt <- dplyr::if_else(nrow(districts) == 0, "---skipping", " in parallel")

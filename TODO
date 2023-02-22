@@ -2,43 +2,19 @@ TODO
 ====
 
 + TODO comment v functions_map_preparation.R
++ TODO comment v functions_cluster_preparation.R
 
 
 Bugs
 ----
-- accidents se aktualizují pokaždé -- asi chyba v závislostech -- v kódu chybu nevidím -- ještě ověřit, až doběhne
-- u adaptivního výpočtu NKDE je někde problém -- zapisuje to nesmyslně velká data (stovky GB místo stovek MB)
-    - přitom by to mělo být bez komprese vždycky stejně velké bez ohledu na způsob výpočtu NKDE
-        - liší se jen hodnoty double hustot, ale jejich počet a všechno ostatní by mělo být stejné
-            - načítá se to z lixelů, jejich středů apod.
+- nehody pro výpočet se zbyteně aktualizují
 
 
 Funkcionalita
 -------------
-- balancování zátěže
-    - buď v PWALK, nebo před to
-    - seřadit okresy tak, aby se jel vždycky celý profil dohromady, pak podle data, ... -- aby se nikdy nejel stejný okres naráz 2x
-    - okresy seřadit podle jejich velikosti (počtu lixelů)
-    - to vyžaduje se někam uložil počet lixelů
-        - buď se musí načít všechny tabulky lixelů a uložit to z toho
-        - nebo při tvorbě lixelů změni PWALK na PMAP a uložit to
-        - nebo mít někde nějaké pišvejcovy konstanty
-        - nebo vzít už z velikosti mapy
 - hotovo -- zkontrolovat:
-    - čištění paměti po velkých výpočtech, aby se používal optimální počet jader (jinak nefunguje dobře odhad workerů v PWALK()) -- možnosti:
-        - skripty, kde je víc výpočetně náročných věcí rozdělit -- v místě time_to_recover_memory()
-            - bash skript updata_data.sh upravit tak, že bez -k se dělají jen věci pro shiny -- zkontrolovat flow
-            - vyhodit time_to_recover_memory() z definic v auxiliary
-        - použít gc a čas + zjistit počet jader na začátku, a pak ho předat následujícím funkcím
-            - get_number_of_workers(profiles$NO_OF_WORKERS[1], profiles$RAM_PER_CORE_GENERAL[1])
-            - get_number_of_workers(profiles$NO_OF_WORKERS_ACCIDENTS[1], profiles$RAM_PER_CORE_ACCIDENTS[1])
+    - balancování zátěže
     - aktualizovat všechny balíky a vyzkoušet
-    - PWALK logging: změnit počet workerů v logu z počtu nastavených workerů na min. z nich a počtu úkolů (prvků .l)
-    - tvorba nehod: přidat kontrolu, že nehody leží v ČR
-        - vypsat varování, kolik nehod má souřadnice NA a kolik neleží v ČR
-        - zahodit
-        - vyžaduje mít shapefile celé republiky
-    - komprimovat .rds -- nyní se komprimují všechny .rds soubory
 
 
 Parametrizace
@@ -50,11 +26,29 @@ Parametrizace
     - podívat se, co dělá cost
     - podívat se, jak se liší klastry mezi obdobími pro různá nastavení (stabilnější je asi lepší)
     - rozmyslet si i délku období -- jsou 3 roky dost? -- klastry se mezi obdobími dost liší (Brno venkov)
+- co se zdá:
+    - continuous / non-continuous
+        - když jsou váhy podle VSL, pak continuous dělá míň nepatrně větších klastrů + sem tan nějaký navíc oproti non-continuous
+        - když jsou váhy equal, tak se to ale dost liší
+        - jako smysluplnější vidím continuous
+    - váhy
+        - když jsou váhy equal, hledá to parkoviště a jiné bezvýznamné věci
+        - když jsou váhy podle VSL, je to strašně vychýlené směrem ke smrťákům a těžkým zraněním
+        - přitom škoda je asi do jisté míry náhodná
+        - navíc některé nehody mají materiální škodu 0, takže se při výpočtu vůbec nepočítají
+        - co z toho plyne:
+            - asi je potřeba dát všem nehodám nějakou konstatní váhu
+            - je potřeba nějak nivelizovat důsledky (jejich váhy) oproti VSL
+            - možnosti: Pišvejcova čísla
+            - Štěpánův návrh mít jen dvě váhy:
+                - autonomní váhu pro škody na plechu u každé nehody
+                - jednu váhu pro jakýkoli typ zranění odvozený od VSL -- podle toho, jaká se stane škoda a
+                  podle jejich frekvence mezi nehodami -- viz skript tmp/find_weights.R
+
 
 
 Testovat
 --------
-- zkontrolovat závislosti v is_behind() a districts_behind()
 - jaké sloupce obsahuje tabulka nehod + ty, které používáme, standardizovat
     - pro případ, že policie sloupce přejmenuje -- není kulturní, abychom používali jejich interní značky
     - nutné domluvit se Štěpánem, co z toho použije
@@ -64,7 +58,6 @@ Testovat
     - klastry nechat celé, které aspoň částí zasahují do okresu
 - zkontrolovat grid_shape v NKDE
     - NKDE i v nové verzi padalo, když tam byl rok 2022
-- otestovat novou verzi densities
 - pro všechny okresy:
     - zkontrolovat počet souvislých podgrafů
     - spustit kontrolu, o které psal Gelb
@@ -82,6 +75,7 @@ Nehody 2022
 
 Čištění
 -------
+- odstranit nepotřebné balíky v renv
 - vyhodit nepoužívané soubory/adresáře
 - vyhodit:
     - unit_cost(s)()

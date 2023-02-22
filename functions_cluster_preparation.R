@@ -433,6 +433,18 @@ optimize_cluster_parameters <- function(lixels, nb, accidents,
 # cluster preparation ----------------------------------------------------------
 
 # TODO: přidat dokumentaci funkce
+# compute_clusters_for_parameters()
+#
+# inputs:
+# - quantile ... (numeric scalar) ?
+# - threshold ... (numeric scalar) ?
+# - cluster_steps ... (numeric scalar) ?
+# - lixels
+# - accidents
+# - nb
+# - geometry
+#
+# value:
 compute_clusters_for_parameters <- function(quantile, threshold,
                                             cluster_steps,
                                             lixels, accidents, nb, geometry) {
@@ -533,7 +545,8 @@ compute_clusters <- function(districts,
                              accidents_dir,
                              cluster_dir,
                              profiles) {
-    one_district <- function(geometry,
+    one_district <- function(district_id,
+                             geometry,
                              densities_file,
                              lixel_nb_file,
                              accident_file,
@@ -547,6 +560,10 @@ compute_clusters <- function(districts,
                              unit_cost_light_injury,
                              unit_cost_material,
                              unit_cost_const,
+                             const_cost_dead,
+                             const_cost_serious_injury,
+                             const_cost_light_injury,
+                             const_cost_material,
                              cluster_severity_limit,
                              cluster_severity_step,
                              cluster_step_limit) {
@@ -559,7 +576,9 @@ compute_clusters <- function(districts,
                           accident_date <= to_date) |>
             add_damage_cost(unit_cost_dead, unit_cost_serious_injury,
                             unit_cost_light_injury, unit_cost_material,
-                            unit_cost_const)
+                            unit_cost_const, const_cost_dead,
+                            const_cost_serious_injury, const_cost_light_injury,
+                            const_cost_material)
 
         severity <- seq(from = cluster_severity_limit, to = 1,
                         by = -cluster_severity_step) / 1000
@@ -587,7 +606,8 @@ compute_clusters <- function(districts,
                                                CLUSTER_SEVERITY_LIMIT,
                                                CLUSTER_SEVERITY_STEP,
                                                CLUSTER_STEP_LIMIT,
-                                               starts_with("UNIT_COST_")) |>
+                                               starts_with("UNIT_COST_"),
+                                               starts_with("CONST_COST_")) |>
                                  tidyr::unnest(TIME_WINDOW) |>
                                  tidyr::nest(data = everything())
             ) |>
@@ -608,7 +628,7 @@ compute_clusters <- function(districts,
             "clusters prep: %d districts x times will be uppdated%s",
             nrow(districts), txt)
         tab <- districts |>
-            dplyr::select() |>
+            dplyr::select(district_id) |>
             dplyr::mutate(
                 densities_file = densities_file_name(districts, densities_dir,
                                                      from_date = districts$from_date,
@@ -629,7 +649,11 @@ compute_clusters <- function(districts,
                 unit_cost_serious_injury = districts$UNIT_COST_SERIOUS_INJURY,
                 unit_cost_light_injury = districts$UNIT_COST_LIGHT_INJURY,
                 unit_cost_material = districts$UNIT_COST_MATERIAL,
-                unit_cost_const = districts$UNIT_COST_CONST
+                unit_cost_const = districts$UNIT_COST_CONST,
+                const_cost_dead = districts$CONST_COST_DEAD,
+                const_cost_serious_injury = districts$CONST_COST_SERIOUS_INJURY,
+                const_cost_light_injury = districts$CONST_COST_LIGHT_INJURY,
+                const_cost_material = districts$CONST_COST_MATERIAL
             )
         PWALK(tab, one_district,
               workers = profiles$NO_OF_WORKERS[1],

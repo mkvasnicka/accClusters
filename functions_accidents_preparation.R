@@ -593,7 +593,8 @@ create_districts_accidents <- function(districts,
                                        accident_dir,
                                        profiles,
                                        shiny = FALSE) {
-    one_file <- function(geometry,
+    one_file <- function(district_id,
+                         geometry,
                          input_file,
                          output_file,
                          buffer_size,
@@ -648,7 +649,7 @@ create_districts_accidents <- function(districts,
             "district accidents prep: %d districts will be uppdated%s",
             nrow(districts), txt)
         tab <- districts |>
-            dplyr::select() |>
+            dplyr::select(district_id) |>
             dplyr::mutate(
                 input_file = lixel_file_name(districts, lixel_dir),
                 output_file = accidents_file_name(districts, accident_dir),
