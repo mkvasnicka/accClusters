@@ -54,10 +54,6 @@ COPY renv/settings.dcf renv/settings.dcf
 # restore R packages
 RUN R -e "renv::restore()"
 
-# useful tools
-# COPY Docker/.vimrc Docker/.screenrc /root/
-# COPY Docker/findgrep /usr/local/bin/
-
 # copy the application itself
 COPY functions_accidents_preparation.R \
 functions_auxiliary.R \
