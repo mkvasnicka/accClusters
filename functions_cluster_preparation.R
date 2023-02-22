@@ -560,6 +560,10 @@ compute_clusters <- function(districts,
                              unit_cost_light_injury,
                              unit_cost_material,
                              unit_cost_const,
+                             const_cost_dead,
+                             const_cost_serious_injury,
+                             const_cost_light_injury,
+                             const_cost_material,
                              cluster_severity_limit,
                              cluster_severity_step,
                              cluster_step_limit) {
@@ -572,7 +576,9 @@ compute_clusters <- function(districts,
                           accident_date <= to_date) |>
             add_damage_cost(unit_cost_dead, unit_cost_serious_injury,
                             unit_cost_light_injury, unit_cost_material,
-                            unit_cost_const)
+                            unit_cost_const, const_cost_dead,
+                            const_cost_serious_injury, const_cost_light_injury,
+                            const_cost_material)
 
         severity <- seq(from = cluster_severity_limit, to = 1,
                         by = -cluster_severity_step) / 1000
@@ -600,7 +606,8 @@ compute_clusters <- function(districts,
                                                CLUSTER_SEVERITY_LIMIT,
                                                CLUSTER_SEVERITY_STEP,
                                                CLUSTER_STEP_LIMIT,
-                                               starts_with("UNIT_COST_")) |>
+                                               starts_with("UNIT_COST_"),
+                                               starts_with("CONST_COST_")) |>
                                  tidyr::unnest(TIME_WINDOW) |>
                                  tidyr::nest(data = everything())
             ) |>
@@ -642,7 +649,11 @@ compute_clusters <- function(districts,
                 unit_cost_serious_injury = districts$UNIT_COST_SERIOUS_INJURY,
                 unit_cost_light_injury = districts$UNIT_COST_LIGHT_INJURY,
                 unit_cost_material = districts$UNIT_COST_MATERIAL,
-                unit_cost_const = districts$UNIT_COST_CONST
+                unit_cost_const = districts$UNIT_COST_CONST,
+                const_cost_dead = districts$CONST_COST_DEAD,
+                const_cost_serious_injury = districts$CONST_COST_SERIOUS_INJURY,
+                const_cost_light_injury = districts$CONST_COST_LIGHT_INJURY,
+                const_cost_material = districts$CONST_COST_MATERIAL
             )
         PWALK(tab, one_district,
               workers = profiles$NO_OF_WORKERS[1],
