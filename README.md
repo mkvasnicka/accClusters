@@ -46,3 +46,5 @@ If you are interested in the project, let me know please.
 ## Who maintains and contributes to the project
 
 -   Michal Kvasnička, [Masaryk University](https://www.muni.cz/en)
+
+[![](tacr/logo_TACR_dopln.png)](https://www.tacr.cz/)
