@@ -47,4 +47,4 @@ If you are interested in the project, let me know please.
 
 -   Michal Kvasnička, [Masaryk University](https://www.muni.cz/en)
 
-[![]([tacr/logo_TACR_dopln.png](https://www.tacr.cz/wp-content/themes/iq-theme/dist/images/logo.svg))](https://www.tacr.cz/)
+[![](tacr/logo_TACR_dopln.png)](https://www.tacr.cz/)
